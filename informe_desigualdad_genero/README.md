@@ -1,4 +1,6 @@
-# Informes de desigualdad de género
+# Informes por trimestre
+
+Realizados con la Encuesta Permanente de Hogares (EPH) del INDEC (Argentina)
 
 ## [4to trimestre de 2017](trim_2017_04/2017_4T.nb.html)
 
