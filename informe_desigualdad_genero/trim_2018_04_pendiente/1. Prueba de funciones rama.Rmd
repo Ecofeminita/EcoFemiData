@@ -1,0 +1,242 @@
+---
+title: "Ejemplo de uso de las funciones de rama"
+output: html_notebook
+---
+
+# Organización de los datos
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+rm(list=ls())
+source("Fuentes/funciones.R")
+source("Fuentes/funciones rama.R")
+library(foreign)
+```
+
+Levanto bases usuarias, y la última base porque aún no está la usuaria.
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# TRIMESTRE 2 2016
+levantar_bases("Fuentes/usu_individual_t216.txt")
+trim16.2 <- base
+
+# TRIMESTRE 3 2016
+levantar_bases("Fuentes/usu_individual_t316.txt")
+trim16.3 <- base
+
+# TRIMESTRE 4 2016
+levantar_bases("Fuentes/usu_individual_t416.txt")
+trim16.4 <- base
+
+# TRIMESTRE 1 2017
+levantar_bases("Fuentes/usu_individual_t117.txt")
+trim17.1 <- base
+
+# TRIMESTRE 2 2017
+levantar_bases("Fuentes/usu_individual_t217.txt")
+trim17.2 <- base
+
+# TRIMESTRE 3 2017
+levantar_bases("Fuentes/usu_individual_t317.txt")
+trim17.3 <- base
+
+# TRIMESTRE 4 2017
+levantar_bases("Fuentes/usu_individual_t417.txt")
+trim17.4 <- base
+
+# TRIMESTRE 1 2018
+levantar_bases("Fuentes/usu_individual_t118.txt")
+trim18.1 <- base
+
+# TRIMESTRE 2 2018
+levantar_bases("Fuentes/usu_individual_t218.txt")
+trim18.2 <- base
+
+rm(base)
+
+# TRIMESTRE 3 2018 (NO USUARIA)
+trim18.3.deciles <- readRDS("Fuentes/Deciles personas_18T3.RDS")
+trim18.3.cuest <- readRDS("Fuentes/Cuestionarios personas_18T3.RDS")
+```
+
+Ultimo trimestre. Modifico el código en la base de deciles para que coincidan.
+```{r, message=FALSE, warning=FALSE}
+trim18.3.deciles <- trim18.3.deciles %>% 
+  mutate(CODIGO = paste0(substr(CODIGO, 1, 18), "18"))
+```
+
+Ultimo trimestre. Me quedo con las variables que me importan.
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+trim18.3.cuest <- trim18.3.cuest %>% 
+  select(CODUSU = CODIGO, AGLOMERADO = AGLO, ANO4 = ANIO, TRIMESTRE = TRIM, COMPONENTE = COMPO, NRO_HOGAR = HOGAR, 
+         PONDERA, ESTADO, CAT_OCUP, NIVEL_ED, PP04B_COD)
+
+trim18.3.deciles <- trim18.3.deciles %>% 
+  select(CODUSU = CODIGO, AGLOMERADO, ANO4 = ANIO, TRIMESTRE, COMPONENTE = NRO_COMPONENTE, NRO_HOGAR, 
+         P21 = P21T, PP07H, CH04, CH06, PONDII, PONDIIO)
+```
+
+Ultimo trimestre. Junto las bases para crear trim18.3
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+trim18.3 <- full_join(trim18.3.cuest, trim18.3.deciles, by = c("CODUSU", "AGLOMERADO", "ANO4", "TRIMESTRE", "COMPONENTE", "NRO_HOGAR"))
+
+rm(trim18.3.cuest, trim18.3.deciles)
+```
+
+Ultimo trimestre. Me quedo con las variables que me importan.
+```{r}
+trim18.3 <- trim18.3 %>% 
+  select(CODUSU, AGLOMERADO, ANO4, TRIMESTRE, COMPONENTE, NRO_HOGAR, CH04, CH06, NIVEL_ED, ESTADO, CAT_OCUP, PP04B_COD, PP07H, P21, PONDERA, PONDII, PONDIIO)
+```
+
+Junto todas en una sola base.
+```{r, message=FALSE, warning=FALSE}
+variables <- c("CODUSU", "AGLOMERADO", "ANO4", "TRIMESTRE", "COMPONENTE", "NRO_HOGAR", "CH04", "CH06", "NIVEL_ED", 
+               "ESTADO", "CAT_OCUP", "PP04B_COD", "PP07H", "P21", "PONDERA", "PONDII", "PONDIIO")
+
+base <- bind_rows(trim16.2 %>% select(variables), 
+                  trim16.3 %>% select(variables), 
+                  trim16.4 %>% select(variables),
+                  trim17.1 %>% select(variables), 
+                  trim17.2 %>% select(variables), 
+                  trim17.3 %>% select(variables), 
+                  trim17.4 %>% select(variables),
+                  trim18.1 %>% select(variables), 
+                  trim18.2 %>% select(variables), 
+                  trim18.3)
+
+rm(trim16.2, trim16.3, trim16.4,
+   trim17.1, trim17.2, trim17.3, trim17.4,
+   trim18.1, trim18.2, trim18.3)
+```
+
+Creo la variable periodo para toda la base
+```{r}
+base <- base %>% 
+  mutate(periodo = paste(ANO4, TRIMESTRE, sep = "."))
+```
+
+# Trabajo la Rama
+
+## Función 1:
+### Corrección de cantidad de caracteres en el código
+
+Aplico la función que corrige la cantidad de caracteres en la variable de rama
+```{r}
+base <- base %>% 
+  mutate(rama = corregir.rama(PP04B_COD))
+```
+
+Chequeo cantidad de dígitos, primero veo la distribución original:
+```{r}
+a <- base %>% 
+  mutate(nchar.original = nchar(PP04B_COD))
+a <- as.data.frame(table(a$nchar.original, exclude = NULL))
+a
+```
+
+Ahora la modificada. Deberían tener 2 o 4 dígitos.
+```{r}
+b <- base %>% 
+  mutate(nchar.modif = nchar(rama))
+b <- as.data.frame(table(b$nchar.modif, exclude = NULL))
+b
+```
+
+## Función 2: 
+### Rama CAES (22 categorías)
+
+Implemento la función que construye la rama CAES a partir de la rama.
+```{r}
+base <- base %>%
+  mutate(rama.caes = rama.caes1.0(rama))
+
+table(base$rama.caes, exclude = NULL)
+```
+
+Chequeo con un cruce entre los códigos originales y la rama CAES generada
+```{r}
+c <- as.data.frame(table(base$rama, base$rama.caes, exclude = NULL)) %>% spread(., Var2, Freq)
+c
+```
+
+VIENDO LOS NAs (Hay más en rama.caes que en los códigos):
+
+Hay 7 casos que tienen un código (9109) que no existe y por tanto tiene rama CAES Missing. Se archivan en un excel y se mandan al equipo de mercado de trabajo.
+```{r}
+d <- base %>% 
+  filter(rama == "9109" & is.na(rama.caes))
+d
+```
+
+```{r, eval=FALSE, include=FALSE}
+openxlsx::write.xlsx(d, "Resultados/Casos con codigo de rama no existente (7 casos del 4to trim 2016).xlsx")
+```
+
+Nota: Estos casos, en la variable de rama agregada, van en la "12. Otros servicios comunitarios, sociales y personales". Se van a clasificar allí posteriormente.
+
+## Función 3:
+### Rama EPH (14 categorías numeradas)
+
+Implemento la función que construye la rama EPH.
+```{r}
+base <- base %>% 
+  mutate(rama.eph = rama.caes1.0.pub(rama.caes))
+
+table(base$rama.eph, exclude = NULL)
+```
+
+## Función 4:
+### Rama EPH (nombres)
+
+Implemento la función que construye la rama EPH con nombres descriptivos
+```{r}
+base <- base %>% 
+  mutate(rama.nombre = rama.eph.nombre(rama.eph))
+
+e <- as.data.frame(table(base$rama.nombre, exclude = NULL))
+e
+```
+
+## Función 5:
+### Entra cuchillo, salen las tripas
+
+Implemento la función que construye la rama EPH con nombres descriptivos, directo desde la PP04B_COD
+```{r}
+base2 <- base %>%
+  mutate(rama.nombre = entra.cuchillo.salen.las.ramas(PP04B_COD))
+
+f <- as.data.frame(table(base2$rama.nombre, exclude = NULL))
+f
+```
+
+## Función 6:
+### Corrección 7 casos MISSING
+
+Corrijo los valores para que queden en "12. Otros servicios comunitarios, sociales y personales".
+
+Implemento la función que corrige los 7 casos
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+base3 <- correcion.7.casos(base)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+g <- as.data.frame(table(base3$rama.nombre, exclude = NULL))
+g
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+h <- as.data.frame(table(base3$rama.eph, exclude = NULL))
+h
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
