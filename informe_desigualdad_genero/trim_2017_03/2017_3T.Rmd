@@ -1,0 +1,480 @@
+---
+title: "Observatorio de la desigualdad de género"
+subtitle: "Encuesta Permanente de Hogares. 3er trimestre de 2017."
+author: "Natsumi S. Shokida^[ _Soy estudiante avanzada de la carrera de Economía (FCE-UBA). Me dedico al análisis de datos y la realización de estudios metodológicos en el área de Pobreza e Ingresos de la Dirección de la Encuesta Permanente de Hogares (EPH-INDEC), aunque este informe lo realizo a título personal. También soy colaboradora en_ [Economía Femini(s)ta](http://economiafeminita.com/) _y soy parte de_ [RLadies Buenos Aires](https://www.meetup.com/es/rladies-buenos-aires/). _Contacto_: natsumi.shokida@gmail.com]"
+date: "Mayo de 2018"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    depth: 4
+---
+    
+<br>
+     
+## Presentación
+
+En este breve informe se presentan una serie de indicadores sociales, desagregados por sexo, calculados con bases públicas de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina). El objetivo de esta presentación es visibilizar la desigualdad de género en la composición del mercado de trabajo, la percepción de ingresos, entre otras cuestiones, en un formato amigable.        
+Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden descargar la sintaxis en lenguaje R.[^1]           
+Todos los datos refieren a los 31 aglomerados urbanos relevados en la EPH y en esta ocasión corresponden al 3er trimestre de 2017. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+rm(list = ls())
+library(tidyverse)
+library(httr)
+library(stringr)
+library(xlsx)
+library(haven)
+library(readxl)
+library(ggthemes)
+library(scales)
+library(knitr)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Función que descarga bases de la página de indec, según el nombre que le pusieron al zip.
+descarga_ultima_base <- function(base = 'EPH_usu_2_Trim_2017_txt.zip', individual = FALSE, hogar = FALSE){
+  
+  link = paste0('https://www.indec.gob.ar/ftp/cuadros/menusuperior/eph/', base)
+  temp <- tempfile()
+  download.file(link,temp)
+  nombres <- as_vector(unzip(temp, list = TRUE)['Name'])
+  base_hogar_name <- nombres[str_detect(nombres, 'hog')]
+  base_individual_name <- nombres[str_detect(nombres, 'ind')]
+  
+  if (individual) {
+    base_individual <<- read.table(unz(temp,base_individual_name), sep=";", dec=",", header = TRUE, fill = TRUE)
+  }
+  
+  if (hogar) {
+    base_hogar <<- read.table(unz(temp,base_hogar_name), sep=";", dec=",", header = TRUE, fill = TRUE) 
+  }
+  
+  unlink(temp)
+}
+
+# Funcion de redondeo para presentación (queda como character)
+formato_porc <- function(numero, dec = 1){
+  format(round(numero, digits = dec), nsmall = dec, decimal.mark = ",")
+}
+
+formato_pesos <- function(numero, dec = 2){
+  paste0("$", format(round(numero, digits = dec), nsmall = dec, big.mark = ".", decimal.mark = ","))
+}
+
+formato_cantidad <- function(numero, dec = 0){
+  format(round(numero, digits = dec), nsmall = dec, big.mark = ".", decimal.mark = ",")
+}
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Se levantan las bases usuarias del 3er trimestre de 2017 de la EPH
+descarga_ultima_base(base = "EPH_usu_3_Trim_2017_txt.zip", individual = TRUE)
+descarga_ultima_base(base = "EPH_usu_3_Trim_2017_txt.zip", hogar = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+base_individual <- base_individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"),
+         PP04D_COD = as.character(PP04D_COD),
+         PP04D_COD = case_when(nchar(PP04D_COD) == 5 ~ PP04D_COD,
+                               nchar(PP04D_COD) == 4 ~ paste0("0", PP04D_COD),
+                               nchar(PP04D_COD) == 3 ~ paste0("00", PP04D_COD),
+                               nchar(PP04D_COD) == 2 ~ paste0("000", PP04D_COD),
+                               nchar(PP04D_COD) == 1 ~ paste0("0000", PP04D_COD)),
+         CALIFICACION = substr(PP04D_COD, 5, 5),
+         CALIFICACION = case_when(CALIFICACION=="1" ~ "Profesionales",
+                                  CALIFICACION=="2" ~ "Técnicos",
+                                  CALIFICACION=="3" ~ "Operativos",
+                                  CALIFICACION=="4" ~ "No Calificados",
+                                  TRUE ~ "0"),
+         CALIFICACION = factor(CALIFICACION, c("Profesionales", "Técnicos", "Operativos", "No Calificados")),
+         JERARQUIA = substr(PP04D_COD, 3, 3),
+         JERARQUIA = case_when(JERARQUIA=="0" ~ "Dirección",
+                               JERARQUIA=="1" ~ "Cuentapropia",
+                               JERARQUIA=="2" ~ "Jefes",
+                               JERARQUIA=="3" ~ "Trabajadores Asalariados",
+                               TRUE ~ "0"),
+         JERARQUIA = factor(JERARQUIA, c("Jefes", "Dirección", "Trabajadores Asalariados", "Cuentapropia")),
+         NIVEL_EDUCATIVO = case_when(NIVEL_ED==1 ~ "Sin instrucción",
+                                     NIVEL_ED==2 ~ "Primaria",
+                                     NIVEL_ED==3 ~ "Primaria",
+                                     NIVEL_ED==4 ~ "Secundaria",
+                                     NIVEL_ED==5 ~ "Secundaria",
+                                     NIVEL_ED==6 ~ "Superior",
+                                     NIVEL_ED==7 ~ "Sin Instrucción",
+                                     NIVEL_ED==9 ~ "NS/NR"),
+         NIVEL_EDUCATIVO = factor(NIVEL_EDUCATIVO, levels = c("Sin Instrucción","Primaria", "Secundaria", "Superior")))
+
+colores = c("#aa165a","#16aa66")
+```
+
+<br>
+
+## Composición del Mercado de Trabajo
+
+## Inserción laboral
+
+En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo.      
+La tasa de Actividad es la relación entre aquellos que participan en el mercado de trabajo (ya sea como ocupados o como desocupados) y la población total. En este caso, dicha tasa es ampliamente mayor entre los varones (la diferencia supera los 20 puntos porcentuales). Esto sucede porque existe una importante porción de las mujeres en edad laboral que dedican su tiempo a realizar tareas domésticas hacia el interior de sus hogares en lugar tener una actividad en el mercado de trabajo.           
+La tasa de Empleo exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso también supera los 20 puntos, denotando el mismo fenómeno anteriormente mencionado.   
+A diferencia de las tasas anteriores, las tasas de desocupación y subocupación expresan la proporción que estos grupos representan en la Población Económicamente Activa. En este caso, ambas tasas son mayores para las mujeres que para los varones. Esto expresa que, incluso siendo minoría en el mercado de trabajo, las mujeres tienen más dificultades para conseguir trabajo y/o para trabajar una jornada completa.      
+En su conjunto, estos cuatro indicadores nos presentan una primera imagen de la masculinización del mercado de trabajo argentino.                   
+                       
+__Gráfico 1.__ _Población de 14 años y más. Principales indicadores de Mercado de Trabajo por sexo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.1 <- base_individual %>% 
+  filter(CH06 >= 14) %>% 
+  group_by(Sexo) %>% 
+  summarise(Poblacion         = sum(PONDERA),
+            Ocupados          = sum(PONDERA[ESTADO == 1]),
+            Desocupados       = sum(PONDERA[ESTADO == 2]),
+            PEA               = Ocupados + Desocupados,
+            Ocupados_demand   = sum(PONDERA[ESTADO == 1 & PP03J ==1]),
+            Suboc_demandante  = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            Suboc_no_demand   = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            Subocupados       = Suboc_demandante + Suboc_no_demand,
+            'Tasa Actividad'                  = round(PEA/Poblacion, 3),
+            'Tasa Empleo'                     = round(Ocupados/Poblacion, 3),
+            'Tasa Desocupacion'               = round(Desocupados/PEA, 3),
+            'Tasa Ocupados Demandantes'       = round(Ocupados_demand/PEA, 3),
+            'Tasa Subocupación'               = round(Subocupados/PEA, 3),
+            'Tasa Subocupación demandante'    = round(Suboc_demandante/PEA, 3),
+            'Tasa Subocupación no demandante' = round(Suboc_no_demand/PEA, 3)) %>% 
+  select(-c(2:9)) %>% 
+  gather(Indicadores, Valor, 2:8) %>% 
+  spread(., Sexo, Valor)
+
+tabla1.2_graf <- tabla1.1 %>% 
+  filter(!Indicadores %in% c("Tasa Subocupación demandante", "Tasa Subocupación no demandante", "Tasa Ocupados Demandantes")) %>% 
+  gather(., Sexo, proporcion,2:3)
+
+ggplot(tabla1.2_graf, aes(x = '', proporcion, fill = Sexo, group= Sexo, label = percent(proporcion))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  theme_void() +
+  scale_fill_manual(values = colores) +
+  facet_wrap(~Indicadores, scales = "free") +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+ggsave("Graficos/Grafico1.png", scale = 2)
+```
+
+<br>
+
+## Empleo no registrado
+
+A su vez, las ocupadas asalariadas están expuestas a una tasa de empleo no registrado mayor que la de sus compañeros varones. Hay un 36.5% de las asalariadas a quienes sus empleadores no inscriben en la seguridad social, mientras que para los asalariados varones esta tasa de no registro es del 32.8%.    
+      
+__Cuadro 2.__ _Ocupadas/os asalariadas/os. Tasas de empleo no registrado por sexo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.1 <- base_individual %>% 
+  filter(ESTADO==1,
+         CAT_OCUP==3) %>% 
+  group_by(Sexo) %>% 
+  summarise("Proporción de no Registrados" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100))
+
+kable(tabla2.1)
+```
+
+<br>
+
+## Acceso a Cargos jerárquicos
+
+Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos: mientras que un 7.8% de los ocupados varones tienen cargos de dirección o son jefes, sólo un 4.7% de las ocupadas ejercen puestos de esas características. Al mismo tiempo, las ocupadas se encuentran más concentradas en los puestos asalariados, es decir, en relación de dependencia.   
+       
+__Gráfico 3.__ _Ocupadas/os. Mujeres y Varones según Jerarquía de la ocupación, en porcentaje (escalas libres). Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.1 <- base_individual %>% 
+  filter(JERARQUIA != "0",
+         ESTADO == 1) %>%
+  group_by(Sexo) %>% 
+  mutate(Frecuencia = sum(PONDERA)) %>% 
+  group_by(Sexo, JERARQUIA) %>% 
+  summarise(proporcion = round(sum(PONDERA)/unique(Frecuencia), 3))
+
+ggplot(tabla3.1, aes(x = '', proporcion, fill = Sexo, group= Sexo, label = percent(proporcion) ))+
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  theme_void()+
+  scale_fill_manual(values = colores)+
+  facet_wrap(~JERARQUIA, scales = "free") + 
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+ggsave("Graficos/Grafico3.png", scale = 2)
+```
+
+<br>
+
+## Brechas de ingresos mensuales
+
+A continuación se hace foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. Incluso pueden distinguirse los ingresos mensuales y los ingresos horarios.              
+Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como "las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones".          
+
+<br>
+
+### Brecha de ingresos totales mensuales
+
+Observando los ingresos totales individuales de toda la población de 14 años y más, se observa que la brecha entre varones y mujeres en este caso supera los 30 puntos porcentuales. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un 33.5% menores que los de los varones.           
+              
+__Cuadro 4.__ _Población perceptora de ingresos de 14 años y más. Media de ingresos totales individuales y brecha de ingresos (en porcentaje) por sexo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla4.1 <- base_individual %>% 
+  filter(CH06 >= 14 & !is.na(P47T)) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.ITI = round(weighted.mean(P47T, PONDII), 1)) %>% 
+  spread(., Sexo, Media.ITI) %>% 
+  mutate("Brecha del Ingreso Total Individual" = formato_porc(((Varones-Mujeres)/Varones)*100),
+         "Media de ingresos de las Mujeres" = formato_pesos(Mujeres),
+         "Media de ingresos de los Varones" = formato_pesos(Varones)) %>% 
+  select("Media de ingresos de las Mujeres", "Media de ingresos de los Varones", "Brecha del Ingreso Total Individual")
+
+kable(tabla4.1)
+```
+
+<br>
+
+### Brecha de ingresos mensuales de las/os ocupadas/os
+
+Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un 25,6% menos que los varones (\$11.085 vs. \$14.898 ). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de la ocupación principal.  
+              
+__Cuadro 5.__ _Ocupadas/os. Media de ingresos de la ocupación principal y brecha de ingresos (en porcentaje) por sexo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla5.1 <- base_individual %>% 
+  filter(ESTADO == 1) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO), 1)) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate("Brecha de ingresos de la ocupación principal" = formato_porc(((Varones-Mujeres)/Varones)*100),
+         "Media de ingresos de las Mujeres" = formato_pesos(Mujeres),
+         "Media de ingresos de los Varones" = formato_pesos(Varones)) %>% 
+  select("Media de ingresos de las Mujeres", "Media de ingresos de los Varones", "Brecha de ingresos de la ocupación principal")
+
+kable(tabla5.1)
+```
+
+<br>
+
+### Brecha de ingresos mensuales entre asalariadas/os no registrados
+
+Anteriormente se observó que las asalariadas están expuestas a una tasa de no registro más alta que la que presentan los asalariados varones. Pero además, las asalariadas de este sector, el no registrado, ganan en promedio un 37.1% menos que sus pares. Es decir que la brecha de ingresos entre sexos se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.         
+                        
+__Cuadro 6.__ _Ocupadas/os Asalariadas/os no registrados. Media de ingresos de la ocupación principal y brecha de ingresos (en porcentaje) por sexo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla6.1 <- base_individual %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO), 1)) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate("Brecha de ingresos de la ocupación principal" = formato_porc(((Varones-Mujeres)/Varones)*100),
+         "Media de ingresos de las Mujeres" = formato_pesos(Mujeres),
+         "Media de ingresos de los Varones" = formato_pesos(Varones)) %>% 
+  select("Media de ingresos de las Mujeres", "Media de ingresos de los Varones", "Brecha de ingresos de la ocupación principal")
+
+kable(tabla6.1)
+```
+
+<br>
+
+### Brecha de ingresos mensuales por calificación del puesto de trabajo
+
+La brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de \$28.556, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de \$21.108, es decir, un 26.1% menos que los varones. Entonces, para las mujeres que se desempeñan como profesionales, la brecha es más alta que para el total de ocupadas/os.      
+En los puestos no calificados, los varones ganan \$9.531 en promedio, al tiempo que las mujeres ganan alrededor de \$6.298. Esta brecha es del 33.9%, siendo también superior a la brecha promedio del mercado laboral.      
+                 
+__Gráfico 7.__ _Ocupadas/os. Media de ingresos mensuales de la ocupación principal, por sexo y calificación ocupacional. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla7.1 <- base_individual %>% 
+  filter(CALIFICACION!="0",
+         ESTADO == 1, PP3E_TOT > 0) %>% 
+  group_by(Sexo, CALIFICACION) %>% 
+  summarise(IOP_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2),
+            IOP_mensual  = round(weighted.mean(P21, PONDIIO), 2)) 
+
+ggplot(tabla7.1, aes(x = CALIFICACION, IOP_mensual, fill = Sexo, group = Sexo, label = formato_pesos(IOP_mensual, dec = 0) ))+
+  geom_col(position = "dodge") +
+  geom_text(position =position_dodge(width = .9), vjust =-.1, size = 3.5) +
+  theme_tufte() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = 'Ingreso Mensual', x = "") +
+  scale_fill_manual(values = colores) +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggsave("Graficos/Grafico7_ms.png")
+```
+
+<br>
+
+### Brecha de ingresos mensuales por nivel educativo 
+
+Las mujeres ocupadas están en promedio más formadas que los varones que participan en el mercado de trabajo (hay una mayor proporción de mujeres con niveles educativos más altos). Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos oscila entre el 31.5% para las de nivel universitario/superior, y el 39.6% para las de nivel primario.              
+                     
+__Cuadro 8.1.__ _Ocupadas/os. Mujeres y Varones según nivel educativo (Porcentaje por columnas). Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla8.1 <- base_individual %>% 
+  filter(ESTADO == 1, !is.na(NIVEL_EDUCATIVO)) %>% 
+  group_by(Sexo) %>%
+  mutate(Frecuencia = sum(PONDERA)) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+  summarise(Tasa = formato_porc(sum(PONDERA)/unique(Frecuencia)*100)) %>% 
+  spread(., Sexo, Tasa) %>% 
+  rename("Nivel Educativo" = NIVEL_EDUCATIVO, "% de Mujeres" = Mujeres, "% de Varones" = Varones)
+
+kable(tabla8.1)
+```
+
+__Gráfico 8.2.__ _Ocupadas/os. Media de ingresos mensuales de la ocupación principal, por sexo y nivel educativo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla8.2 <- base_individual %>% 
+  filter(ESTADO == 1, PP3E_TOT>0, !is.na(NIVEL_EDUCATIVO)) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+  summarise(IOP_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2),
+            IOP_mensual  = round(weighted.mean(P21, PONDIIO), 2)) 
+
+ggplot(tabla8.2, aes(x = NIVEL_EDUCATIVO, IOP_mensual, fill = Sexo, group= Sexo, label = formato_pesos(IOP_mensual, dec = 0) )) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 3.5) +
+  theme_tufte() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = 'Ingreso Mensual', x = "") +
+  scale_fill_manual(values = colores) +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggsave("Graficos/Grafico8_ms.png")
+```
+
+<br>
+
+## Brechas de ingresos horarios
+
+### Brecha de ingresos horarios por calificación del puesto de trabajo
+
+Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora de las personas, la historia es un poco diferente. Al recalcular el gráfico 7 (Calificación del puesto), la brecha disminuye fuertemente, siendo incluso negativa en el caso de los técnicos y no calificados. En el caso de los puestos profesionales y operativos se reduce a 6.5% y 3.7% respectivamente.
+
+__Gráfico 9.__ _Ocupadas/os. Media de ingresos horarios de la ocupación principal, por sexo y calificación ocupacional. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla7.1, aes(x = CALIFICACION, IOP_hr, fill = Sexo, group= Sexo, label = formato_pesos(IOP_hr, dec = 0) )) +
+  geom_col(position = "dodge") +
+  geom_text(position =position_dodge(width = .9), vjust =-.1, size = 4) +
+  theme_tufte() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = 'Ingreso Horario', x = "") +
+  scale_fill_manual(values = colores) +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggsave("Graficos/Grafico9_hr.png")
+```
+
+<br>
+
+### Brecha de ingresos horarios por nivel educativo
+
+Si esos mismos ingresos horarios de las/os ocupadas/os se comparan según su nivel educativo, la brecha se mantiene para todos los niveles excepto para quienes poseen un nivel educativo primario. En este caso la brecha es de 4.2% a favor de las mujeres. Para el resto de los niveles educativos, las mujeres perciben ingresos horarios menores que los varones. Esta diferencia es de entre un 13.9% y 14.9% a favor de los ocupados varones. Al igual que en el gráfico 9, el gráfico 10 muestra que la brecha se reduce fuertemente, aunque no en la misma magnitud que al analizar la calificación ocupacional.
+
+__Gráfico 10.__ _Ocupadas/os. Media de ingresos horarios de la ocupación principal, por sexo y nivel educativo. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla8.2, aes(x = NIVEL_EDUCATIVO, IOP_hr, fill = Sexo, group= Sexo, label = formato_pesos(IOP_hr, dec = 0) ))+
+  geom_col(position = "dodge")+
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 4)+
+  theme_tufte() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = 'Ingreso Horario', x = "") +
+  scale_fill_manual(values = colores) +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggsave("Graficos/Grafico10_hr.png")
+```
+
+Al incorporar la extensión de las jornadas laborales al análisis, la magnitud de la brecha disminuye notablemente. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante de la brecha de ingresos mensuales. A su vez, la disminución es menor al observar el nivel educativo, por lo que existe un factor de la desigualdad de género en términos de ingresos laborales que opera sobre una dimensión y no sobre la otra. Por ejemplo, podría haber una mayor sobrecalificación en mujeres que en varones. Al margen de esto último, cabe cuestionarse respecto al porqué de la diferencia de horas trabajadas por mujeres y por hombres. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿son más holgazanas? ¿o en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los hombres están exentos?
+
+<br>
+
+## Distribución de las tareas del hogar
+
+Generalmente, las mujeres deben además dedicar su tiempo al trabajo doméstico. Es decir, realizan tareas de cuidado y reproducción para otros miembros de su hogar. Este trabajo no se comercia en el mercado y por tanto no es remunerado. A modo ilustrativo, se señala que: del total de personas que realizan las tareas de la casa, un 76% son mujeres y un 24% son varones. A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres.              
+Este reparto desigual de las tareas domésticas entre varones y mujeres puede asociarse a las desigualdades vistas en la composición del mercado de trabajo y la diferencia de la extensión de la jornada laboral.     
+                      
+__Gráfico 11.__ _Personas que realizan las tareas domésticas del hogar, según sexo (no incluye trabajadoras de servicio doméstico). Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla11.1_graf <- base_individual %>% 
+  left_join(., base_hogar %>% 
+              select(CODUSU, NRO_HOGAR, VII1_1, VII1_2), by = c("CODUSU", "NRO_HOGAR")) %>% 
+  mutate(proporcion = case_when(VII1_1 == COMPONENTE | VII1_2 == COMPONENTE ~ 1,
+                                    TRUE ~ 0)) %>% 
+  select(Sexo, proporcion, PONDERA) %>% 
+  group_by(Sexo) %>% 
+    summarise(proporcion = sum(proporcion*PONDERA)) %>% 
+    mutate(proporcion = round(proporcion/sum(proporcion)*100, 0))
+
+## Prep data (nothing to change here)
+nrows <- 10
+df <- expand.grid(x = 1:nrows, y = 1:nrows)
+df$Sexo <- factor(rep(tabla11.1_graf$Sexo, tabla11.1_graf$proporcion))  
+## Plot
+ggplot(df, aes(x = x, y = y, fill = Sexo)) + 
+        geom_tile(color = "black", size = 0.5) +
+        scale_x_continuous(expand = c(0, 0)) +
+        scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
+        scale_fill_manual(values = colores) +
+  theme_void() +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ggsave("Graficos/Grafico11.png", scale = 3)
+```
+
+<br>
+
+## Distribución del ingreso
+
+Por último, podemos ver el efecto de estas diferencias en la distribución de los ingresos. Separando a la población en deciles (diez grupos de igual tamaño ordenados de acuerdo a los niveles de los ingresos), puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres. Paralelamente, los deciles de mayores ingresos se componen mayoritariamente por varones. Los estratos de menores ingresos están entonces feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados.    
+En este caso nos referimos a los ingresos totales individuales, es decir, considerando todo tipo de fuente de ingresos.              
+      
+__Gráfico 12.__ _Población perceptora de ingresos. Composición según sexo de los deciles de ingresos totales individuales. Total de aglomerados urbanos. 3er trimestre 2017._
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla12.1_graf <-base_individual %>% 
+    select(DECINDR, P47T, PONDII, Sexo) %>% 
+    filter(DECINDR %in% c(1:10)) %>% 
+  group_by(DECINDR) %>% 
+  mutate(Pob = sum(PONDII)) %>% 
+  group_by(DECINDR, Sexo) %>%
+  summarise(Prop = sum(PONDII)/unique(Pob))
+
+ggplot(tabla12.1_graf, aes(x = DECINDR, Prop, fill = Sexo, group= Sexo, label = percent(round(Prop,2))))+
+  geom_col(position = "dodge")+
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5)+
+  theme_tufte()+
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = '') +
+  scale_fill_manual(values = colores)+
+  scale_x_continuous("Decil de ingreso total", breaks =c(1:10)) +
+  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+
+```
+
+
+               
+[^1]: _Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe, que incluye la descarga automática de las bases de la EPH utilizadas, una serie de funciones útiles y la elaboración de cuadros y gráficos con el lenguaje R._    
