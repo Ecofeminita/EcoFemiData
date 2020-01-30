@@ -34,7 +34,7 @@ source("funciones rama.R")
 date <- "2do trimestre de 2019"                        # <-----------------
 ```
 
-Aquí se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la Encuesta Permanente de Hogares (EPH-INDEC-Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma durante el `r date`.´.     
+Aquí se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la Encuesta Permanente de Hogares (EPH-INDEC-Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma durante el `r date`.     
 El presente documento no consiste en un informe o publicación finalizada, sino en la disponibilización de resultados parciales de un trabajo más amplio.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -85,23 +85,31 @@ colores = c("#FE1764", "#00BDD6")
 
 ### Total de asalariades
 
-#### Empleo sin descuento jubilatorio.
+<p style="color:#FE1764">__Empleo sin descuento jubilatorio__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
 base_individual %>% 
   filter(ESTADO == 1,
          CAT_OCUP==3) %>% 
-  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100))
+  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 Entre el total de ocupades asalariades, un 34,5% no posee descuento jubilatorio por su trabajo, que es un indicador que nos aproxima a quienes no están registrades en la seguridad social.      
-      
-#### Empleo sin descuento jubilatorio por sexo.
+       
+<p style="color:#FE1764">__Empleo sin descuento jubilatorio por sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(ESTADO==1,
          CAT_OCUP==3) %>% 
   group_by(Sexo) %>% 
-  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100))
+  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 A su vez, esta tasa asciende al 36,1% cuando se trata de asalariadas mujeres, y es del 33,2% en el caso de asalariados varones.
@@ -110,7 +118,7 @@ A su vez, esta tasa asciende al 36,1% cuando se trata de asalariadas mujeres, y 
 
 Si bien analizamos al conjunto de les trabajadores de se dedican a esta actividad, utilizamos pronombres femeninos a la hora de generalizar, dada la alta tasa de feminidad del sector. A su vez, cabe destacar que se realiza el ejercicio en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales. 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 # Armamos una mini base de servicio doméstico utilizando la pregunta PP04B1, que identifica a las personas que prestan servicio doméstico en hogares particulares. 
 
 serv.dom <- base_individual %>% 
@@ -122,25 +130,33 @@ table(serv.dom$ESTADO, serv.dom$CAT_OCUP, exclude = NULL)
 # Todas ocupadas - asalariadas. 
 ```
 
-#### Cantidad de personas que se dedican al servicio doméstico
+<p style="color:#FE1764">__Cantidad de personas que se dedican al servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% summarise(Cantidad = formato_cantidad(sum(PONDERA)))
+serv.dom %>% summarise(Cantidad = formato_cantidad(sum(PONDERA))) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-Más de 900 mil personas componen al sector, siendo el equivalente a 13 canchas de River llenas. Se trata de una cantidad estimada para las grandes ciudades del país (31 aglomerados urbanos relevados por la encuesta).
-
-#### Proporcion de mujeres y de varones 
+Más de 900 mil personas componen al sector, siendo el equivalente a 13 canchas de River llenas. Se trata de una cantidad estimada para las grandes ciudades del país (31 aglomerados urbanos relevados por la encuesta).       
+       
+<p style="color:#FE1764">__Proporcion de mujeres y de varones__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(PP04B1 == 1) %>% 
   mutate(Total = sum(PONDERA)) %>% 
   group_by(Sexo) %>% 
-  summarise(Porcentaje = formato_porc(sum(PONDERA)/unique(Total)*100))
+  summarise(Porcentaje = formato_porc(sum(PONDERA)/unique(Total)*100)) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-La tasa de feminidad del sector es del 97,9%. Es decir, que casi en su totalidad se trata de trabajadoras mujeres.
-
-#### Proporción de servicio doméstico dentro de las ocupadas mujeres
+La tasa de feminidad del sector es del 97,9%. Es decir, que casi en su totalidad se trata de trabajadoras mujeres.           
+        
+<p style="color:#FE1764">__Proporción de servicio doméstico dentro de las ocupadas mujeres__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(ESTADO == 1,
@@ -152,13 +168,17 @@ base_individual %>%
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
-         Cantidad, Porcentaje)
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 A su vez, las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares, representan un 17% dentro del total de ocupadas mujeres. Esto significa que una de cada 6 ocupadas en Argentina trabaja en este sector de la economía.   
-La leve diferencia en la cantidad se debe a que, en este último caso, sólo estamos considerando a las mujeres del sector. 
-
-#### Proporción de servicio doméstico dentro de las asalariadas mujeres
+La leve diferencia en la cantidad se debe a que, en este último caso, sólo estamos considerando a las mujeres del sector.          
+            
+<p style="color:#FE1764">__Proporción de servicio doméstico dentro de las asalariadas mujeres__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(ESTADO == 1,
@@ -171,27 +191,34 @@ base_individual %>%
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
-         Cantidad, Porcentaje)
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares.
-
-#### Composicion por edad de las trabajadoras del servicio doméstico
+Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares.      
+        
+<p style="color:#FE1764">__Composicion por edad de las trabajadoras del servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   group_by(GRUPO_EDAD) %>% 
   summarise(Cantidad = sum(PONDERA)) %>% 
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>%
-  select(Edad = GRUPO_EDAD, Cantidad, Porcentaje)
+  select(Edad = GRUPO_EDAD, Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 Mientras que casi la mitad de estas trabajadoras tienen entre 30 y 49 años, un 31% tiene entre 50 y 64 años. Por su parte, hay un 5,4% que continúa trabajando a pesar de haber superado la edad jubilatoria, y un 16.6% son jóvenes que tienen hasta 29 años. Este último grupo está compuesto por más de 150 mil jóvenes.
 
 ### Educación
 
-#### Composicion por nivel educativo de las trabajadoras del servicio doméstico
-
+<p style="color:#FE1764">__Composicion por nivel educativo de las trabajadoras del servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   group_by(NIVEL_EDUCATIVO) %>% 
@@ -199,18 +226,23 @@ serv.dom %>%
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>%
   filter(NIVEL_EDUCATIVO != "Superior") %>% 
-  select("Nivel educativo" = NIVEL_EDUCATIVO, Cantidad, Porcentaje)
+  select("Nivel educativo" = NIVEL_EDUCATIVO, Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 Más de la mitad de las trabajadoras del sector cuenta con el nivel primario de escolaridad finalizado, a lo que se suma un 35,7% que cuenta también con el nivel secundario. En tanto, un 7,7% no posee instrucción formal.     
       
-_Nota: La estimación correspondiente a aquellas que han finalizado un nivel superior de formación no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._      
-
-#### Las jóvenes y su formación educativa
-
-En este apartado se presentan indicadores referidos a las jóvenes de entre 14 y 29 años que se desempeñan como trabajadoras domésticas, y sus características respecto de la asistencia a establecimientos educativos. En primer lugar, puede observarse que un 23,4% (casi 1 de cada 4) asiste a un establecimiento educativo al mismo tiempo que se desempeña en su trabajo.
-
-#### Mujeres jóvenes del servicio doméstico por asistencia a establecimiento educativo
+_Nota: La estimación correspondiente a aquellas que han finalizado un nivel superior de formación no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._       
+          
+<p style="color:#FE1764">__Las jóvenes y su formación educativa__</p>               
+                      
+En este apartado se presentan indicadores referidos a las jóvenes de entre 14 y 29 años que se desempeñan como trabajadoras domésticas, y sus características respecto de la asistencia a establecimientos educativos. En primer lugar, puede observarse que un 23,4% (casi 1 de cada 4) asiste a un establecimiento educativo al mismo tiempo que se desempeña en su trabajo. Este indicador se ubica 9 puntos por debajo de la tasa de formación en curso de aquellas ocupadas que no se dedican a esta tarea en particular, dado que un 32,4% de aquellas que no se dedican al trabajo doméstico remunerado se encuentran asistiendo a un establecimiento educativo.     
+Tanto entre las que trabajan en el sector de tareas domésticas y de cuidado como entre las que no, aquellas que se encuentran estudiando lo hacen en su mayoría en un Terciario o carrera universitaria, seguidas por las que se encuentran finalizando el Secundario o el Polimodal. Sin embargo, entre estas ocupadas que estudian, la probablidad de estar cursando el nivel Terciario o Universitario es del 85,5% entre quienes no se dedican al servicio doméstico, al tiempo que esta tasa disminuye a 65,5% entre las que sí se desempeñan en dicho sector de la economía.    
+            
+<p style="color:#FE1764">__Mujeres jóvenes del servicio doméstico por asistencia a establecimiento educativo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   filter(Sexo == "Mujeres",
@@ -225,11 +257,15 @@ serv.dom %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   filter(Asistencia != "Nunca asistió") %>% 
   select("¿Asiste a un establecimiento educativo?" = Asistencia,
-         Cantidad, Porcentaje)
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
-_Nota: La estimación correspondiente a aquellas que nunca asistieron a un establecimiento educativo no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._ 
-
-#### Ocupadas jóvenes
+_Nota: La estimación correspondiente a aquellas que nunca asistieron a un establecimiento educativo no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._         
+                
+<p style="color:#FE1764">__Ocupadas jóvenes según si se dedican al servicio doméstico y su respectiva tasa de asistencia a un establecimiento educativo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(Sexo == "Mujeres",
@@ -247,10 +283,15 @@ base_individual %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   filter(Asistencia == "Asiste actualmente") %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
-         "Tasa de formación" = Porcentaje)
+         "Tasa de asistencia a est. educativo" = Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
-_Nota: La estimación correspondiente a aquellas que nunca asistieron a un establecimiento educativo no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._ 
-
+_Nota: La estimación correspondiente a aquellas que nunca asistieron a un establecimiento educativo no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._         
+          
+<p style="color:#FE1764">__Ocupadas jóvenes que estudian según si se dedican al servicio doméstico, y qué nivel se encuentran cursando__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #ocupadas jóvenes que asisten segun si son de servicio domestico y a qué nivel
 base_individual %>% 
@@ -275,101 +316,184 @@ base_individual %>%
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
          "Nivel al que asiste" = Nivel,
          "Tasa" = Porcentaje) %>% 
-  spread(., "Nivel al que asiste", Tasa)
+  spread(., "Nivel al que asiste", Tasa) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
+_Nota: Las estimaciones correspondientes a otros niveles educativos en curso no cuentan con suficientes casos muestrales como para garantizar significatividad de los datos, por lo que se las ha retirado del cuadro._ 
 
+### Intensidad del trabajo de las empleadas de Servicio doméstico
 
-
-### Derechos laborales, ingresos y carga horaria de las trabajadoras domésticas
-
-En esta sección no se filtra a las mujeres, pero al igual que en todo el ejercicio, hacemos uso del femenino por la alta tasa de feminidad del sector.     
+En esta sección no se filtra a las mujeres, pero al igual que en todo el ejercicio, hacemos uso del femenino por la alta tasa de feminidad del sector.                 
       
-Proporción sin descuento jubilatorio dentro de trabajadoras domesticas
+<p style="color:#FE1764">__Cantidad de hogares en los que trabajan__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
-  summarise("Proporción de no Registrados" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100))
+  mutate(cantidad_hogares = case_when(PP04B2 == 1 ~ "1",
+                                      PP04B2 == 2 ~ "2",
+                                      PP04B2 >= 3 ~ "3 o más")) %>% 
+  group_by(cantidad_hogares) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("Cantidad de hogares en que trabaja" = cantidad_hogares,
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-Ingreso promedio (de la ocupación principal) de las trabajadoras domésticas
+Un 71,2% de las empleadas domésticas es contratada por un sólo hogar, por lo que al mismo tiempo casi un 30% de ellas trabaja en más de una vivienda.               
+          
+<p style="color:#FE1764">__Intensidad del trabajo__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  mutate(Intensidad = case_when(INTENSI == 1 ~ "Subocupadas por insuficiencia horaria",
+                                INTENSI == 2 ~ "Ocupadas plenas",
+                                INTENSI == 3 ~ "Sobreocupadas",
+                                INTENSI == 4 ~ "Ocupada que no trabajó en la semana")) %>% 
+  group_by(Intensidad) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  filter(Intensidad != "Ocupada que no trabajó en la semana") %>% 
+  select(Intensidad, Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+En relación a la cantidad de horas que trabajan semanalmente las empleadas domésticas, un 54,1% son ocupadas "plenas", es decir que trabajan entre 35 y 45 horas semanales, o están conformes con la cantidad de horas que trabajan. Al mismo tiempo, cerca de un 43,7% se encuentra sub o sobre ocupada: un 10,5% trabaja más de 45 horas por semana, y un 33,2% trabaja menos de 35 horas semanales por causas involuntarias y está dispuesta a trabajar más horas.          
+        
+_Nota: La estimación correspondiente a aquellas que no trabajaron en la semana de referencia de la encuesta no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._ 
+
+### Derechos laborales de las trabajadoras de Servicio doméstico
+
+<p style="color:#FE1764">__Proporción sin descuento jubilatorio dentro de trabajadoras domesticas__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+En tanto ya hemos visto que, dentro del conjunto de asalariades, un 34,5% no se encuentra registrade en la seguridad social (tasa que asciende al 36,1% cuando hablamos de las asalariadas mujeres), también puede observarse que el fenómeno se agrava ampliamente entre las trabajadoras domésticas: un 73,5% de ellas no percibe descuento jubilatorio.          
+                  
+<p style="color:#FE1764">__En ese trabajo tiene...__</p>                
+                    
+En este apartado se presentan indicadores referidos a los derechos laborales de les asalariades, y el acceso a los mismos por parte de las trabajadoras del sector de servicio doméstico. Cabe destacar que los resultados se encuentran altamente correlacionados con la falta de acceso al descuento jubilatorio que caracteriza a dicha población.   
+Un 69,2% de estas trabajadoras no cuenta con vacaciones pagas, un 68,1% no percibe aguinaldos, un 72,2% no percibe el pago en caso de enfermedad, y un 72,6% no cuenta con cobertura de salud mediante Obra Social.        
+                     
+<p style="color:#FE1764">__... vacaciones pagas?__</p>   
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  mutate(Vacaciones_pagas = case_when(PP07G1 == 1 ~ "Sí",
+                                      PP07G1 == 2 ~ "No")) %>% 
+  group_by(Vacaciones_pagas) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("¿Tiene vacaciones pagas?" = Vacaciones_pagas,
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+<p style="color:#FE1764">__...aguinaldo?__</p>   
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  mutate(Aguinaldo = case_when(PP07G2 == 1 ~ "Sí",
+                               PP07G2 == 2 ~ "No")) %>% 
+  group_by(Aguinaldo) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("¿Tiene aguinaldo?" = Aguinaldo,
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+<p style="color:#FE1764">__... días pagos por enfermedad?__</p>   
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  mutate(Dias_enfermedad = case_when(PP07G3 == 1 ~ "Sí",
+                                     PP07G3 == 2 ~ "No")) %>% 
+  group_by(Dias_enfermedad) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("¿Tiene días pagos por enfermedad?" = Dias_enfermedad,
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+``` 
+
+<p style="color:#FE1764">__... obra social?__</p>   
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  mutate(Obra_social = case_when(PP07G4 == 1 ~ "Sí",
+                                     PP07G4 == 2 ~ "No")) %>% 
+  group_by(Obra_social) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("¿Tiene obra social?" = Obra_social,
+         Cantidad, Porcentaje) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+### Ingresos de las trabajadoras de Servicio doméstico
+
+Respecto de la percepción de ingresos, teniendo en cuenta a la ocupación principal (el hogar para el que más horas trabaja), el ingreso de estas trabajadoras promedia $7.243, mientras que la mitad percibe menos de $6.000 por mes. Si se tienen en cuenta también los ingresos de las ocupaciones secundarias (aquellos otros hogares para los que se trabaja u otras ocupaciones secundarias), los ingresos promedian $8.425, y la mitad de ellas no alcanza los $8.000 mensuales.                  
+                
+<p style="color:#FE1764">__Ingreso promedio (de la ocupación principal) de las trabajadoras domésticas__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO)),
-            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21, PONDIIO)))
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21, PONDIIO))) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-Ingreso promedio (incluyendo ocupaciones secundarias) de las trabajadoras domésticas
+<p style="color:#FE1764">__Ingreso promedio (incluyendo ocupaciones secundarias) de las trabajadoras domésticas__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21+TOT_P12, PONDIIO)),
-            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21+TOT_P12, PONDIIO)))
-```
-
-Cantidad de hogares en los que trabajan
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$PP04B2, 
-                        weights = serv.dom$PONDERA, 
-                        exclude = NULL)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(cantidad_hogares = Var1, Porcentaje)
-```
-
-Intensidad
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$INTENSI, weights = serv.dom$PONDERA, na.rm = FALSE)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(Intensi = Var1, Porcentaje)
-```
-1 = Subocupado por insuficiencia horaria            
-2 = Ocupado pleno         
-3 = Sobreocupado            
-4 = Ocupado que no trabajó en la semana               
-            
-Población subocupada: se refiere a la subocupación por insuficiencia de horas, visible u horaria, y comprende a los ocupados que trabajan menos de 35 horas semanales por causas involuntarias y están dispuestos a trabajar más horas.              
-                  
-#### En ese trabajo tiene...            
-
-1 = Si       
-2 = No        
-                    
-Vacaciones pagas?
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$PP07G1, weights = serv.dom$PONDERA, na.rm = FALSE)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(Vacaciones = Var1, Porcentaje)
-```
-
-Aguinaldo?
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$PP07G2, weights = serv.dom$PONDERA, na.rm = FALSE)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(Aguinaldo = Var1, Porcentaje)
-```
-
-Días pagos por enfermedad?
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$PP07G3, weights = serv.dom$PONDERA, na.rm = FALSE)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(Pago_enfermedad = Var1, Porcentaje)
-```
-
-Obra social?
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-as.data.frame(wtd.table(serv.dom$PP07G4, weights = serv.dom$PONDERA, na.rm = FALSE)) %>% 
-  mutate(total = sum(Freq),
-         Porcentaje = formato_porc(Freq/total*100)) %>% 
-  select(Obra_social = Var1, Porcentaje)
-```
-
-      
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21+TOT_P12, PONDIIO))) %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```      
 
 ### Comparación entre ramas de la ocupación         
 
-Considerando rama de actividad de la ocupación principal
+Es útil contextualizar muchos de los indicadores presentados realizando una comparación con otras actividades que agrupan a les distintes trabajadores, por lo que en esta sección se presentan tablas que permiten realizar este ejercicio. En todos estos casos se consideró la rama de actividad de la ocupación principal de estas personas.
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Implemento la función que construye la rama EPH con nombres descriptivos, directo desde la PP04B_COD
 base_individual <- base_individual %>%
@@ -381,53 +505,72 @@ asalariades <- base_individual %>%
   filter(ESTADO == 1,
          CAT_OCUP == 3)
 
-as.data.frame(wtd.table(asalariades$rama.nombre, 
-                        weights = asalariades$PONDERA, 
-                        exclude = NULL))
-```
+asalariades %>% 
+  group_by(rama.nombre) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA))
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
 table(asalariades$rama.nombre, asalariades$PP04B1, exclude = NULL)
 # Hay casos de Servicio domestico en la rama pero que no tienen marcada la variable que las identifica como prestadoras de servicio doméstico en hogares, son 21 casos muestrales
-```
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
 prueba <- asalariades %>% 
   filter(rama.nombre == "Servicio domestico", 
          PP04B1 == 2)
 
 table(prueba$PP04B_COD, exclude = NULL)
 table(prueba$PP04B2, exclude = NULL)
-# Los 21 casos tienen rama "9700", que en CAES Mercosur es "Actividades de los hogares como empleadores de personal doméstico", la misma rama que el resto, pero responder trabajar en "0 casas" y por eso no se tienen en cuenta hasta ahora, en la base serv.dom.
+# Los 21 casos tienen rama "9700", que en CAES Mercosur es "Actividades de los hogares como empleadores de personal doméstico", la misma rama que el resto, pero responden trabajar en "0 casas" y por eso no se tienen en cuenta hasta ahora, en la base serv.dom.
 ```
 
-Asalariades. Indicadores por rama.
+<p style="color:#FE1764">__Asalariades - Indicadores por rama__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 asal.ramas <- asalariades %>% 
-  mutate(total = sum(PONDERA)) %>% 
-  group_by(rama.nombre) %>% 
-  summarise(Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
-            Tasa.feminidad = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
-            Tasa.no.registro = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
-            Ingreso.Promedio = weighted.mean(P21, PONDIIO)) %>% 
-  arrange(-Tasa.feminidad)
+  mutate(total = sum(PONDERA),
+         total_mujeres = sum(PONDERA[Sexo == "Mujeres"]),
+         total_varones = sum(PONDERA[Sexo == "Varones"])) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise(Cantidad = formato_cantidad(sum(PONDERA)),
+            Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
+            "Tasa de feminizacion" = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
+            "Proporción en mujeres" = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
+            "Proporción en varones" = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
+            "Tasa de no registro" = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
+            "Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO))) %>% 
+  arrange(-Proporcion)
 
-asal.ramas
+asal.ramas %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
+  row_spec(which(grepl("Servicio domestico", asal.ramas$Rama)), 
+           bold = T, color = "white", background = "#00BDD6")
 ```
 
-Ocupades. Indicadores por rama.
+<p style="color:#FE1764">__Ocupades - Indicadores por rama__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ocup.ramas <- base_individual %>%
   filter(ESTADO == 1) %>% 
-  mutate(total = sum(PONDERA)) %>% 
-  group_by(rama.nombre) %>% 
-  summarise(Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
-            Tasa.feminidad = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
-            Tasa.no.registro = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
-            Ingreso.Promedio = weighted.mean(P21, PONDIIO)) %>% 
-  arrange(-Tasa.feminidad)
+  mutate(total = sum(PONDERA),
+         total_mujeres = sum(PONDERA[Sexo == "Mujeres"]),
+         total_varones = sum(PONDERA[Sexo == "Varones"])) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise(Cantidad = formato_cantidad(sum(PONDERA)),
+            Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
+            "Tasa de feminizacion" = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
+            "Proporción en mujeres" = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
+            "Proporción en varones" = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
+            "Tasa de no registro" = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
+            "Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO))) %>% 
+  arrange(-Proporcion)
 
-ocup.ramas
+ocup.ramas %>% 
+  kable() %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
+  row_spec(which(grepl("Servicio domestico", ocup.ramas$Rama)), 
+           bold = T, color = "white", background = "#00BDD6")
 ```
 
 
