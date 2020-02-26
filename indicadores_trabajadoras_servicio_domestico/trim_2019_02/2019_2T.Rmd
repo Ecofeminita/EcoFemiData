@@ -2,7 +2,7 @@
 title: "Indicadores sobre Trabajadoras de Servicio Doméstico"
 subtitle: "Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2019."
 author: "Natsumi Shokida para Economía Femini(s)ta"
-date: "Enero de 2020"
+date: "Febrero de 2020"
 output: 
   html_notebook:
     toc: yes
@@ -27,7 +27,7 @@ library(formattable)
 library(questionr)
 library(eph)
 # Como fuente tomamos un script con el código que permite construir las ramas de la ocupación de acuerdo al nomenclador
-source("funciones rama.R") 
+source("../../R/funciones rama.R") 
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -77,7 +77,30 @@ base_individual <- base_individual %>%
                              levels = c("de 14 a 29 años",
                                         "de 30 a 49 años",
                                         "de 50 a 64 años",
-                                        "65 años y más")))
+                                        "65 años y más")),
+         DONDE_NACIO = case_when(CH15 == 1 ~ "En esta localidad",
+                                 CH15 == 2 ~ "En otra localidad de esta provincia",
+                                 CH15 == 3 ~ "En otra provincia",
+                                 CH15 == 4 ~ "En un país limítrofe",
+                                 CH15 == 5 ~ "En otro país",
+                                 CH15 == 9 ~ "NS/NR"),
+         DONDE_NACIO = factor(DONDE_NACIO,
+                              levels = c("En esta localidad",
+                                         "En otra localidad de esta provincia",
+                                         "En otra provincia",
+                                         "En un país limítrofe",
+                                         "En otro país",
+                                         "NS/NR")),
+         Vacaciones_pagas = case_when(PP07G1 == 1 ~ "Sí",
+                                      PP07G1 == 2 ~ "No"),
+         Aguinaldo = case_when(PP07G2 == 1 ~ "Sí",
+                               PP07G2 == 2 ~ "No"),
+         Dias_enfermedad = case_when(PP07G3 == 1 ~ "Sí",
+                                     PP07G3 == 2 ~ "No"),
+         Obra_social = case_when(PP07G4 == 1 ~ "Sí",
+                                 PP07G4 == 2 ~ "No"),
+         Descuento_jubilatorio = case_when(PP07H == 1 ~ "Sí",
+                                           PP07H == 2 ~ "No"))
 
 # colores = c("#aa165a","#16aa66")
 colores = c("#FE1764", "#00BDD6")
@@ -91,7 +114,7 @@ base_individual %>%
   filter(ESTADO == 1,
          CAT_OCUP==3) %>% 
   summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -106,7 +129,7 @@ base_individual %>%
          CAT_OCUP==3) %>% 
   group_by(Sexo) %>% 
   summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -133,7 +156,7 @@ table(serv.dom$ESTADO, serv.dom$CAT_OCUP, exclude = NULL)
 <p style="color:#FE1764">__Cantidad de personas que se dedican al servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% summarise(Cantidad = formato_cantidad(sum(PONDERA))) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -148,7 +171,7 @@ base_individual %>%
   mutate(Total = sum(PONDERA)) %>% 
   group_by(Sexo) %>% 
   summarise(Porcentaje = formato_porc(sum(PONDERA)/unique(Total)*100)) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -169,7 +192,7 @@ base_individual %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
          Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -192,13 +215,17 @@ base_individual %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
          Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares.      
+        
+### Características
+
+#### Edad
         
 <p style="color:#FE1764">__Composicion por edad de las trabajadoras del servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -208,7 +235,7 @@ serv.dom %>%
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>%
   select(Edad = GRUPO_EDAD, Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -216,7 +243,52 @@ serv.dom %>%
 
 Mientras que casi la mitad de estas trabajadoras tienen entre 30 y 49 años, un 31% tiene entre 50 y 64 años. Por su parte, hay un 5,4% que continúa trabajando a pesar de haber superado la edad jubilatoria, y un 16.6% son jóvenes que tienen hasta 29 años. Este último grupo está compuesto por más de 150 mil jóvenes.
 
-### Educación
+#### Lugar de nacimiento
+
+<p style="color:#FE1764">__Lugar de nacimiento de las trabajadoras de servicio doméstico y del total de la población__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Tabla intermedia. Casos de servicio doméstico. Chequeo cantidades muestrales.
+tabla1 <- serv.dom %>% 
+  group_by(DONDE_NACIO) %>% 
+  summarise(n=n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select(DONDE_NACIO, Cantidad, Porcentaje)
+
+# Tabla intermedia. Todos los casos. Chequeo cantidades muestrales.
+tabla2 <- base_individual %>% 
+  group_by(DONDE_NACIO) %>% 
+  summarise(n=n(),
+            Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select(DONDE_NACIO, Cantidad, Porcentaje)
+
+left_join(tabla1, tabla2, by = "DONDE_NACIO") %>% 
+  filter(DONDE_NACIO != "En otro país",
+         DONDE_NACIO != "NS/NR") %>% 
+  select("¿Dónde nació?" = DONDE_NACIO,
+         "Cantidad" = Cantidad.x,
+         "Porcentaje" = Porcentaje.x,
+         "Cantidad" = Cantidad.y,
+         "Porcentaje" = Porcentaje.y) %>% 
+  kable(align = "r") %>% 
+  add_header_above(c("      " = 1, "Trabajadoras de Servicio Doméstico" = 2, "Población general" = 2), 
+                   bold = T, color = "white", background = "#FE1764") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+_Nota: Las estimaciones correspondientes a aquellas personas que han nacido en otro país (no limítrofe) y aquellas que NS/NR la pregunta, no cuentan con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro las categorías._     
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1, tabla2)
+```
+
+
+#### Educación
 
 <p style="color:#FE1764">__Composicion por nivel educativo de las trabajadoras del servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -227,7 +299,7 @@ serv.dom %>%
          Cantidad = formato_cantidad(Cantidad)) %>%
   filter(NIVEL_EDUCATIVO != "Superior") %>% 
   select("Nivel educativo" = NIVEL_EDUCATIVO, Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -258,7 +330,7 @@ serv.dom %>%
   filter(Asistencia != "Nunca asistió") %>% 
   select("¿Asiste a un establecimiento educativo?" = Asistencia,
          Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -284,7 +356,7 @@ base_individual %>%
   filter(Asistencia == "Asiste actualmente") %>% 
   select("¿Se dedica al servicio doméstico?" = Servicio_domestico,
          "Tasa de asistencia a est. educativo" = Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -317,14 +389,14 @@ base_individual %>%
          "Nivel al que asiste" = Nivel,
          "Tasa" = Porcentaje) %>% 
   spread(., "Nivel al que asiste", Tasa) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 _Nota: Las estimaciones correspondientes a otros niveles educativos en curso no cuentan con suficientes casos muestrales como para garantizar significatividad de los datos, por lo que se las ha retirado del cuadro._ 
 
-### Intensidad del trabajo de las empleadas de Servicio doméstico
+### Intensidad del trabajo
 
 En esta sección no se filtra a las mujeres, pero al igual que en todo el ejercicio, hacemos uso del femenino por la alta tasa de feminidad del sector.                 
       
@@ -341,7 +413,7 @@ serv.dom %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select("Cantidad de hogares en que trabaja" = cantidad_hogares,
          Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -363,7 +435,7 @@ serv.dom %>%
          Cantidad = formato_cantidad(Cantidad)) %>% 
   filter(Intensidad != "Ocupada que no trabajó en la semana") %>% 
   select(Intensidad, Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -373,98 +445,72 @@ En relación a la cantidad de horas que trabajan semanalmente las empleadas dom�
         
 _Nota: La estimación correspondiente a aquellas que no trabajaron en la semana de referencia de la encuesta no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._ 
 
-### Derechos laborales de las trabajadoras de Servicio doméstico
-
-<p style="color:#FE1764">__Proporción sin descuento jubilatorio dentro de trabajadoras domesticas__</p>
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  summarise("Tasa de no registro" = formato_porc(sum(PONDERA[PP07H==2])/sum(PONDERA)*100)) %>% 
-  kable() %>% 
-  kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T) %>% 
-  row_spec(0, bold = T, color = "white", background = "#FE1764")
-```
+### Derechos laborales
 
 En tanto ya hemos visto que, dentro del conjunto de asalariades, un 34,5% no se encuentra registrade en la seguridad social (tasa que asciende al 36,1% cuando hablamos de las asalariadas mujeres), también puede observarse que el fenómeno se agrava ampliamente entre las trabajadoras domésticas: un 73,5% de ellas no percibe descuento jubilatorio.          
                   
-<p style="color:#FE1764">__En ese trabajo tiene...__</p>                
-                    
 En este apartado se presentan indicadores referidos a los derechos laborales de les asalariades, y el acceso a los mismos por parte de las trabajadoras del sector de servicio doméstico. Cabe destacar que los resultados se encuentran altamente correlacionados con la falta de acceso al descuento jubilatorio que caracteriza a dicha población.   
 Un 69,2% de estas trabajadoras no cuenta con vacaciones pagas, un 68,1% no percibe aguinaldos, un 72,2% no percibe el pago en caso de enfermedad, y un 72,6% no cuenta con cobertura de salud mediante Obra Social.        
                      
-<p style="color:#FE1764">__... vacaciones pagas?__</p>   
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  mutate(Vacaciones_pagas = case_when(PP07G1 == 1 ~ "Sí",
-                                      PP07G1 == 2 ~ "No")) %>% 
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1 <- serv.dom %>% 
+  group_by(Descuento_jubilatorio) %>% 
+  summarise(Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100)) %>% 
+  select(Descuento_jubilatorio, Porcentaje) %>% 
+  pivot_wider(names_from = Descuento_jubilatorio, values_from = Porcentaje) %>% 
+  mutate(Indicador = "¿Tiene descuento jubilatorio?")
+
+tabla2 <- serv.dom %>% 
   group_by(Vacaciones_pagas) %>% 
-  summarise(n = n(),
-            Cantidad = sum(PONDERA)) %>% 
-  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
-         Cantidad = formato_cantidad(Cantidad)) %>% 
-  select("¿Tiene vacaciones pagas?" = Vacaciones_pagas,
-         Cantidad, Porcentaje) %>% 
-  kable() %>% 
-  kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T) %>% 
-  row_spec(0, bold = T, color = "white", background = "#FE1764")
-```
+  summarise(Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100)) %>% 
+  select(Vacaciones_pagas, Porcentaje) %>% 
+  pivot_wider(names_from = Vacaciones_pagas, values_from = Porcentaje) %>% 
+  mutate(Indicador = "¿Tiene vacaciones pagas?")
 
-<p style="color:#FE1764">__...aguinaldo?__</p>   
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  mutate(Aguinaldo = case_when(PP07G2 == 1 ~ "Sí",
-                               PP07G2 == 2 ~ "No")) %>% 
+tabla3 <- serv.dom %>% 
   group_by(Aguinaldo) %>% 
-  summarise(n = n(),
-            Cantidad = sum(PONDERA)) %>% 
-  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
-         Cantidad = formato_cantidad(Cantidad)) %>% 
-  select("¿Tiene aguinaldo?" = Aguinaldo,
-         Cantidad, Porcentaje) %>% 
-  kable() %>% 
-  kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T) %>% 
-  row_spec(0, bold = T, color = "white", background = "#FE1764")
-```
+  summarise(Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100)) %>% 
+  select(Aguinaldo, Porcentaje) %>% 
+  pivot_wider(names_from = Aguinaldo, values_from = Porcentaje) %>% 
+  mutate(Indicador = "¿Tiene aguinaldo?")
 
-<p style="color:#FE1764">__... días pagos por enfermedad?__</p>   
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  mutate(Dias_enfermedad = case_when(PP07G3 == 1 ~ "Sí",
-                                     PP07G3 == 2 ~ "No")) %>% 
+tabla4 <- serv.dom %>% 
   group_by(Dias_enfermedad) %>% 
-  summarise(n = n(),
-            Cantidad = sum(PONDERA)) %>% 
-  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
-         Cantidad = formato_cantidad(Cantidad)) %>% 
-  select("¿Tiene días pagos por enfermedad?" = Dias_enfermedad,
-         Cantidad, Porcentaje) %>% 
-  kable() %>% 
-  kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T) %>% 
-  row_spec(0, bold = T, color = "white", background = "#FE1764")
-``` 
+  summarise(Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100)) %>% 
+  select(Dias_enfermedad, Porcentaje) %>% 
+  pivot_wider(names_from = Dias_enfermedad, values_from = Porcentaje) %>% 
+  mutate(Indicador = "¿Tiene días pagos por enfermedad?")
 
-<p style="color:#FE1764">__... obra social?__</p>   
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  mutate(Obra_social = case_when(PP07G4 == 1 ~ "Sí",
-                                     PP07G4 == 2 ~ "No")) %>% 
+tabla5 <- serv.dom %>% 
   group_by(Obra_social) %>% 
-  summarise(n = n(),
-            Cantidad = sum(PONDERA)) %>% 
-  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
-         Cantidad = formato_cantidad(Cantidad)) %>% 
-  select("¿Tiene obra social?" = Obra_social,
-         Cantidad, Porcentaje) %>% 
-  kable() %>% 
+  summarise(Cantidad = sum(PONDERA)) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100)) %>% 
+  select(Obra_social, Porcentaje) %>% 
+  pivot_wider(names_from = Obra_social, values_from = Porcentaje) %>% 
+  mutate(Indicador = "¿Tiene obra social?")
+```
+
+<p style="color:#FE1764">__En ese trabajo tiene...__</p>     
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+bind_rows(tabla1, tabla2, tabla3, tabla4, tabla5) %>% 
+  select(Indicador, Sí, No) %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-### Ingresos de las trabajadoras de Servicio doméstico
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1, tabla2, tabla3, tabla4, tabla5)
+```
+
+### Ingresos
 
 Respecto de la percepción de ingresos, teniendo en cuenta a la ocupación principal (el hogar para el que más horas trabaja), el ingreso de estas trabajadoras promedia $7.243, mientras que la mitad percibe menos de $6.000 por mes. Si se tienen en cuenta también los ingresos de las ocupaciones secundarias (aquellos otros hogares para los que se trabaja u otras ocupaciones secundarias), los ingresos promedian $8.425, y la mitad de ellas no alcanza los $8.000 mensuales.                  
                 
@@ -473,7 +519,7 @@ Respecto de la percepción de ingresos, teniendo en cuenta a la ocupación princ
 serv.dom %>% 
   summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO)),
             "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21, PONDIIO))) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -484,7 +530,7 @@ serv.dom %>%
 serv.dom %>% 
   summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21+TOT_P12, PONDIIO)),
             "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21+TOT_P12, PONDIIO))) %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
@@ -539,7 +585,7 @@ asal.ramas <- asalariades %>%
   arrange(-Proporcion)
 
 asal.ramas %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
@@ -565,7 +611,7 @@ ocup.ramas <- base_individual %>%
   arrange(-Proporcion)
 
 ocup.ramas %>% 
-  kable() %>% 
+  kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
