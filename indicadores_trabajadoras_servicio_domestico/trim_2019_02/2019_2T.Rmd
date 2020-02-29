@@ -2,7 +2,7 @@
 title: "Indicadores sobre Trabajadoras de Servicio Doméstico"
 subtitle: "Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2019."
 author: "Natsumi Shokida para Economía Femini(s)ta"
-date: "Febrero de 2020"
+date: "Marzo de 2020"
 output: 
   html_notebook:
     toc: yes
@@ -40,6 +40,9 @@ El presente documento no consiste en un informe o publicación finalizada, sino 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Cargo base de EPH con el paquete eph
 base_individual <- eph::get_microdata(year = 2019, trimester = 2, type =  "individual") 
+base_hogar <- eph::get_microdata(year = 2019, trimester = 2, type =  "hogar") 
+# Agrego las variables de los hogares en cada individuo
+base_individual <- left_join(base_individual, base_hogar, by = c("CODUSU", "NRO_HOGAR"))
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -400,24 +403,6 @@ _Nota: Las estimaciones correspondientes a otros niveles educativos en curso no 
 
 En esta sección no se filtra a las mujeres, pero al igual que en todo el ejercicio, hacemos uso del femenino por la alta tasa de feminidad del sector.                 
       
-<p style="color:#FE1764">__Cantidad de hogares en los que trabajan__</p>
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
-  mutate(cantidad_hogares = case_when(PP04B2 == 1 ~ "1",
-                                      PP04B2 == 2 ~ "2",
-                                      PP04B2 >= 3 ~ "3 o más")) %>% 
-  group_by(cantidad_hogares) %>% 
-  summarise(n = n(),
-            Cantidad = sum(PONDERA)) %>% 
-  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
-         Cantidad = formato_cantidad(Cantidad)) %>% 
-  select("Cantidad de hogares en que trabaja" = cantidad_hogares,
-         Cantidad, Porcentaje) %>% 
-  kable(align = "r") %>% 
-  kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T) %>% 
-  row_spec(0, bold = T, color = "white", background = "#FE1764")
-```
 
 Un 71,2% de las empleadas domésticas es contratada por un sólo hogar, por lo que al mismo tiempo casi un 30% de ellas trabaja en más de una vivienda.               
           
@@ -444,6 +429,32 @@ serv.dom %>%
 En relación a la cantidad de horas que trabajan semanalmente las empleadas domésticas, un 54,1% son ocupadas "plenas", es decir que trabajan entre 35 y 45 horas semanales, o están conformes con la cantidad de horas que trabajan. Al mismo tiempo, cerca de un 43,7% se encuentra sub o sobre ocupada: un 10,5% trabaja más de 45 horas por semana, y un 33,2% trabaja menos de 35 horas semanales por causas involuntarias y está dispuesta a trabajar más horas.          
         
 _Nota: La estimación correspondiente a aquellas que no trabajaron en la semana de referencia de la encuesta no cuenta con suficientes casos muestrales como para garantizar significatividad del dato, por lo que se ha retirado del cuadro la categoría._ 
+
+<p style="color:#FE1764">__Cantidad de hogares en los que trabajan__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serv.dom %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  mutate(cantidad_hogares = case_when(PP04B2 == 1 ~ "1",
+                                      PP04B2 == 2 ~ "2",
+                                      PP04B2 >= 3 ~ "3 o más")) %>% 
+  group_by(cantidad_hogares) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA),
+            hs_ocup_princ = formato_porc(weighted.mean(PP3E_TOT, PONDERA)),
+            hs_totales = formato_porc(weighted.mean(PP3E_TOT + PP3F_TOT, PONDERA))) %>% 
+  mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
+         Cantidad = formato_cantidad(Cantidad)) %>% 
+  select("Cantidad de hogares en que trabaja" = cantidad_hogares,
+         Cantidad, Porcentaje, 
+         "hs/sem en ocup. princ." = hs_ocup_princ, 
+         "hs/sem con ocup. secund." = hs_totales) %>% 
+  kable(align = "r") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
 
 ### Derechos laborales
 
@@ -509,32 +520,87 @@ bind_rows(tabla1, tabla2, tabla3, tabla4, tabla5) %>%
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla1, tabla2, tabla3, tabla4, tabla5)
 ```
-
+  
 ### Ingresos
 
 Respecto de la percepción de ingresos, teniendo en cuenta a la ocupación principal (el hogar para el que más horas trabaja), el ingreso de estas trabajadoras promedia $7.243, mientras que la mitad percibe menos de $6.000 por mes. Si se tienen en cuenta también los ingresos de las ocupaciones secundarias (aquellos otros hogares para los que se trabaja u otras ocupaciones secundarias), los ingresos promedian $8.425, y la mitad de ellas no alcanza los $8.000 mensuales.                  
-                
-<p style="color:#FE1764">__Ingreso promedio (de la ocupación principal) de las trabajadoras domésticas__</p> 
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% 
+# Ingresos mensuales, de la ocupación principal
+tabla1 <- serv.dom %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
   summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO)),
             "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21, PONDIIO))) %>% 
+  mutate(Ingresos =  "Mensuales, de la ocupación principal")
+
+# Ingresos por hora, de la ocupación principal
+tabla2 <- serv.dom %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)),
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21/(PP3E_TOT * 30 / 7), PONDIIO))) %>% 
+  mutate(Ingresos =  "Por hora, de la ocupación principal")
+
+# Ingresos mensuales, total de fuente laboral
+tabla3 <- serv.dom %>% 
+  summarise("Ingreso promedio" = formato_pesos(weighted.mean(P47T - T_VI, PONDII)),
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P47T - T_VI, PONDII))) %>% 
+  mutate(Ingresos =  "Mensuales, total de fuente laboral")
+  
+# Ingresos mensuales, totales individuales
+tabla4 <- serv.dom %>% 
+  summarise("Ingreso promedio" = formato_pesos(weighted.mean(P47T, PONDII)),
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P47T, PONDII))) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso total individual")
+
+# Ingresos mensuales, totales familiares
+tabla5 <- serv.dom %>% 
+  summarise("Ingreso promedio" = formato_pesos(weighted.mean(ITF, PONDIH)),
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(ITF, PONDIH))) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso total familiar")
+
+# Ingresos mensuales, per capita familiar
+tabla6 <- serv.dom %>% 
+  summarise("Ingreso promedio" = formato_pesos(weighted.mean(IPCF, PONDIH)),
+            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(IPCF, PONDIH))) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
+```
+
+<p style="color:#FE1764">__TITULO__</p> 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+bind_rows(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6) %>% 
+  select(Ingresos, everything()) %>% 
   kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-<p style="color:#FE1764">__Ingreso promedio (incluyendo ocupaciones secundarias) de las trabajadoras domésticas__</p> 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6)
+```
+          
+<p style="color:#FE1764">__TITULO__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Ingresos mensuales y por hora, de la ocupación principal
 serv.dom %>% 
-  summarise("Ingreso promedio" = formato_pesos(weighted.mean(P21+TOT_P12, PONDIIO)),
-            "50% cobra menos de" = formato_pesos(spatstat::weighted.median(P21+TOT_P12, PONDIIO))) %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Descuento_jubilatorio) %>% 
+  summarise(Ingresos = formato_pesos(weighted.mean(P21, PONDIIO)),
+            Ingresos_hs = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)),
+            hs_ocup_princ = formato_porc(weighted.mean(PP3E_TOT, PONDERA))) %>% 
+  arrange(Ingresos) %>% 
+  select("¿Tiene descuento jubilatorio?" = Descuento_jubilatorio,
+         "Ingreso mensual promedio" = Ingresos,
+         "Ingreso por hora promedio" = Ingresos_hs,
+         "hs/sem en ocup. princ." = hs_ocup_princ) %>% 
   kable(align = "r") %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
                 fixed_thead = T) %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
-```      
+```
 
 ### Comparación entre ramas de la ocupación         
 
