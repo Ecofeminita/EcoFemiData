@@ -36,7 +36,7 @@ date <- "2do trimestre de 2019"                        # <-----------------
 ```
 
 Aquí se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la Encuesta Permanente de Hogares (EPH-INDEC-Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma durante el `r date`.     
-El presente documento no consiste en un informe o publicación finalizada, sino en la disponibilización de resultados parciales de un trabajo más amplio.
+El presente documento no consiste en un informe o publicación finalizada, sino en la disponibilización de resultados parciales de un trabajo más amplio.    
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Cargo base de EPH con el paquete eph
