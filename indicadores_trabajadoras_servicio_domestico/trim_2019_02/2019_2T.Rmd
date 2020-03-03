@@ -1,14 +1,37 @@
 ---
-title: "Indicadores sobre Trabajadoras de Servicio Doméstico"
-subtitle: "Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2019."
-author: "Natsumi Shokida para Economía Femini(s)ta"
-date: "Marzo de 2020"
+title: "Las trabajadoras de servicio doméstico en Argentina"
+subtitle: "2do trimestre de 2019"
+author: "Natsumi Shokida para Economía Femini(s)ta - Marzo de 2020"
 output: 
   html_notebook:
-    toc: yes
-    toc_float: yes
-    toc_depth: 3
+    theme: flatly
+urlcolor: #FE1764
 ---
+
+<style>
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: #FE1764;
+}
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
+    color: #ffffff;
+    background-color: #FE1764;
+}
+</style>
+
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+date <- "2do trimestre de 2019"                        # <-----------------
+```
+
+El presente informe tiene como objetivo visibilizar las condiciones de trabajo, ingresos, y principales características de las trabajadoras que prestan servicio doméstico en hogares particulares. Para ello se presentan diversos indicadores, cuadros y gráficos de elaboración propia. Para realizar los cálculos, se utilizan bases de microdatos publicados por la Encuesta Permanente de Hogares (EPH - INDEC - Argentina). Esta información refiere a los 31 aglomerados urbanos que releva la encuesta, en este caso durante el `r date`. El documento se realizó íntegramente utilizando el lenguaje de programación R y todo el código se encuentra disponible para su descarga.
+<br><br>
+Sabemos que puede volverse un poco técnico por momentos, pero seguramente desde [Economía Femini(s)ta](http://economiafeminita.com/) realicemos también otras notas de carácter divulgatorio que podrás encontrar en nuestra página. Obviamente, estás invitade a utilizar estos datos en notas, trabajos, infografías, etc. citando nuestro trabajo^[Shokida, Natsumi S. (05/03/2020) Las trabajadoras de servicio doméstico en Argentina. 2do trimestre de 2019. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/indicadores_trabajadoras_servicio_domestico/trim_2019_02/2019_2T.nb.html]. Además, si te gusta nuestro trabajo podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+
+## Secciones {.tabset .tabset-fade .tabset-pills}
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Se cargan librerías útiles
@@ -26,26 +49,19 @@ library(kableExtra)
 library(formattable)
 library(questionr)
 library(eph)
-# Como fuente tomamos un script con el código que permite construir las ramas de la ocupación de acuerdo al nomenclador
+# Como fuente tomamos un script con el código que permite construir las ramas de la ocupación de acuerdo al nomenclador, y otro con funciones de formato para los datos.
 source("../../R/funciones rama.R") 
 source("../../R/funciones formato.R")
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-date <- "2do trimestre de 2019"                        # <-----------------
-```
-
-Aquí se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la Encuesta Permanente de Hogares (EPH-INDEC-Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma durante el `r date`.     
-El presente documento no consiste en un informe o publicación finalizada, sino en la disponibilización de resultados parciales de un trabajo más amplio.    
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Cargo base de EPH con el paquete eph
-base_individual <- eph::get_microdata(year = 2019, trimester = 2, type =  "individual") 
-base_hogar <- eph::get_microdata(year = 2019, trimester = 2, type =  "hogar") 
+base_individual <- eph::get_microdata(year = 2019, trimester = 2, type =  "individual") # <-----------------
+base_hogar <- eph::get_microdata(year = 2019, trimester = 2, type =  "hogar")           # <-----------------
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Modificaciones en la base
+# Modificaciones en la base de individuos
 base_individual <- base_individual %>% 
   mutate(Sexo = as.character(CH04),
          Sexo = case_when(Sexo=="1" ~ "Varones",
@@ -93,14 +109,11 @@ base_individual <- base_individual %>%
 colores = c("#FE1764", "#00BDD6")
 ```
 
-### Trabajadoras del Servicio doméstico
+### Trabajadoras del Servicio doméstico 
 
-Si bien analizamos al conjunto de les trabajadores de se dedican a esta actividad, utilizamos pronombres femeninos a la hora de generalizar, dada la alta tasa de feminidad del sector. A su vez, cabe destacar que se realiza el ejercicio en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.     
-Más de 900 mil personas componen al sector, siendo el equivalente a 13 canchas de River llenas. Se trata de una cantidad estimada para las grandes ciudades del país (31 aglomerados urbanos relevados por la encuesta).      
-La tasa de feminidad del sector es del 97,9%. Es decir, que casi en su totalidad se trata de trabajadoras mujeres.   
-A su vez, las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares, representan un 17% dentro del total de ocupadas mujeres. Esto significa que una de cada 6 ocupadas en Argentina trabaja en este sector de la economía.   
-La leve diferencia en la cantidad se debe a que, en este último caso, sólo estamos considerando a las mujeres del sector.    
-Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares. 
+El interés por analizar distintas características de las trabajadoras de servicio doméstico radica principalmente en la magnitud que dicha ocupación presenta, y en su estrecho vínculo con la división sexual del trabajo. Entre las grandes ciudades del país, pueden contarse __más de 900 mil personas que componen al sector (¡esto es el equivalente a más de 13 canchas de River llenas!)__. A su vez, la tasa de feminidad del sector es del 97,9%. Es decir que __casi en su totalidad se trata de trabajadoras mujeres__. Es por esto que, a lo largo de todo el informe, utilizaremos pronombres femeninos a la hora de generalizar, aunque muchas veces estemos hablando del conjunto de les trabajadores que se dedican a esta actividad. A su vez, cabe destacar que el ejercicio debe ser realizado en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.     
+<br><br>
+Las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares representan un 17% dentro del total de ocupadas mujeres. Esto significa que __una de cada 6 ocupadas en Argentina trabaja en este sector de la economía__. Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares. Como veremos más adelante, se trata de __la ocupación más popular entre las mujeres__. 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Armamos una mini base de servicio doméstico utilizando la pregunta PP04B1, que identifica a las personas que prestan servicio doméstico en hogares particulares. 
@@ -116,14 +129,15 @@ table(serv.dom$ESTADO, serv.dom$CAT_OCUP, exclude = NULL)
 
 <p style="color:#FE1764">__Cantidad de personas que se dedican al servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-serv.dom %>% summarise(Cantidad = formato_cantidad(sum(PONDERA))) %>% 
+serv.dom %>% 
+  summarise(Cantidad = formato_cantidad(sum(PONDERA))) %>% 
   kable(align = "c",  col.names = NULL) %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"),
-                fixed_thead = T, font_size = 50)  
-    # row_spec(0, bold = T, color = "white", background = "#FE1764")
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#00BDD6")
 ```
 
-<p style="color:#FE1764">__Proporcion de mujeres y de varones__</p>
+<p style="color:#FE1764">__Proporcion de mujeres y de varones en el sector__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   mutate(Total = sum(PONDERA)) %>% 
@@ -135,7 +149,7 @@ serv.dom %>%
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-<p style="color:#FE1764">__Proporción de servicio doméstico dentro de las ocupadas mujeres__</p>
+<p style="color:#FE1764">__Proporción de la ocupación dentro de las ocupadas mujeres__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(ESTADO == 1,
@@ -153,7 +167,7 @@ base_individual %>%
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-<p style="color:#FE1764">__Proporción de servicio doméstico dentro de las asalariadas mujeres__</p>
+<p style="color:#FE1764">__Proporción de la ocupación dentro de las asalariadas mujeres__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 base_individual %>% 
   filter(ESTADO == 1,
@@ -172,11 +186,13 @@ base_individual %>%
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
-### Características
+### Características {.tabset .tabset-fade .tabset-pills}
+
+En esta sección se presentan algunas métricas respecto a la distribución etaria, el lugar de nacimiento y características educativas de las trabajadoras del sector de servicio doméstico. 
 
 #### Edad
         
-Mientras que casi la mitad de estas trabajadoras tienen entre 30 y 49 años, un 31% tiene entre 50 y 64 años. Por su parte, hay un 5,4% que continúa trabajando a pesar de haber superado la edad jubilatoria, y un 16.6% son jóvenes que tienen hasta 29 años. Este último grupo está compuesto por más de 150 mil jóvenes.
+Mientras que casi la mitad de estas trabajadoras tienen entre 30 y 49 años, un 31% tiene entre 50 y 64 años. Por su parte, hay un 5,4% que continúa trabajando a pesar de haber superar los 65 años, y un 16.6% está compuesto por jóvenes que no llegan a los 30 años. Este último grupo está compuesto por más de 150 mil jóvenes.
         
 <p style="color:#FE1764">__Composicion por edad de las trabajadoras del servicio doméstico__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -193,6 +209,8 @@ serv.dom %>%
 ```
 
 #### Lugar de nacimiento
+
+Considerando a la población de estas ciudades en general, casi un 12% se encuentra viviendo en una provincia distinta a la que tiene como lugar de nacimiento, y un 3,5% proviene de un país limítrofe. Por su parte, en el caso de las trabajadoras de servicio doméstico, casi un 20% ha migrado de provincia y casi un 10% proviene de un país limítrofe, es decir que las personas migrantes se encuentran sobrerrepresentadas en dicho sector de la economía. Puede observarse entonces que la ocupación está estrechamente relacionada con los fenómenos migratorios.
 
 <p style="color:#FE1764">__Lugar de nacimiento de las trabajadoras de servicio doméstico y del total de la población__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
