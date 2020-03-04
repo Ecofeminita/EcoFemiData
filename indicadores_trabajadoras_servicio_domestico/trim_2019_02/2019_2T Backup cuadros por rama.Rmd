@@ -1,0 +1,104 @@
+---
+title: "Backup ramas"
+output: html_notebook
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Implemento la función que construye la rama EPH con nombres descriptivos, directo desde la PP04B_COD
+base_individual <- base_individual %>%
+  mutate(rama.nombre = entra.cuchillo.salen.las.ramas(PP04B_COD))
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+asalariades <- base_individual %>%
+  filter(ESTADO == 1,
+         CAT_OCUP == 3)
+
+asalariades %>% 
+  group_by(rama.nombre) %>% 
+  summarise(n = n(),
+            Cantidad = sum(PONDERA))
+
+table(asalariades$rama.nombre, asalariades$PP04B1, exclude = NULL)
+# Hay casos de Servicio domestico en la rama pero que no tienen marcada la variable que las identifica como prestadoras de servicio doméstico en hogares, son 21 casos muestrales
+
+prueba <- asalariades %>% 
+  filter(rama.nombre == "Servicio domestico", 
+         PP04B1 == 2)
+
+table(prueba$PP04B_COD, exclude = NULL)
+table(prueba$PP04B2, exclude = NULL)
+# Los 21 casos tienen rama "9700", que en CAES Mercosur es "Actividades de los hogares como empleadores de personal doméstico", la misma rama que el resto, pero responden trabajar en "0 casas" y por eso no se tienen en cuenta hasta ahora, en la base serv.dom.
+```
+
+<p style="color:#FE1764">__Asalariades - Indicadores por rama__</p> 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+asal.ramas <- asalariades %>% 
+  mutate(total = sum(PONDERA),
+         total_mujeres = sum(PONDERA[Sexo == "Mujeres"]),
+         total_varones = sum(PONDERA[Sexo == "Varones"])) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise(Cantidad = formato_cantidad(sum(PONDERA)),
+            Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
+            "Tasa de feminizacion" = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
+            "Proporción en mujeres" = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
+            "Proporción en varones" = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
+            "Tasa de no registro" = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
+            "Ingreso mensual promedio" = formato_pesos(weighted.mean(P21, PONDIIO))) 
+
+asal.ramas2 <- asalariades %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise("Ingreso horario promedio" = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)))
+
+asal.ramas <- asal.ramas %>% 
+  left_join(., asal.ramas2, by = "Rama") %>% 
+  arrange(-Proporcion)
+
+asal.ramas %>% 
+  kable(align = "r") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
+  row_spec(which(grepl("Servicio domestico", asal.ramas$Rama)), 
+           bold = T, color = "white", background = "#00BDD6")
+```
+
+<p style="color:#FE1764">__Ocupades - Indicadores por rama__</p> 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ocup.ramas <- base_individual %>%
+  filter(ESTADO == 1) %>% 
+  mutate(total = sum(PONDERA),
+         total_mujeres = sum(PONDERA[Sexo == "Mujeres"]),
+         total_varones = sum(PONDERA[Sexo == "Varones"])) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise(Cantidad = formato_cantidad(sum(PONDERA)),
+            Proporcion = round(sum(PONDERA)/unique(total)*100, 1),
+            "Tasa de feminizacion" = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
+            "Proporción en mujeres" = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
+            "Proporción en varones" = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
+            "Tasa de no registro" = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
+            "Ingreso promedio" = formato_pesos(weighted.mean(P21, PONDIIO))) 
+
+ocup.ramas2 <- base_individual %>%
+  filter(ESTADO == 1) %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by("Rama" = rama.nombre) %>% 
+  summarise("Ingreso horario promedio" = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)))
+
+ocup.ramas <- ocup.ramas %>% 
+  left_join(., ocup.ramas2, by = "Rama") %>% 
+  arrange(-Proporcion)
+
+ocup.ramas %>% 
+  kable(align = "r") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764") %>% 
+  row_spec(which(grepl("Servicio domestico", ocup.ramas$Rama)), 
+           bold = T, color = "white", background = "#00BDD6")
+```
+
+
