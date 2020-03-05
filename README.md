@@ -7,7 +7,7 @@ Quienes estén interesados en reproducir los cálculos necesarios para obtener l
      
 [^1]: Variable disponible en las bases de datos      
 
-## [Indicadores sobre trabajadoras del Servicio Doméstico](indicadores_trabajadoras_servicio_domestico)
+## [Indicadores sobre trabajadoras del Servicio Doméstico](informe_servicio_domestico)
 
 Se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma durante el 2do trimestre de 2019.             
 El presente documento no consiste en un informe o publicación finalizada, sino en la disponibilización de resultados parciales de un trabajo más amplio. 
