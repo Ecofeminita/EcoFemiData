@@ -527,6 +527,96 @@ cuadro5 <- kable(tabla7.1, digits = 1, align = 'lrrr',
 cuadro5
 ```
 
+### Brecha de ingresos horarios por calificación del puesto de trabajo
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla7.1 <- base_individual %>% 
+  filter(CALIFICACION != "0",
+         ESTADO == 1, 
+         PP3E_TOT > 0,
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, CALIFICACION) %>% 
+  summarise(IOP_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2),
+            IOP_mensual  = round(weighted.mean(P21, PONDIIO), 2))
+
+tabla7.1_graf <- tabla7.1 %>% 
+  select(-IOP_mensual) %>% 
+  spread(., Sexo, IOP_hr) %>% 
+  mutate(brecha = paste0(formato_porc((Varones-Mujeres)/Varones*100), "%"),
+         x = (Varones+Mujeres)/2)
+```
+
+__Gráfico 6.__ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla7.1_graf, 
+       aes(x = Mujeres, xend = Varones, y = CALIFICACION, 
+           group = CALIFICACION, label = brecha)) +
+  geom_dumbbell(color= "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla7.1_graf,
+            aes(x, CALIFICACION, label = brecha), nudge_y = .2)+
+  labs(title = "Brecha de ingresos horarios de la ocupación principal
+       por sexo y calificación ocupacional",
+       subtitle = paste0("Ocupadas/os. Total de aglomerados urbanos. ", date),
+       x="Ingreso Mensual",
+       y=NULL, 
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC")+
+  scale_color_manual(values = colores)+
+  theme_minimal()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+ggsave("Grafico6.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+```
+
+### Brecha de ingresos horarios por nivel educativo
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla8.2 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         PP3E_TOT > 0,
+         PP3E_TOT != 999,
+         !is.na(NIVEL_EDUCATIVO)) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+  summarise(IOP_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2),
+            IOP_mensual  = round(weighted.mean(P21, PONDIIO), 2))
+
+tabla8.2_graf <- tabla8.2 %>% 
+  select(-IOP_mensual) %>% 
+  spread(., Sexo, IOP_hr) %>% 
+  mutate(brecha = paste0(formato_porc((Varones-Mujeres)/Varones*100), "%"),
+         x = (Varones+Mujeres)/2)
+```
+
+__Gráfico 7.__ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla8.2_graf, 
+       aes(x = Mujeres, xend = Varones, y = NIVEL_EDUCATIVO, 
+           group = NIVEL_EDUCATIVO, label = brecha)) +
+  geom_dumbbell(color= "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla8.2_graf,
+            aes(x, NIVEL_EDUCATIVO, label = brecha), nudge_y = .2)+
+  labs(title = "Brecha de ingresos horarios de la ocupación principal
+       por sexo y nivel educativo",
+       subtitle = paste0("Ocupadas/os. Total de aglomerados urbanos. ", date),
+       x="Ingreso Mensual",
+       y=NULL, 
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC")+
+  scale_color_manual(values = colores)+
+  theme_minimal()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+ggsave("Grafico7.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+```
+
 ## Horas trabajadas
 
 horas promedio trabajadas para ocupades, asalariades, asalariades no registrades
@@ -599,34 +689,105 @@ Ocupadas/os
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # ramas de ocupades, con tasa de feminización, ingreso promedio
+# tabla9.1 <- base_individual %>% 
+#   mutate(Rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
+#   filter(ESTADO == 1) %>% 
+#   group_by(Rama) %>% 
+#   summarise(Feminización = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+#             Ingreso = round(weighted.mean(P21, PONDIIO))) %>% 
+#   arrange(Ingreso)
+  
+# tabla9.1
+
 tabla9.1 <- base_individual %>% 
   mutate(Rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
   filter(ESTADO == 1) %>% 
   group_by(Rama) %>% 
-  summarise(Feminización = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
-            Ingreso = round(weighted.mean(P21, PONDIIO))) %>% 
-  arrange(Ingreso)
-  
-tabla9.1
+  summarise("Tasa de feminización" = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+            ingreso_promedio = weighted.mean(P21, PONDIIO),
+            mujeres = round(weighted.mean(P21[Sexo == "Mujeres"], PONDIIO[Sexo == "Mujeres"])),
+            varones = round(weighted.mean(P21[Sexo == "Varones"], PONDIIO[Sexo == "Varones"])),
+            brecha_ing_mens = percent(((varones-mujeres)/varones), 1),) %>% 
+  arrange(-ingreso_promedio) %>% 
+  mutate("Ingreso mensual promedio" = formato_pesos(ingreso_promedio),
+         "Brecha ingreso mensual" = brecha_ing_mens) %>% 
+  select(-(3:6))
+```
+
+__Cuadro 7.__
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cuadro7 <- kable(tabla9.1, align = 'llrrr', 
+      caption = paste("Ramas de ocupación. Tasa de feminización. Ingreso mensual promedio. ", date)) %>%
+  kable_styling(bootstrap_options = c("striped"), 
+                full_width = F, position = "left") %>%
+#  add_header_above(c(" " = 2, "Media del ingreso" = 2, " " = 1)) %>% 
+  footnote(general = "Natsumi Shokida en base a EPH-INDEC",
+           general_title = "Fuente: ",
+           title_format = c("italic"),
+           footnote_as_chunk = FALSE) %>% 
+  column_spec(2, width = "6cm") #%>% 
+#  column_spec(5, bold = TRUE, width = "2cm")
+
+cuadro7
 ```
 
 Asalariadas/os
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # asalariades
-tabla9.2 <- base_individual %>% 
-  mutate(rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
+# tabla9.2 <- base_individual %>% 
+#   mutate(rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
+#   filter(ESTADO == 1,
+#          CAT_OCUP == 3) %>% 
+#   group_by(rama) %>% 
+#   summarise(Feminización = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+#             "Sin descuento jubilatorio" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1),
+#             "Ingreso Medio" = round(weighted.mean(P21, PONDIIO)),
+#             Mujeres = round(weighted.mean(P21[Sexo == "Mujeres"], PONDIIO[Sexo == "Mujeres"])),
+#             Varones = round(weighted.mean(P21[Sexo == "Varones"], PONDIIO[Sexo == "Varones"])),
+#             Brecha = percent(((Varones-Mujeres)/Varones), 1),) %>% 
+#   arrange(-Feminización)
+
+asalariades <- base_individual %>% 
   filter(ESTADO == 1,
          CAT_OCUP == 3) %>% 
+  mutate(rama = entra.cuchillo.salen.las.ramas(PP04B_COD),
+         total = sum(PONDERA),
+         total_mujeres = sum(PONDERA[Sexo == "Mujeres"]),
+         total_varones = sum(PONDERA[Sexo == "Varones"]))
+
+asal.ramas <- asalariades %>% 
   group_by(rama) %>% 
-  summarise(Feminización = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
-            "Sin descuento jubilatorio" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1),
-            "Ingreso Medio" = round(weighted.mean(P21, PONDIIO)),
+  summarise(prop_en_mujeres = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
+            prop_en_varones = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
+            tasa_feminizacion = round(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA)*100, 1),
+            tasa_no_registro = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
+            ingreso_mensual = weighted.mean(P21, PONDIIO),
             Mujeres = round(weighted.mean(P21[Sexo == "Mujeres"], PONDIIO[Sexo == "Mujeres"])),
             Varones = round(weighted.mean(P21[Sexo == "Varones"], PONDIIO[Sexo == "Varones"])),
-            Brecha = percent(((Varones-Mujeres)/Varones), 1),) %>% 
-  arrange(-Feminización)
+            brecha_ing_mens = percent(((Varones-Mujeres)/Varones), 1),) %>% 
+#  summarise(Feminización = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+#            "Sin descuento jubilatorio" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1),
+#            "Ingreso Medio" = round(weighted.mean(P21, PONDIIO)),
+#            Mujeres = round(weighted.mean(P21[Sexo == "Mujeres"], PONDIIO[Sexo == "Mujeres"])),
+#            Varones = round(weighted.mean(P21[Sexo == "Varones"], PONDIIO[Sexo == "Varones"])),
+#            Brecha = percent(((Varones-Mujeres)/Varones), 1),) %>% 
+  arrange(-tasa_feminizacion)
 
+asal.ramas2 <- asalariades %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, rama) %>% 
+  summarise(iop_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
+  group_by(rama) %>% 
+  summarise(Mujeres = iop_hr[Sexo == "Mujeres"],
+            Varones = iop_hr[Sexo == "Varones"],
+            brecha_ing_hr = percent(((Varones-Mujeres)/Varones), 1),)
+
+tabla9.2 <- asal.ramas %>% 
+  left_join(., asal.ramas2, by = "rama")
+
+rm(asal.ramas, asal.ramas2)
 
 # Luego sección de ramas:
 
@@ -651,7 +812,7 @@ tabla11.1_graf <- base_individual %>%
     mutate(proporcion = round(proporcion/sum(proporcion)*100, 0))
 ```
 
-__Gráfico 8.__ _Personas que realizan las tareas domésticas del hogar, según sexo (no incluye trabajadoras de servicio doméstico). Total de aglomerados urbanos. `r date`._
+__Gráfico 8.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ## Prep data (nothing to change here)
 nrows <- 10
@@ -659,12 +820,14 @@ df <- expand.grid(x = 1:nrows, y = 1:nrows)
 df$Sexo <- factor(rep(tabla11.1_graf$Sexo, tabla11.1_graf$proporcion))  
 ## Plot
 ggplot(df, aes(x = x, y = y, fill = Sexo)) + 
-        geom_tile(color = "black", size = 0.5) +
-        scale_x_continuous(expand = c(0, 0)) +
-        scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
-        scale_fill_manual(values = colores) +
-  theme_void() +
-  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+  geom_tile(color = "black", size = 0.5) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
+  scale_fill_manual(values = colores) +
+  labs(title = "Personas que realizan las tareas domésticas del hogar por sexo",
+       subtitle = paste0("No incluye trabajadoras de servicio doméstico. Total de aglomerados urbanos. ", date),
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+  theme_void()
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -688,7 +851,7 @@ tabla9.2_graf <- base_individual %>%
   mutate(proporcion = round(frecuencia/sum(frecuencia)*100, 0))
 ```
 
-__Gráfico 9.__ _Ocupadas, según si prestan o no servicios domésticos en hogares particulares. Total de aglomerados urbanos. `r date`._
+__Gráfico 9.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 colores2 = c("#FE1764","#808080")
 
@@ -698,13 +861,15 @@ df <- expand.grid(x = 1:nrows, y = 1:nrows)
 df$servicio.domestico <- factor(rep(tabla9.2_graf$servicio.domestico, tabla9.2_graf$proporcion))  
 ## Plot
 ggplot(df, aes(x = x, y = y, fill = servicio.domestico)) + 
-        geom_tile(color = "black", size = 0.5) +
-        scale_x_continuous(expand = c(0, 0)) +
-        scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
-        scale_fill_manual(values = colores2) +
-  theme_void() +
-  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
-  guides(fill=guide_legend(title="Trabajan en Servicio Doméstico?"))
+  geom_tile(color = "black", size = 0.5) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
+  scale_fill_manual(values = colores2) +
+  guides(fill=guide_legend(title="Trabajan en Servicio Doméstico?")) +
+  labs(title = "Ocupadas, según si prestan o no servicios domésticos en hogares particulares",
+       subtitle = paste0("Total de aglomerados urbanos. ", date),
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+  theme_void()
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -715,7 +880,7 @@ ggplot(df, aes(x = x, y = y, fill = servicio.domestico)) +
 
 ## Distribución del ingreso
          
-__Gráfico 10.__ _Total de la población. Composición según sexo de los deciles del ingreso per cápita familiar. Total de aglomerados urbanos. `r date`._
+__Gráfico 10.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla13.1_graf <-base_individual %>% 
   select(DECCFR, IPCF, PONDIH, Sexo) %>% 
@@ -728,21 +893,22 @@ tabla13.1_graf <-base_individual %>%
 ggplot(tabla13.1_graf, aes(x = DECCFR, Prop, fill = Sexo, group= Sexo, label = paste0(formato_porc(Prop*100), "%"))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5) +
-  theme_minimal() +
-  theme(axis.text.y = element_blank(),
-        axis.ticks.y = element_blank()) +
   labs(y = '') +
   scale_fill_manual(values = colores) +
   scale_x_continuous("Decil del Ingreso Per Cápita Familiar", breaks = c(1:10)) +
-  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+  labs(title = "Total de la población",
+       subtitle = paste0("Composición según sexo de los deciles del ingreso per cápita familiar. Total de aglomerados urbanos. ", date),
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
 ```
              
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #ggsave("Graficos/Grafico10.png", scale = 1)
 ```
 
-
-__Gráfico 11.__ _Población perceptora de ingresos. Composición según sexo de los deciles de ingresos totales individuales. Total de aglomerados urbanos. `r date`._
+__Gráfico 11.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla12.1_graf <-base_individual %>% 
     select(DECINDR, P47T, PONDII, Sexo) %>% 
@@ -761,14 +927,16 @@ ggplot(tabla12.1_graf, aes(x = DECINDR, Prop, fill = Sexo, group= Sexo, label = 
   labs(y = '') +
   scale_fill_manual(values = colores)+
   scale_x_continuous("Decil de ingreso total", breaks =c(1:10)) +
-  labs(caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+  labs(title = "Población perceptora de ingresos",
+       subtitle = paste0("Composición según sexo de los deciles de ingresos totales individuales. Total de aglomerados urbanos. ", date),
+       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC")
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #ggsave("Graficos/Grafico11.png", scale = 1)
 ```
 
-      
+
 [^1]: _Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe, que incluye la descarga automática de las bases de la EPH utilizadas, una serie de funciones útiles y la elaboración de cuadros y gráficos con el lenguaje R._    
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
