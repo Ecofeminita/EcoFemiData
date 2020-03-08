@@ -333,8 +333,8 @@ Esta problemática es conocida como Techo de Cristal, y hace referencia a la dif
 __Gráfico 3.__       
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(tabla3.1 %>% filter(JERARQUIA == "Dirección o Jefes"), 
-       aes(x = '', cantidad, fill = Sexo, group = Sexo, 
-                          label = formato_cantidad(cantidad))) +
+       aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+                          label = percent(proporcion))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
@@ -365,17 +365,17 @@ Ocupadas/os
 # ramas de ocupades, con tasa de feminización, ingreso promedio
 tabla4.1 <- base_individual %>% 
   mutate(Rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
-  filter(ESTADO == 1) %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
   group_by(Rama) %>% 
   summarise("Tasa de feminización" = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
             ingreso_promedio = weighted.mean(P21, PONDIIO),
-            mujeres = round(weighted.mean(P21[Sexo == "Mujeres"], PONDIIO[Sexo == "Mujeres"])),
-            varones = round(weighted.mean(P21[Sexo == "Varones"], PONDIIO[Sexo == "Varones"])),
-            brecha_ing_mens = percent(((varones-mujeres)/varones), 1),) %>% 
+            ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
   arrange(-ingreso_promedio) %>% 
   mutate("Ingreso mensual promedio" = formato_pesos(ingreso_promedio),
-         "Brecha ingreso mensual" = brecha_ing_mens) %>% 
-  select(-(3:6))
+         "Ingreso horario" = formato_pesos(ingreso_hor)) %>% 
+  select(-(3:4))
 
 ```
 
@@ -386,7 +386,7 @@ Esto se conoce como Paredes de Cristal, y hace referencia a los muros invisibles
 __Cuadro 3.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 cuadro3 <- kable(tabla4.1, align = 'llrrr', 
-      caption = paste("Ramas de ocupación. Tasa de feminización. Ingreso mensual promedio. Brecha ingresos mensuales. ", date)) %>%
+      caption = paste("Ramas de ocupación. Tasa de feminización. Ingreso mensual promedio. Ingreso horario. ", date)) %>%
   kable_styling(bootstrap_options = c("striped"), 
                 full_width = F, position = "left") %>%
 #  add_header_above(c(" " = 2, "Media del ingreso" = 2, " " = 1)) %>% 
@@ -942,7 +942,7 @@ tabla13.1_graf <-base_individual %>%
   group_by(DECCFR, Sexo) %>%
   summarise(Prop = sum(PONDIH)/unique(Pob))
 
-ggplot(tabla13.1_graf, aes(x = DECCFR, Prop, fill = Sexo, group= Sexo, label = paste0(formato_porc(Prop*100), "%"))) +
+ggplot(tabla13.1_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group= Sexo, label = paste0(formato_porc(Prop*100), "%"))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5) +
   labs(y = '') +
@@ -974,7 +974,7 @@ tabla12.1_graf <-base_individual %>%
   group_by(DECINDR, Sexo) %>%
   summarise(Prop = sum(PONDII)/unique(Pob))
 
-ggplot(tabla12.1_graf, aes(x = DECINDR, Prop, fill = Sexo, group= Sexo, label = paste0(formato_porc(Prop*100), "%"))) +
+ggplot(tabla12.1_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sexo, label = paste0(formato_porc(Prop*100), "%"))) +
   geom_col(position = "dodge")+
   geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5)+
   theme_minimal()+
@@ -982,7 +982,7 @@ ggplot(tabla12.1_graf, aes(x = DECINDR, Prop, fill = Sexo, group= Sexo, label = 
         axis.ticks.y = element_blank()) +
   labs(y = '') +
   scale_fill_manual(values = colores) +
-  scale_x_discrete("Decil de ingreso total", breaks =c(1:10)) +
+  scale_x_continuous("Decil de ingreso total", breaks =c(1:10)) +
   labs(title = "Población perceptora de ingresos",
        subtitle = paste0("Composición según sexo de los deciles de ingresos totales individuales. Total de aglomerados urbanos. ", date),
        caption = "Fuente: Natsumi Shokida en base a EPH-INDEC")
