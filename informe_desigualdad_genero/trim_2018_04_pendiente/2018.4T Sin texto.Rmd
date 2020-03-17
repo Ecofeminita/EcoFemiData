@@ -160,7 +160,7 @@ ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Grafico1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+# ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 A diferencia de las tasas anteriores, las tasas de desocupación y subocupación expresan la proporción que estos grupos representan en la Población Económicamente Activa. 
@@ -191,7 +191,7 @@ ggplot(tabla1_graf2, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Grafico2.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+# ggsave("Figura2.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 ### Por grupos de edad y sexo
@@ -249,7 +249,7 @@ __Figura 3.__
 <p style="color:#FE1764">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3 %>% 
-  kable(#align = "c",
+  kable(align = "lcccc",
         caption = paste0("Población de 14 a 64 años. ", aglo_date)) %>%
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
                 #full_width = F, position = "left",
@@ -320,17 +320,17 @@ Además de tener una participación más restringida en el mercado de trabajo, l
 Esta problemática es conocida como Techo de Cristal, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. 
 
 
-__Gráfico 3.__       
+__Figura 5.__       
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-ggplot(tabla3.1 %>% filter(JERARQUIA == "Dirección o Jefes"), 
+ggplot(tabla5 %>% filter(JERARQUIA == "Dirección o Jefes"), 
        aes(x = '', proporcion, fill = Sexo, group = Sexo, 
                           label = percent(proporcion))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
   labs(title = "Mujeres y Varones en cargos de dirección y jefatura.",
-       subtitle = paste0("Ocupadas/os. Total de aglomerados urbanos. ", date),
-       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+       subtitle = paste0("Porcentaje de cargos jerárquicos entre ocupadas/os. ", aglo_date),
+       caption = fuente) +
   theme_minimal() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -339,50 +339,62 @@ ggplot(tabla3.1 %>% filter(JERARQUIA == "Dirección o Jefes"),
        
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-#ggsave("Grafico3.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+# ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
-## Ramas
+## Ramas de la ocupación
+
+### Ocupadas/os
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-# ramas de ocupades, con tasa de feminización, ingreso promedio
-tabla4.1 <- base_individual %>% 
+tabla6 <- base_individual %>% 
   mutate(Rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
   filter(ESTADO == 1,
          PP3E_TOT > 0, # Horas trabajadas positivas
-         PP3E_TOT != 999) %>% 
+         PP3E_TOT != 999,
+         P21 > 0) %>%  # Ingresos positivos
   group_by(Rama) %>% 
-  summarise("Tasa de feminización" = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+  summarise(tasa_feminizacion = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
             ingreso_promedio = weighted.mean(P21, PONDIIO),
             ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
-  arrange(-ingreso_promedio) %>% 
-  mutate("Ingreso mensual promedio" = formato_pesos(ingreso_promedio),
-         "Ingreso horario" = formato_pesos(ingreso_hor)) %>% 
-  select(-(3:4))
-
+  arrange(-tasa_feminizacion) %>% 
+  transmute("Rama de la ocupación" = Rama,
+         "Tasa de feminización" = tasa_feminizacion,
+         "Ingreso mensual promedio" = formato_pesos(ingreso_promedio),
+         "Ingreso horario" = formato_pesos(ingreso_hor))
 ```
-
 
 Como se observa en la siguiente tabla, las mujeres se encuentran sobrerrepresentadas en aquellos sectores (trabajo doméstico y enseñanza, entre otros) en los cuales el salario promedio es menor al de sectores más masculinizados (transporte y comunicación, por ejemplo). 
 
 Esto se conoce como Paredes de Cristal, y hace referencia a los muros invisibles que segmentan el desarrollo laboral de las mujeres y genera que estas se concentren en sectores menos dinámicos y peor remunerados. 
 
-__Cuadro 3.__
+__Figura 6.__
+<br>
+<p style="color:#FE1764">__Indicadores por ramas de la ocupación__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cuadro3 <- kable(tabla4.1, align = 'llrrr', 
-      caption = paste("Ramas de ocupación. Tasa de feminización. Ingreso mensual promedio. Ingreso horario. ", date)) %>%
-  kable_styling(bootstrap_options = c("striped"), 
-                full_width = F, position = "left") %>%
-#  add_header_above(c(" " = 2, "Media del ingreso" = 2, " " = 1)) %>% 
-  footnote(general = "Natsumi Shokida en base a EPH-INDEC",
-           general_title = "Fuente: ",
-           title_format = c("italic"),
-           footnote_as_chunk = FALSE) %>% 
-  column_spec(2, width = "6cm") #%>% 
-#  column_spec(5, bold = TRUE, width = "2cm")
-
-cuadro3
+tabla6 %>% 
+  kable(align = 'lrrr', 
+        caption = paste("Tasa de feminización, ingreso mensual promedio, ingreso horario. ", aglo_date)) %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
+
+### Asalariadas/os
+
+COPIAR LO MISMO ACÁ PERO CON ASALARIADES Y AGREGAR TASA DE NO REGISTRO
+
+
+
+
+
+
+
+
 
 
 ## Brechas de ingresos mensuales
