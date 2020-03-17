@@ -1,8 +1,8 @@
 ---
 title: "La desigualdad de género se puede medir"
 subtitle: "Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2018."
-author: "Natsumi S. Shokida (@NatsuSh)^[ _Economista (FCE-UBA). Me dedico al análisis de datos. Formo parte de_ [Economía Femini(s)ta](http://economiafeminita.com/) _y_ [RLadies Buenos Aires](https://www.meetup.com/es/rladies-buenos-aires/). _Contacto_: natsumi.shokida@gmail.com]"
-date: "Octubre de 2019"
+author: "Julieta Moure^[nota al pie], Daiana Serpa^[nota al pie], Natsumi Shokida^[nota al pie] para Economía Femini(s)ta"
+date: "Marzo de 2020"
 output: 
   html_notebook:
     toc: true
@@ -24,37 +24,24 @@ library(knitr)
 library(ggalt)
 library(kableExtra)
 library(formattable)
-library(eph)
 library(openxlsx)
 library(gridExtra)
 library(magrittr)
+library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
+# Como fuente tomamos un script con el código que permite construir las ramas de la ocupación de acuerdo al nomenclador, y otro con funciones de formato para los datos.
+source("../../R/funciones rama.R")
+source("../../R/funciones formato.R")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 date <- "4to trimestre 2018"
+aglo_date <- paste0("Total de aglomerados urbanos. ", date)
+fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
 ```
 
 En este informe se presentan una serie de indicadores sociales, desagregados por sexo, calculados con bases públicas de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina). El objetivo de esta presentación es visibilizar la desigualdad de género en la composición del mercado de trabajo, la percepción de ingresos, entre otras cuestiones, en un formato amigable.        
 Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden descargar la sintaxis en lenguaje R.[^1]           
 Todos los datos refieren a los 31 aglomerados urbanos relevados en la EPH y en esta ocasión corresponden al `r date`. 
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Funciones útiles
-
-# Funciones de redondeo y presentación (quedan como character)
-formato_porc <- function(numero, dec = 1){
-  format(round(numero, digits = dec), nsmall = dec, decimal.mark = ",")
-}
-
-formato_pesos <- function(numero, dec = 2){
-  paste0("$", format(round(numero, digits = dec), nsmall = dec, big.mark = ".", decimal.mark = ","))
-}
-
-formato_cantidad <- function(numero, dec = 0){
-  format(round(numero, digits = dec), nsmall = dec, big.mark = ".", decimal.mark = ",")
-}
-
-```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
@@ -101,14 +88,14 @@ base_individual <- base_individual %>%
 colores = c("#FE1764", "#00BDD6")
 ```
 
-## Composición del Mercado de Trabajo
+## Mercado de Trabajo
 
 ### Tasas básicas
 
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla1.1 <- base_individual %>% 
+tabla1 <- base_individual %>% 
   filter(CH06 >= 14) %>% 
   group_by(Sexo) %>% 
   summarise(Poblacion         = sum(PONDERA),
@@ -130,10 +117,13 @@ tabla1.1 <- base_individual %>%
   gather(Indicadores, Valor, 2:8) %>% 
   spread(., Sexo, Valor)
 
-inline_1 <- tabla1.1 %>% filter(Indicadores == "Tasa Actividad") %>% 
-  transmute(diferencia = round((Varones-Mujeres)*100,-1))
+inline_1 <- tabla1 %>% 
+  filter(Indicadores == "Tasa Actividad") %>% 
+  transmute(diferencia = round((Varones-Mujeres)*100,-1)) # transmute() conserva solo las variables que creo
 inline_1 <- inline_1$diferencia
-inline_2 <- tabla1.1 %>% filter(Indicadores == "Tasa Empleo") %>% 
+
+inline_2 <- tabla1 %>% 
+  filter(Indicadores == "Tasa Empleo") %>% 
   transmute(diferencia = round((Varones-Mujeres)*100,-1))
 inline_2 <- inline_2$diferencia
 ```
@@ -147,21 +137,21 @@ La tasa de Empleo, por su parte, exhibe la proporción de ocupados entre la pobl
 
 Es importante aclarar que, desagregando en función de ciertas variables (edad, nivel educativo, tenencia de hijos/as o nivel de ingresos), estas diferencias entre hombres y mujeres sufrirán variaciones. 
 
-__Gráfico 1.__
+__Figura 1.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tabla1.2_graf <- tabla1.1 %>% 
+tabla1_graf1 <- tabla1 %>% 
   filter(Indicadores %in% c("Tasa Actividad", "Tasa Empleo")) %>% 
   gather(., Sexo, proporcion, 2:3)
 
-ggplot(tabla1.2_graf, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
                           label = paste0(formato_porc(proporcion*100), "%"))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
   facet_wrap(~Indicadores, strip.position = "bottom") +
   labs(title = "Tasas de Actividad y de Empleo por sexo",
-       subtitle = paste0("Población de 14 años y más. Total de aglomerados urbanos. ", date),
-       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+       subtitle = paste0("Población de 14 años y más. ", aglo_date),
+       caption = fuente) +
   theme_minimal() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -170,7 +160,7 @@ ggplot(tabla1.2_graf, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-ggsave("Grafico1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+# ggsave("Grafico1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 A diferencia de las tasas anteriores, las tasas de desocupación y subocupación expresan la proporción que estos grupos representan en la Población Económicamente Activa. 
@@ -178,22 +168,21 @@ En este caso, ambas tasas son mayores para las mujeres que para los varones. Est
 
 En su conjunto, estos cuatro indicadores presentan una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino. 
 
-
-__Gráfico 2.__
+__Figura 2.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tabla1.3_graf <- tabla1.1 %>% 
+tabla1_graf2 <- tabla1 %>% 
   filter(Indicadores %in% c("Tasa Desocupación", "Tasa Subocupación")) %>% 
   gather(., Sexo, proporcion, 2:3)
 
-ggplot(tabla1.3_graf, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+ggplot(tabla1_graf2, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
                           label = paste0(formato_porc(proporcion*100), "%"))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
   facet_wrap(~Indicadores, strip.position = "bottom") +
   labs(title = "Tasas de Desocupación y de Subocupación por sexo",
-       subtitle = paste0("Población de 14 años y más. Total de aglomerados urbanos. ", date),
-       caption = "Fuente: Natsumi Shokida en base a EPH-INDEC") +
+       subtitle = paste0("Población de 14 años y más. ", aglo_date),
+       caption = fuente) +
   theme_minimal() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
@@ -202,13 +191,13 @@ ggplot(tabla1.3_graf, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-ggsave("Grafico2.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+# ggsave("Grafico2.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 ### Por grupos de edad y sexo
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla1.4 <- base_individual %>% 
+tabla2 <- base_individual %>% 
   filter(CH06 >= 14) %>% 
   group_by(Sexo, GRUPO_EDAD) %>% 
   summarise(Poblacion         = sum(PONDERA),
@@ -230,21 +219,21 @@ tabla1.4 <- base_individual %>%
   mutate(Indicadores = factor(Indicadores, levels = c("Tasa Actividad", "Tasa Empleo", "Tasa Desocupación", "Tasa Subocupación"))) %>% 
   arrange(Indicadores)
 
-tabla1.4.m <- tabla1.4 %>% 
+tabla2m <- tabla2 %>% 
   select(-Varones) %>% 
   spread(., GRUPO_EDAD, Mujeres)
 
-tabla1.4.v <- tabla1.4 %>% 
+tabla2v <- tabla2 %>% 
   select(-Mujeres) %>% 
   spread(., GRUPO_EDAD, Varones)
 
-tabla1.5 <- left_join(tabla1.4.m, tabla1.4.v, by = "Indicadores") %>% 
+tabla3 <- left_join(tabla2m, tabla2v, by = "Indicadores") %>% 
   select(Indicadores, Mujeres = `de 14 a 29 años.x`, Varones = `de 14 a 29 años.y`,
          Mujeres = `de 30 a 64 años.x`, Varones = `de 30 a 64 años.y`)
 
-inline_3 <- tabla1.4.m$`de 14 a 29 años`[tabla1.4.m$Indicadores == "Tasa Desocupación"]
+inline_3 <- tabla2m$`de 14 a 29 años`[tabla2m$Indicadores == "Tasa Desocupación"]
 
-inline_4 <- tabla1.4.v$`de 14 a 29 años`[tabla1.4.m$Indicadores == "Tasa Desocupación"]
+inline_4 <- tabla2v$`de 14 a 29 años`[tabla2v$Indicadores == "Tasa Desocupación"]
 
 ```
 
@@ -255,61 +244,64 @@ En este caso, llama la atención que son las mujeres más jóvenes las que prese
 Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años. 
 
 
-__Cuadro 1.__
+__Figura 3.__
+<br>
+<p style="color:#FE1764">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cuadro1 <- kable(tabla1.5,
-      caption = paste("Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo. Población de 14 a 64 años. Total de aglomerados urbanos. ", date)) %>%
-  kable_styling(bootstrap_options = c("striped"), 
-                full_width = F, position = "left") %>%
-  add_header_above(c(" " = 1, "de 14 a 29 años" = 2, "de 30 a 64 años" = 2)) %>% 
-  footnote(general = "Natsumi Shokida en base a EPH-INDEC",
-           general_title = "Fuente: ",
-           title_format = c("italic"),
-           footnote_as_chunk = FALSE) %>%
+tabla3 %>% 
+  kable(#align = "c",
+        caption = paste0("Población de 14 a 64 años. ", aglo_date)) %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c(" " = 1, "de 14 a 29 años" = 2, "de 30 a 64 años" = 2),
+                   color = "white", background = "#FE1764") %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>%
   column_spec(1, width = "4cm") %>% 
   column_spec(2, bold = TRUE, width = "3cm") %>% 
   column_spec(3, width = "3cm") %>% 
   column_spec(4, width = "3cm") %>%
-  column_spec(5, width = "3cm")
-  
-cuadro1
+  column_spec(5, width = "3cm") %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 ## Empleo no registrado
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla2.1 <- base_individual %>% 
+tabla4 <- base_individual %>% 
   filter(ESTADO==1,
          CAT_OCUP==3) %>% 
   group_by(Sexo) %>% 
   summarise("Sin descuento jubilatorio" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1))
 
-inline_5 <- tabla2.1$`Sin descuento jubilatorio`[tabla2.1$Sexo == "Mujeres"]
-inline_6 <- tabla2.1$`Sin descuento jubilatorio`[tabla2.1$Sexo == "Varones"]
+inline_5 <- tabla4$`Sin descuento jubilatorio`[tabla4$Sexo == "Mujeres"]
+inline_6 <- tabla4$`Sin descuento jubilatorio`[tabla4$Sexo == "Varones"]
 ```
 
 La tasa de asalariados/as sin descuento jubilatorio es mayor en las mujeres. En concreto, Hay un `r inline_5` de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios mientras que en los asalariados varones dicha tasa es del `r inline_6`
 
-__Cuadro 2.__
+__Figura 4.__
+<br>
+<p style="color:#FE1764">__Empleo sin descuento jubilatorio por sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cuadro2 <- kable(tabla2.1,
-                 caption = paste("Empleo sin descuento jubilatorio por sexo. Ocupadas/os asalariadas/os. Total de aglomerados urbanos. ", date)) %>% 
-  kable_styling(bootstrap_options = c("striped"), 
-                full_width = F, position = "left") %>% 
-  footnote(general = "Natsumi Shokida en base a EPH-INDEC",
-           general_title = "Fuente: ",
-           title_format = c("italic"),
-           footnote_as_chunk = FALSE) %>% 
+tabla4 %>% 
+  kable(caption = paste("Ocupadas/os asalariadas/os. ", aglo_date),
+        align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n") %>%
   column_spec(1, width = "5cm") %>% 
-  column_spec(2, width = "7cm")
-
-cuadro2
+  column_spec(2, width = "7cm") %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
 ## Acceso a Cargos jerárquicos
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla3.1 <- base_individual %>% 
+tabla5 <- base_individual %>% 
   filter(JERARQUIA != "0",
          ESTADO == 1) %>%
   group_by(Sexo) %>% 
@@ -318,8 +310,8 @@ tabla3.1 <- base_individual %>%
   summarise(proporcion = round(sum(PONDERA)/unique(Frecuencia), 3),
             cantidad = sum(PONDERA))
 
-inline_7 <- formato_porc((tabla3.1$proporcion[tabla3.1$JERARQUIA %in% c("Dirección o Jefes") & tabla3.1$Sexo == "Varones"]) * 100)
-inline_8 <- formato_porc((tabla3.1$proporcion[tabla3.1$JERARQUIA %in% c("Dirección o Jefes") & tabla3.1$Sexo == "Mujeres"]) * 100)
+inline_7 <- formato_porc((tabla5$proporcion[tabla5$JERARQUIA %in% c("Dirección o Jefes") & tabla5$Sexo == "Varones"]) * 100)
+inline_8 <- formato_porc((tabla5$proporcion[tabla5$JERARQUIA %in% c("Dirección o Jefes") & tabla5$Sexo == "Mujeres"]) * 100)
 ```
 
 
@@ -347,17 +339,10 @@ ggplot(tabla3.1 %>% filter(JERARQUIA == "Dirección o Jefes"),
        
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-ggsave("Grafico3.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Grafico3.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
-
 
 ## Ramas
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-source("../../R/funciones rama.R")
-```
-
-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # ramas de ocupades, con tasa de feminización, ingreso promedio
@@ -546,7 +531,7 @@ ggplot(tabla5.1_graf,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-ggsave("Grafico4.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Grafico4.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 ### Brecha de ingresos mensuales por nivel educativo 
@@ -640,7 +625,7 @@ ggplot(tabla6.2_graf,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-ggsave("Grafico5.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Grafico5.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
 ## Brechas de ingresos horarios
@@ -922,7 +907,6 @@ ggplot(df, aes(x = x, y = y, fill = servicio.domestico)) +
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #ggsave("Graficos/Grafico9.png", scale = 3)
-
 ```
 
 <br>
@@ -956,7 +940,6 @@ ggplot(tabla13.1_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group= Sex
   theme_minimal() +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
-
 ```
              
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
