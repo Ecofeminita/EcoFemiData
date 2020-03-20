@@ -144,7 +144,7 @@ tabla1_graf1 <- tabla1 %>%
   gather(., Sexo, proporcion, 2:3)
 
 ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
-                          label = paste0(formato_porc(proporcion*100), "%"))) +
+                          label = percent(proporcion, digits = 1))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
@@ -175,7 +175,7 @@ tabla1_graf2 <- tabla1 %>%
   gather(., Sexo, proporcion, 2:3)
 
 ggplot(tabla1_graf2, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
-                          label = paste0(formato_porc(proporcion*100), "%"))) +
+                          label = percent(proporcion, digits = 1))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
@@ -243,6 +243,10 @@ En este caso, llama la atención que son las mujeres más jóvenes las que prese
 
 Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años. 
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1, tabla1_graf1, tabla1_graf2, 
+   inline_1, inline_2)
+```
 
 __Figura 3.__
 <br>
@@ -254,7 +258,7 @@ tabla3 %>%
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
                 #full_width = F, position = "left",
                 fixed_thead = T, font_size = 20) %>%
-  add_header_above(c(" " = 1, "de 14 a 29 años" = 2, "de 30 a 64 años" = 2),
+  add_header_above(c("\n" = 1, "de 14 a 29 años" = 2, "de 30 a 64 años" = 2),
                    color = "white", background = "#FE1764") %>% 
   footnote(general = fuente,
            general_title = "\n") %>%
@@ -264,6 +268,11 @@ tabla3 %>%
   column_spec(4, width = "3cm") %>%
   column_spec(5, width = "3cm") %>% 
   row_spec(0, bold = T, color = "white", background = "#FE1764")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2, tabla2m, tabla2v, tabla3, 
+   inline_3, inline_4)
 ```
 
 ## Empleo no registrado
@@ -298,6 +307,11 @@ tabla4 %>%
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla4, 
+   inline_5, inline_6)
+```
+
 ## Acceso a Cargos jerárquicos
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -324,7 +338,7 @@ __Figura 5.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(tabla5 %>% filter(JERARQUIA == "Dirección o Jefes"), 
        aes(x = '', proporcion, fill = Sexo, group = Sexo, 
-                          label = percent(proporcion))) +
+                          label = percent(proporcion, digits = 1))) +
   geom_col(position = "dodge") +
   geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
   scale_fill_manual(values = colores) +
@@ -340,6 +354,11 @@ ggplot(tabla5 %>% filter(JERARQUIA == "Dirección o Jefes"),
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
 # ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla5, 
+   inline_7, inline_8)
 ```
 
 ## Ramas de la ocupación
@@ -359,9 +378,9 @@ tabla6 <- base_individual %>%
             ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
   arrange(-tasa_feminizacion) %>% 
   transmute("Rama de la ocupación" = Rama,
-         "Tasa de feminización" = tasa_feminizacion,
-         "Ingreso mensual promedio" = formato_pesos(ingreso_promedio),
-         "Ingreso horario" = formato_pesos(ingreso_hor))
+            "Tasa de feminización" = tasa_feminizacion,
+            "Ingreso mensual promedio" = formato_pesos(round(ingreso_promedio, -2)),
+            "Ingreso horario" = formato_pesos(round(ingreso_hor)))
 ```
 
 Como se observa en la siguiente tabla, las mujeres se encuentran sobrerrepresentadas en aquellos sectores (trabajo doméstico y enseñanza, entre otros) en los cuales el salario promedio es menor al de sectores más masculinizados (transporte y comunicación, por ejemplo). 
@@ -384,16 +403,13 @@ tabla6 %>%
   row_spec(0, bold = T, color = "white", background = "#FE1764")
 ```
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla6)
+```
+
 ### Asalariadas/os
 
 COPIAR LO MISMO ACÁ PERO CON ASALARIADES Y AGREGAR TASA DE NO REGISTRO
-
-
-
-
-
-
-
 
 
 
@@ -401,7 +417,7 @@ COPIAR LO MISMO ACÁ PERO CON ASALARIADES Y AGREGAR TASA DE NO REGISTRO
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ingreso Total Individual
-tabla4.3 <- base_individual %>% 
+tabla7.1 <- base_individual %>% 
   filter(P47T > 0) %>% 
   group_by(Sexo) %>% 
   summarise(Media.ITI = round(weighted.mean(P47T, PONDII))) %>% 
@@ -410,7 +426,7 @@ tabla4.3 <- base_individual %>%
          Ingreso = "Ingreso Total Individual")
 
 # Ingreso de la Ocupación Principal
-tabla4.4 <- base_individual %>% 
+tabla7.2 <- base_individual %>% 
   filter(ESTADO == 1) %>% 
   group_by(Sexo) %>% 
   summarise(Media.IOP = round(weighted.mean(P21, PONDIIO))) %>% 
@@ -419,28 +435,38 @@ tabla4.4 <- base_individual %>%
          Ingreso = "Ingreso de la Ocupación Principal")
 
 # Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
-tabla4.5 <- base_individual %>% 
+tabla7.3 <- base_individual %>% 
   filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
   group_by(Sexo) %>% 
-  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO), 1)) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO))) %>% 
   spread(., Sexo, Media.IOP) %>% 
   mutate(Población = "Asalariadas/os sin desc. jubil.",
          Ingreso = "Ingreso de la Ocupación Principal")
 
-tabla4.6 <- bind_rows(tabla4.3, tabla4.4, tabla4.5) %>% 
+# Jubilaciones
+tabla7.4 <- base_individual %>% 
+  filter(V2_M > 0) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.JUB = round(weighted.mean(V2_M, PONDII))) %>% 
+  spread(., Sexo, Media.JUB) %>% 
+  mutate(Población = "Perceptores de jubilación",
+         Ingreso = "Jubilación")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla7 <- bind_rows(tabla7.1, tabla7.2, tabla7.3, tabla7.4) %>% 
   mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
-         Mujeres = formato_pesos(Mujeres),
-         Varones = formato_pesos(Varones)) %>% 
+         Mujeres = formato_pesos(round(Mujeres, -2)),
+         Varones = formato_pesos(round(Varones, -2))) %>% 
   select(Población, Ingreso, Mujeres, Varones, Brecha)
 
-inline_9 <- tabla4.6$`Brecha`[tabla4.6$Población == "Perceptores de ingresos"]
-inline_10 <- tabla4.6$`Brecha`[tabla4.6$Población == "Ocupadas/os"]
+inline_9 <- tabla7$`Brecha`[tabla7$Población == "Perceptores de ingresos"]
+inline_10 <- tabla7$`Brecha`[tabla7$Población == "Ocupadas/os"]
 
-inline_11 <- tabla4.6$`Mujeres`[tabla4.6$Población == "Ocupadas/os"]
-inline_12 <- tabla4.6$`Varones`[tabla4.6$Población == "Ocupadas/os"]
+inline_11 <- tabla7$`Mujeres`[tabla7$Población == "Ocupadas/os"]
+inline_12 <- tabla7$`Varones`[tabla7$Población == "Ocupadas/os"]
 
-inline_13 <- tabla4.6$`Brecha`[tabla4.6$Población == "Asalariadas/os sin desc. jubil."]
-
+inline_13 <- tabla7$`Brecha`[tabla7$Población == "Asalariadas/os sin desc. jubil."]
 ```
 
 
@@ -456,27 +482,38 @@ Finalmente, si tomamos en cuenta a aquellas personas que no poseen descuentos ju
 
 <br>
 
-__Cuadro 4.__
+__Figura 7.__
+<br>
+<p style="color:#FE1764">__Brechas de ingresos mensuales__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cuadro4 <- kable(tabla4.6, align = 'llrrr', 
-      caption = paste("Brechas de ingresos mensuales. ", date)) %>%
-  kable_styling(bootstrap_options = c("striped"), 
-                full_width = F, position = "left") %>%
-  add_header_above(c(" " = 2, "Media del ingreso" = 2, " " = 1)) %>% 
-  footnote(general = "Natsumi Shokida en base a EPH-INDEC",
-           general_title = "Fuente: ",
-           title_format = c("italic"),
-           footnote_as_chunk = FALSE) %>% 
+tabla7 %>% 
+  select(Población, Ingreso, Brecha, Mujeres, Varones) %>% 
+  kable(align = 'llrrr', 
+        caption = paste("Por poblaciones y tipos de ingresos. ", aglo_date)) %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 3, "Media del ingreso" = 2), 
+                   color = "white", background = "#FE1764") %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
   column_spec(2, width = "6cm") %>% 
-  column_spec(5, bold = TRUE, width = "2cm")
+  column_spec(3, bold = TRUE, width = "2cm") %>% 
+  row_spec(0, bold = T, color = "white", background = "#FE1764")
 
-cuadro4
+# En este cuadro la brecha mantiene comparabilidad con trimestres anteriores porque se calcula sobre los valores sin redondear
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla7, tabla7.1, tabla7.2, tabla7.3, tabla7.4, 
+   inline_9, inline_10, inline_11, inline_12, inline_13)
 ```
 
 ### Brecha de ingresos mensuales por calificación del puesto de trabajo
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla5.1 <- base_individual %>% 
+# Ocupades
+tabla8 <- base_individual %>% 
   filter(CALIFICACION != "0",
          ESTADO == 1) %>% 
   group_by(Sexo, CALIFICACION) %>% 
@@ -484,22 +521,27 @@ tabla5.1 <- base_individual %>%
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-tabla5.1_graf <- tabla5.1 %>% 
-  spread(., Sexo, IOP_mensual) %>% 
-  mutate(brecha = paste0(formato_porc((Varones-Mujeres)/Varones*100), "%"),
-         x = (Varones+Mujeres)/2)
+inline_14 <- tabla8 %>% 
+  filter(Sexo == "Varones", 
+         CALIFICACION == "Profesionales") %>% 
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(.)
 
+inline_15 <- tabla8 %>% 
+  filter(Sexo == "Mujeres",
+         CALIFICACION == "Profesionales") %>% 
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(.)
 
-inline_14 <- formato_pesos(tabla5.1$IOP_mensual[tabla5.1$Sexo == "Varones" & tabla5.1$CALIFICACION == "Profesionales"], dec = 0) 
-
-inline_15 <- formato_pesos(tabla5.1$IOP_mensual[tabla5.1$Sexo == "Mujeres" & tabla5.1$CALIFICACION == "Profesionales"], dec = 0)
-
-inline_16 <- tabla5.1 %>% 
+inline_16 <- tabla8 %>% 
   filter(CALIFICACION == "Profesionales") %>% 
   select(Sexo, IOP_mensual) %>% 
   spread(., Sexo, IOP_mensual) %>% 
-  transmute(valor = formato_porc((Varones-Mujeres)/Varones * 100))
-inline_16 <- inline_16$valor
+  transmute(valor = formato_porc((Varones-Mujeres)/Varones * 100)) %>% 
+  
+  
 
 inline_17 <- formato_pesos(tabla5.1$IOP_mensual[tabla5.1$Sexo == "Varones" & tabla5.1$CALIFICACION == "No Calificados"], dec = 0)
 
@@ -522,6 +564,11 @@ En los puestos no calificados, los varones ganan `r inline_17` en promedio, al t
 
 __Gráfico 4.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla8_graf <- tabla8 %>% 
+  spread(., Sexo, IOP_mensual) %>% 
+  mutate(brecha = percent((Varones-Mujeres)/Varones),
+         x = (Varones+Mujeres)/2)
+
 ggplot(tabla5.1_graf, 
        aes(x = Mujeres, xend = Varones, y = CALIFICACION, 
            group = CALIFICACION, label = brecha)) +
