@@ -561,6 +561,21 @@ inline_18 <- tabla8 %>%
   formato_pesos(., 0)
 
 inline_19 <- tabla8 %>% 
+  formato_pesos(.)
+
+inline_16 <- tabla8 %>% 
+  filter(CALIFICACION == "Profesionales") %>% 
+  select(Sexo, IOP_mensual) %>% 
+  spread(., Sexo, IOP_mensual) %>% 
+  transmute(valor = formato_porc((Varones-Mujeres)/Varones * 100)) %>% 
+  
+  
+
+inline_17 <- formato_pesos(tabla5.1$IOP_mensual[tabla5.1$Sexo == "Varones" & tabla5.1$CALIFICACION == "No Calificados"], dec = 0)
+
+inline_18 <- formato_pesos(tabla5.1$IOP_mensual[tabla5.1$Sexo == "Mujeres" & tabla5.1$CALIFICACION == "No Calificados"], dec = 0)
+
+inline_19 <- tabla5.1 %>% 
   filter(CALIFICACION == "No Calificados") %>% 
   pivot_wider(names_from = Sexo, values_from = IOP_mensual) %>% 
   mutate(brecha = (Varones-Mujeres)/Varones) %>% 
@@ -582,6 +597,12 @@ tabla8_graf <- tabla8 %>%
 ggplot(tabla8_graf, 
        aes(x = Mujeres, xend = Varones, 
            y = CALIFICACION, 
+  spread(., Sexo, IOP_mensual) %>% 
+  mutate(brecha = percent((Varones-Mujeres)/Varones),
+         x = (Varones+Mujeres)/2)
+
+ggplot(tabla5.1_graf, 
+       aes(x = Mujeres, xend = Varones, y = CALIFICACION, 
            group = CALIFICACION, label = brecha)) +
   geom_dumbbell(color = "#808080",
                 size_x = 3, size_xend = 3,
