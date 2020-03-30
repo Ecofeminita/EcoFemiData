@@ -59,7 +59,6 @@ Este reporte puede volverse un poco técnico por momentos, pero seguramente desd
 <br><br>
 ^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/XXXXXXXXXX.html"
 
-
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
 # Reiniciar R
@@ -81,6 +80,10 @@ library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente 
 source("../../R/funciones rama.R")
 source("../../R/funciones formato.R")
 ```
+
+En este informe se presentan una serie de indicadores sociales, desagregados por sexo, calculados con bases públicas de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina). El objetivo de esta presentación es visibilizar la desigualdad de género en la composición del mercado de trabajo, la percepción de ingresos, entre otras cuestiones, en un formato amigable.        
+Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden descargar la sintaxis en lenguaje R.[^1]           
+Todos los datos refieren a los 31 aglomerados urbanos relevados en la EPH y en esta ocasión corresponden al `r date`. 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
@@ -182,8 +185,6 @@ Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es q
 La tasa de Empleo, por su parte, exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso también supera los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.     
 
 Es importante aclarar que, desagregando en función de ciertas variables (edad, nivel educativo, tenencia de hijos/as o nivel de ingresos), estas diferencias entre hombres y mujeres sufrirán variaciones. 
-  
----
 
 __Figura 1.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -390,7 +391,6 @@ inline_8 <- tabla5 %>%
   pull(proporcion) %>% 
   percent(., 1)
 ```
-
 
 Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un `r inline_7` de los ocupados varones tienen cargos de dirección o son jefes, un `r inline_8` de las ocupadas ejercen puestos de esas características. 
 
@@ -904,6 +904,7 @@ rm(tabla11, tabla11_graf)
 
 ### Horas trabajadas
 <br><br>
+
 Al comparar las horas promedio trabajadas, la magnitud de la brecha disminuye notablemente. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante de (aunque no toda) la brecha de ingresos mensuales.
 Cabe cuestionarse entonces respecto al porqué de la diferencia de horas trabajadas por mujeres y por hombres. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿son más holgazanas? ¿o en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los hombres están exentos?
 
@@ -967,6 +968,7 @@ kable(tabla12, digits = 1, align = 'lccc',
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
 
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla12.1, tabla12.2, tabla12.3, tabla12)
 ```
@@ -979,6 +981,7 @@ rm(tabla12.1, tabla12.2, tabla12.3, tabla12)
 
 ### Distribución de las tareas domésticas
 <br><br>
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla13_graf <- base_individual %>% 
   left_join(., base_hogar %>% 
@@ -1082,6 +1085,7 @@ rm(tabla14.1, tabla14.2)
 
 ### Distribución del Ingreso
 <br><br>
+
 Por último, podemos analizar las brechas de género en la distribución de los ingresos. En primer lugar, se ordena por deciles a las personas según su ingreso per cápita familiar (el ingreso total del hogar dividido por la cantidad de personas que lo componen). Es decir, se forman diez grupos de individuos, de igual tamaño, ordenados según el nivel de ingresos que le corresponden por el hogar al que pertenece. En el gráfico 10 se puede observar la proporción de mujeres y de varones que finalmente componen cada decil. 
 
 En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general).
@@ -1152,14 +1156,6 @@ ggplot(tabla16_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sexo
 En el gráfico 10, las unidades de análisis son los hogares, sólo que luego se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el gráfico 11 vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero es dentro de ésta que se mantiene la diferencia: de acuerdo a todo lo visto anteriormente, los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
 Entonces, la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones. 
       
-
-
-```{r}
-tabla16_graf %>% 
-  datatable(extensions = 'Buttons',
-            options = list(dom = 'B',
-                           buttons = c('copy', 'excel')))
-```
 
 
 
