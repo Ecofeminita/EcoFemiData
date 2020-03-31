@@ -177,14 +177,12 @@ inline_2 <- tabla1 %>%
   pull(diferencia)
 ```
 
-En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo.      
-La tasa de Actividad es la relación entre aquellos que participan en el mercado de trabajo (ya sea como ocupados o como desocupados) y la población total. En este caso, dicha tasa es ampliamente mayor entre los varones (la diferencia supera los `r inline_1` puntos porcentuales). 
-
-Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. 
-
-La tasa de Empleo, por su parte, exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso también supera los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.     
-
-Es importante aclarar que, desagregando en función de ciertas variables (edad, nivel educativo, tenencia de hijos/as o nivel de ingresos), estas diferencias entre hombres y mujeres sufrirán variaciones. 
+En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo.
+<br><br>
+La __tasa de actividad__ es la relación entre aquellos que participan en el mercado de trabajo (ya sea como ocupados o como desocupados) y la población total. En este caso, dicha tasa es ampliamente mayor entre los varones (la diferencia supera los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La __tasa de empleo__, por su parte, exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso también supera los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.
+<br><br>
+Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos.
+<br><br>
 
 __Figura 1.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -212,10 +210,12 @@ ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 # ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
 ```
 
-A diferencia de las tasas anteriores, las tasas de desocupación y subocupación expresan la proporción que estos grupos representan en la Población Económicamente Activa. 
-En este caso, ambas tasas son mayores para las mujeres que para los varones. Esto señala  que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. 
+---
 
-En su conjunto, estos cuatro indicadores presentan una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino. 
+A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. En este caso, ambas tasas son mayores para las mujeres que para los varones. Esto señala que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa.
+<br><br>
+En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino.
+<br><br>
 
 __Figura 2.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -248,6 +248,7 @@ rm(tabla1, tabla1_graf1, tabla1_graf2)
 ```
 
 #### Por grupos de edad
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla2 <- base_individual %>% 
@@ -294,11 +295,12 @@ inline_4 <- tabla2v %>%
   pull(`de 14 a 29 años`)
 ```
 
-A continuación, se exponen las mismas tasas, pero desagregadas por grupos de edad además de por sexo. 
-
-En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de Desocupación y Subocupación. Para dar un ejemplo, un `r inline_3` de las mujeres de 14 a 29 años está desocupada, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de `r inline_4`
-
-Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años. 
+A continuación se exponen los mismos indicadores, pero desagregados por grupos de edad además de por sexo.
+<br><br>
+En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de `r inline_4`.
+<br><br>
+Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años.
+<br><br>
 
 __Figura 3.__
 <br>
@@ -327,6 +329,7 @@ rm(tabla2, tabla2m, tabla2v, tabla3)
 ```
 
 #### Empleo no registrado
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla4 <- base_individual %>% 
@@ -344,7 +347,8 @@ inline_6 <- tabla4 %>%
   pull(`Sin descuento jubilatorio`)
 ```
 
-La tasa de asalariados/as sin descuento jubilatorio es mayor en las mujeres. En concreto, Hay un `r inline_5` de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios mientras que en los asalariados varones dicha tasa es del `r inline_6`
+La falta de descuento jubilatorio suele ser un indicador que aproxima la falta de registro de la relación laboral asalariada. Como puede verse en el siguiente cuadro, la incidencia de esta problemática es mayor entre las asalariadas mujeres. En concreto, hay un `r inline_5` de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios, mientras que para los asalariados varones dicha tasa es del `r inline_6`.
+<br><br>
 
 __Figura 4.__
 <br>
@@ -368,6 +372,7 @@ rm(tabla4)
 ```
 
 #### Cargos jerárquicos
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla5 <- base_individual %>% 
@@ -392,9 +397,10 @@ inline_8 <- tabla5 %>%
   percent(., 1)
 ```
 
-Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un `r inline_7` de los ocupados varones tienen cargos de dirección o son jefes, un `r inline_8` de las ocupadas ejercen puestos de esas características. 
-
-Esta problemática es conocida como Techo de Cristal, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. 
+Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un `r inline_7` de los ocupados varones tienen cargos de dirección o son jefes, un `r inline_8` de las ocupadas ejercen puestos de esas características.
+<br><br>
+Esta problemática es conocida como __Techo de Cristal__ o __segregación vertical__ del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo.
+<br><br>
 
 __Figura 5.__       
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -423,6 +429,7 @@ rm(tabla5)
 ```
 
 #### Ramas de la ocupación
+<br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla6 <- base_individual %>% 
@@ -442,9 +449,10 @@ tabla6 <- base_individual %>%
             "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
 ```
 
-Como se observa en la siguiente tabla, las mujeres se encuentran sobrerrepresentadas en aquellos sectores (trabajo doméstico y enseñanza, entre otros) en los cuales el salario promedio es menor al de sectores más masculinizados (transporte y comunicación, por ejemplo). 
-
-Esto se conoce como Paredes de Cristal, y hace referencia a los muros invisibles que segmentan el desarrollo laboral de las mujeres y genera que estas se concentren en sectores menos dinámicos y peor remunerados. 
+La siguiente tabla representa al total de ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
+<br><br>
+Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. 
+<br><br>
 
 __Figura 6.__
 <br>
@@ -452,7 +460,7 @@ __Figura 6.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla6 %>% 
   kable(align = 'lrrr', 
-        caption = paste("Tasa de feminización, ingreso mensual promedio, ingreso horario. ", aglo_date)) %>%
+        caption = paste("Ocupadas/os. Tasa de feminización, ingreso mensual promedio, ingreso horario. ", aglo_date)) %>%
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
                 #full_width = F, position = "left",
                 fixed_thead = T, font_size = 20) %>%
@@ -472,13 +480,16 @@ rm(tabla6)
 
 ### Ingresos {.tabset .tabset-fade .tabset-pills}
 <br><br>
-En esta sección...
+En esta sección se coloca el foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. A su vez, pueden distinguirse los ingresos mensuales y los ingresos por hora trabajada.
+<br><br>
+Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como "las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones".
 
 ---
 
 #### Ingresos mensuales
 
 ##### Brechas de ingresos mensuales
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ingreso Total Individual
@@ -546,18 +557,14 @@ inline_13 <- tabla7 %>%
   pull(Brecha)
 ```
 
-
-A continuación se hace foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. Incluso pueden distinguirse los ingresos mensuales y los ingresos horarios.
-
-Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como "las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones".        
-
-Como se ve en el cuadro 4, para el caso de todas aquellas perceptoras/os de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de `r inline_9`. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones. 
-
-Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un `r inline_10` menos que los varones (`r inline_11` vs. `r inline_12` ). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de la ocupación principal.  
-
-Finalmente, si tomamos en cuenta a aquellas personas que no poseen descuentos jubilatorios, se observa como las mujeres ganan en promedio un `r inline_13` menos que sus pares. Es decir que la brecha de ingresos de las/os ocupadas/os se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.    
-
-<br>
+Como se ve en el siguiente cuadro, para el caso de todas las personas perceptoras de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de `r inline_9`. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones.
+<br><br>
+Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un `r inline_10` menos que los varones (`r inline_11` vs. `r inline_12` ). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal.
+<br><br>
+Si tomamos en cuenta únicamente a aquellas personas que no poseen descuentos jubilatorios, se observa cómo las mujeres ganan en promedio un `r inline_13` menos que sus pares. Es decir que la brecha de ingresos entre las y los trabajadores se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.
+<br><br>
+Finalmente, puede observarse que también existe una brecha, aunque mucho menor, entre las jubilaciones que perciben las mujeres y los varones.
+<br><br>
 
 __Figura 7.__
 <br>
@@ -585,7 +592,10 @@ tabla7 %>%
 rm(tabla7, tabla7.1, tabla7.2, tabla7.3, tabla7.4)
 ```
 
+---
+
 ##### Brecha de ingresos mensuales por calificación del puesto de trabajo
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ocupades
@@ -640,9 +650,9 @@ inline_19 <- tabla8 %>%
   percent(., 1)
 ```
 
-El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo.
-Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de `r inline_14`, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de `r inline_15`, es decir, un `r inline_16` menos que los varones.    
-En los puestos no calificados, los varones ganan `r inline_17` en promedio, al tiempo que las mujeres ganan alrededor de `r inline_18`. Esta brecha es del `r inline_19`.             
+El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de `r inline_14`, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de `r inline_15`, es decir, un `r inline_16` menos que los varones.    
+En los puestos no calificados, los varones ganan `r inline_17` en promedio, al tiempo que las mujeres ganan alrededor de `r inline_18`. Esta brecha es del `r inline_19`.
+<br><br>
 
 __Figura 8.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -679,7 +689,10 @@ ggplot(tabla8_graf,
 rm(tabla8, tabla8_graf)
 ```
 
+---
+
 ##### Brecha de ingresos mensuales por nivel educativo 
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla9.1 <- base_individual %>% 
@@ -715,7 +728,10 @@ inline_21 <- tabla9.2 %>%
   percent(., 1)
 ```
 
-Como puede observarse en el cuadro siguiente, la proporción de ocupadas/os con nivel educativo superior es notablemente mayor en las mujeres que en los varones
+Como puede observarse en el cuadro siguiente, el porcentaje de personas que cuentan con un nivel educativo superior es notablemente mayor entre las ocupadas mujeres, en comparación a los ocupados varones.
+<br><br>
+Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos es del `r inline_20` para las de nivel universitario/superior, y del `r inline_21` para las que cuentan con nivel primario.
+<br><br>
 
 __Figura 9.__
 <br>
@@ -745,7 +761,7 @@ tabla9.2_graf <- tabla9.2 %>%
          x = (Varones+Mujeres)/2)
 ```
 
-Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos es del `r inline_20` para las de nivel universitario/superior, y del `r inline_21` para las que cuentan con nivel primario. 
+<br><br>
 
 __Figura 10.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -780,6 +796,7 @@ rm(tabla9.1, tabla9.2, tabla9.2_graf)
 #### Ingresos horarios
 
 ##### Brechas de ingresos horarios
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ocupades. Ingreso de la Ocupación Principal
@@ -822,7 +839,8 @@ tabla10 <- bind_rows(tabla10.1, tabla10.2, tabla10.3) %>%
   select(Población, Mujeres, Varones, Brecha)
 ```
 
-Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora de las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Esto señala que las mujeres trabajan, por lo general, menos horas. Como se verá más adelante, esto está ligado al trabajo que las mismas realizan al interior de los hogares. 
+Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Que las brechas sean más amplias comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares.
+<br><br>
 
 __Figura 11.__
 <br>
@@ -846,7 +864,10 @@ kable(tabla10, digits = 1, align = 'lccc',
 rm(tabla10.1, tabla10.2, tabla10.3, tabla10)
 ```
 
+---
+
 ##### Brecha de ingresos horarios por nivel educativo
+<br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla11 <- base_individual %>% 
@@ -865,8 +886,8 @@ tabla11_graf <- tabla11 %>%
          x = (Varones+Mujeres)/2)
 ```
 
-
-Como se analizó en el caso anterior, si se observa la brecha de ingresos horarios por nivel educativo alcanzado la misma se reduce significativamente. 
+Tal como se analizó en el caso anterior, si se observa la brecha de ingresos horarios por nivel educativo alcanzado, la misma se reduce significativamente, aunque sigue presente en algunas categorías.
+<br><br>
 
 __Figura 12.__ 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -905,9 +926,10 @@ rm(tabla11, tabla11_graf)
 ### Horas trabajadas
 <br><br>
 
-Al comparar las horas promedio trabajadas, la magnitud de la brecha disminuye notablemente. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante de (aunque no toda) la brecha de ingresos mensuales.
-Cabe cuestionarse entonces respecto al porqué de la diferencia de horas trabajadas por mujeres y por hombres. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿son más holgazanas? ¿o en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los hombres están exentos?
-
+La idea de la "brecha" también puede aplicarse para comparar las horas que trabajan en promedio mujeres y varones en el mercado de trabajo, de forma remunerada. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante (aunque no toda) de la brecha de ingresos mensuales.
+<br><br>
+Cabe cuestionarse entonces respecto al porqué de la diferencia de horas trabajadas por mujeres y por hombres. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿son más "vagas"? ¿o en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los hombres están exentos? Como veremos más adelante, los datos sugieren una estrecha relación con la distribución de las tareas domésticas hacia el interior de los hogares.
+<br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ocupades
@@ -968,7 +990,6 @@ kable(tabla12, digits = 1, align = 'lccc',
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
 
-
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla12.1, tabla12.2, tabla12.3, tabla12)
 ```
@@ -1003,14 +1024,14 @@ inline_23 <- tabla13_graf %>%
   pull(proporcion)
 ```
 
-El trabajo doméstico suele recaer más en las mujeres que en los varones. 
-Es decir, es más probable que sean estas las encargadas de realizar tareas de cuidado y reproducción para otros miembros de su hogar. Este trabajo no se comercia en el mercado y por tanto no es remunerado. 
-
+El trabajo doméstico suele recaer más en las mujeres que en los varones. Es decir, es más probable que sean éstas las encargadas de realizar tareas de cuidado y reproducción para otros miembros de su hogar. En estos casos, el trabajo no se comercia en el mercado, se realiza entre quienes tienen un vínculo personal, y por tanto no es remunerado.
+<br><br>
 A modo ilustrativo, se señala que: del total de personas que realizan tareas domésticas, un `r inline_22`% son mujeres y un `r inline_23`% son varones. Esto sucede si tenemos en cuenta el total de los hogares, y seguramente la diferencia se agravaría si quitáramos los hogares unipersonales del conteo y/o incluyéramos a las trabajadoras de servicio doméstico.    
 
 Este reparto desigual de las tareas domésticas entre varones y mujeres podría asociarse a las desigualdades vistas anteriormente en la composición del mercado de trabajo (obstáculos en el acceso a cargos jerárquicos, precarización laboral, etc ) y responde a un conjunto de normas sociales y estereotipos de género que asignan mandatos diferenciales a varones y mujeres.
 
 Dicha feminización de las tareas de cuidado penaliza a estas últimas, haciendo que enfrenten extensas cargas de trabajo en el hogar y, por ende, imponiendo una fuerte restricción temporal y afectando el acceso al mercado de trabajo y a la trayectoria laboral. 
+<br><br>
 
 __Figura 14.__ 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
