@@ -2,7 +2,7 @@
 title: "La desigualdad de género se puede medir"
 subtitle: "Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2018."
 author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para Economía Femini(s)ta"
-date: "Marzo de 2020"
+date: "Abril de 2020"
 output: 
   html_notebook:
     theme: flatly
@@ -39,13 +39,15 @@ fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
 
 ### Introducción
 <br><br>
-En este informe se presentan una serie de indicadores sociales, desagregados por sexo, calculados con bases públicas de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina). El objetivo de esta presentación es visibilizar la desigualdad de género en la composición del mercado de trabajo, la percepción de ingresos, entre otras cuestiones, en un formato amigable.
+El objetivo de este informe es visibilizar las diferencias que, de acuerdo al género de las personas, pueden encontrarse en el ámbito del mercado de trabajo, los ingresos que perciben, la cantidad de horas que trabajan semanalmente, la distribución de las tareas domésticas. También se indaga sobre la expresión de estos mismos fenómenos en la distribución del ingreso a nivel social. Para ello se presenta una serie de indicadores, cuadros y gráficos de elaboración propia, que intentan responder preguntas como ¿Cómo se compone el mercado de trabajo de acuerdo al género de las personas?, ¿Hay diferencia entre varones y mujeres cuando hablamos de trabajo informal?¿Y cuando hablamos de cargos jerárquicos?, ¿Qué tanta diferencia hay entre los ingresos de los varones y de las mujeres?, ¿Los varones cobran más por cada hora trabajada?, ¿Trabajan las mujeres menos horas que los varones?, ¿Y qué pasa si consideramos trabajo no sólo a lo que se remunera sino también al trabajo doméstico?.
 <br><br>
-Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden descargar la sintaxis en lenguaje R^4^.
+Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
 <br><br>
-Todos los datos refieren a los 31 aglomerados urbanos relevados en la EPH y en esta ocasión corresponden al `r date`. 
+Los indicadores presentados se encuentran desagregados según la variable disponible, que indica el _sexo_ declarado por las personas respondentes de la encuesta, de acuerdo a una distinción _binaria_. Bregamos por la incorporación definitiva de una pregunta que nos permita tener información sobre la identidad de género de las personas en el próximo censo nacional, además de la referida al sexo asignado al nacer. La población trans-travesti históricamente ha sido excluida mediante violencia física, simbólica, psicológica, sexual y económica del sistema educativo, de salud y del trabajo formal. Dada la situación de vulnerabilidad a la que muches se enfrentan, resulta fundamental que estén presentes en las estadísticas oficiales.
 <br><br>
-Este reporte puede volverse un poco técnico por momentos, pero seguramente desde [Economía Femini(s)ta](http://economiafeminita.com/) realicemos también otras notas de carácter divulgatorio. Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^5^. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+El documento se realizó utilizando el lenguaje de programación R, y para les curioses todo el código se encuentra disponible para su descarga^4^. 
+<br><br>
+Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^5^. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 
 ---
 
@@ -53,11 +55,11 @@ Este reporte puede volverse un poco técnico por momentos, pero seguramente desd
 <br><br>
 ^2^ Daiana Serpa
 <br><br>
-^3^ Natsumi Shokida
+^3^ Natsumi Shokida es economista (FCE-UBA), coordinadora de EcoFemiData, el área de datos de [Economía Femini(s)ta](http://economiafeminita.com).
 <br><br>
 ^4^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe, que incluye la descarga automática de las bases de la EPH utilizadas, una serie de funciones útiles y la elaboración de cuadros y gráficos con el lenguaje R.
 <br><br>
-^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/XXXXXXXXXX.html"
+^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2018_04/informe.nb.html"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
@@ -80,10 +82,6 @@ library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente 
 source("../../R/funciones rama.R")
 source("../../R/funciones formato.R")
 ```
-
-En este informe se presentan una serie de indicadores sociales, desagregados por sexo, calculados con bases públicas de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina). El objetivo de esta presentación es visibilizar la desigualdad de género en la composición del mercado de trabajo, la percepción de ingresos, entre otras cuestiones, en un formato amigable.        
-Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden descargar la sintaxis en lenguaje R.[^1]           
-Todos los datos refieren a los 31 aglomerados urbanos relevados en la EPH y en esta ocasión corresponden al `r date`. 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
@@ -136,7 +134,7 @@ colores = c("#FE1764", "#00BDD6")
 
 ### Sobre la composición del Mercado de Trabajo {.tabset .tabset-fade .tabset-pills}
 <br><br>
-En esta sección se presentan...
+En esta sección se intenta dar cuenta de las asimetrías que existen en el mercado de trabajo en cuanto a su composición. Para esto se utilizan las tasas de actividad, empleo, desempleo y subocupación según el sexo de las personas, para ver qué tan masculinizado se encuentra el mismo y ver si las mujeres encuentran más problemas a la hora de conseguir un empleo. También se analizan estos indicadores teniendo en cuenta la edad de las personas, y se examina la incidencia de la informalidad en las relaciones de dependencia de asalariados y asalariadas. A su vez, se grafica la diferencia en acceso a cargos jerárquicos y la estructura de las diferentes ramas de ocupación, vinculando estos datos a las ideas de segregación vertical y horizontal en el mercado de trabajo.
 
 ---
 
@@ -1088,11 +1086,7 @@ inline_25 <- tabla14.2 %>%
   pull(proporcion)
 ```
 
-A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres, un `r inline_24`. Asimismo, del total de mujeres ocupadas, un `r inline_25` se dedica a esta ocupación, conformando entonces una salida laboral popular. Para más información:
-
-```{r}
-#AGREGAR LINK AL COMUNICADO DE TRABAJADORAS DOMESTICAS
-```
+A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres, un `r inline_24`. Asimismo, del total de mujeres ocupadas, un `r inline_25` se dedica a esta ocupación, conformando entonces una salida laboral popular. Para más información, podés consultar el informe [Las trabajadoras de servicio doméstico en Argentina](http://economiafeminita.com/informe-servicio-domestico/).
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla14.1, tabla14.2)

@@ -2,6 +2,8 @@
 
 Realizados con la Encuesta Permanente de Hogares (EPH) del INDEC (Argentina)
 
+## [4to trimestre de 2018](trim_2018_04/informe.nb.html)
+
 ## [3er trimestre de 2018](trim_2018_03/2018_3T.nb.html)
 
 ## [2do trimestre de 2018](trim_2018_02/2018_2T.nb.html)
