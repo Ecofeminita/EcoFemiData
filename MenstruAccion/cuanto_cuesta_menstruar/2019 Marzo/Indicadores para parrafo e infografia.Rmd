@@ -1,0 +1,128 @@
+---
+title: "Indicadores para Menstruacción"
+subtitle: "Ecofemini(s)ta"
+Author: "Candelaria Botto, Natsumi Shokida"
+Date: "Marzo 2018"
+output: html_notebook
+---
+
+Se utiliza la base de la EPH, 3er trimestre de 2017, disponible en la página web del INDEC.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+rm(list = ls())
+library(reldist)
+source("Fuentes/funciones.R")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+descarga_ultima_base(base = "EPH_usu_3_Trim_2017_txt.zip", individual = TRUE)
+descarga_ultima_base(base = "EPH_usu_3_Trim_2017_txt.zip", hogar = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+base_individual <- base_individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"))
+```
+
+
+### Mujeres de 14 años y más. Cuantiles del Ingreso Total Individual (incluyendo a las Sin ingresos). 
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+mujeres.ing.tot <- base_individual %>% 
+  filter(CH04 == 2 & CH06 >= 14) %>% 
+  summarise(cuantil.25 = wtd.quantile(P47T, 0.25, na.rm = TRUE, weight = PONDII),
+            mediana = wtd.quantile(P47T, 0.5, na.rm = TRUE, weight = PONDII),
+            cuantil.75 = wtd.quantile(P47T, 0.75, na.rm = TRUE, weight = PONDII))
+
+mujeres.ing.tot
+```
+"La mitad de las mujeres en nuestro país perciben menos de 5.000 pesos entre ingresos laborales y no laborales."
+
+### Ocupadas/os. Brechas de Ingresos de la Ocupación Principal.
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+brecha.ing.ocup.princ <- base_individual %>% 
+  filter(ESTADO == 1) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO), 2)) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate("X% menos que los hombres" = round(((Varones-Mujeres)/Varones)*100, 2))
+
+brecha.ing.ocup.princ
+```
+
+### Asalariadas/os. Tasa de empleo no registrado.
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+no.registro <- base_individual %>% 
+  filter(ESTADO==1,
+         CAT_OCUP==3) %>% 
+  group_by(Sexo) %>% 
+  summarise("Tasa de no Registrados" = round(sum(PONDERA[PP07H==2])/sum(PONDERA)*100, 2))
+
+no.registro
+```
+
+### Asalariadas/os no registrados. Brecha del Ingreso de la Ocupación Principal.
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+brecha.no.registro <- base_individual %>% 
+  filter(ESTADO == 1 &
+           CAT_OCUP == 3 & 
+           PP07H == 2) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO), 2)) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate("X% menos que los hombres" = round(((Varones-Mujeres)/Varones)*100, 2))
+
+brecha.no.registro
+```
+
+### Hogares. Porcentaje de hogares cuyo único ingreso proviene de una jefa mujer.
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+mujeres.sosten.hogar <- base_individual %>% 
+  filter(CH03 == 1 & Sexo == "Mujeres" & P47T == ITF) %>% 
+  summarise(cantidad = sum(PONDERA))
+  
+hogares.totales <- base_hogar %>% 
+  summarise(hogares.totales = sum(PONDERA))
+
+tasa.mujeres.sosten <- mujeres.sosten.hogar$cantidad / hogares.totales$hogares.totales *100
+tasa.mujeres.sosten
+```
+
+### Hogares. Porcentaje de hogares con mujeres en edad de menstruar (entre 12 y 52 años).
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
+hogares.mujeres.menstruan <- base_individual %>% 
+  filter(Sexo == "Mujeres" &
+           CH06 >= 12 &
+           CH06 <= 52) %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  summarise(n = n(),
+            PONDERA = unique(PONDERA))
+
+tasa.hogares.mujeres.menstruan <- sum(hogares.mujeres.menstruan$PONDERA) / sum(base_hogar$PONDERA) *100
+tasa.hogares.mujeres.menstruan
+```
+
+### Hogares. Mediana del ITF.
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+hogares.ITF <- base_hogar %>% 
+  summarise(cuantil.25 = wtd.quantile(ITF, 0.25, na.rm = TRUE, weight = PONDIH),
+            mediana = wtd.quantile(ITF, 0.5, na.rm = TRUE, weight = PONDIH),
+            cuantil.75 = wtd.quantile(ITF, 0.75, na.rm = TRUE, weight = PONDIH),
+            decil.10 = wtd.quantile(ITF, 0.10, na.rm = TRUE, weight = PONDIH))
+
+hogares.ITF
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

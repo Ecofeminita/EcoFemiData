@@ -1,0 +1,231 @@
+---
+title: "#MenstruAcción"
+subtitle: "Datos 2019"
+output: html_notebook
+---
+
+# Organización y limpieza de los datos
+
+Fuente: preciosclaros.gob.ar e INDEC          
+Precios: Toallitas y tampones. Productos disponibles en la página al 05/03/2019         
+          
+Obtención de los datos: Nay de Las de sistemas, incorporar sus aclaraciones metodológicas que mandó por mail.          
+          
+Contamos con 118.561 observaciones        
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(list = ls())
+source("Fuentes/funciones.R")
+library(EnvStats)
+datos <- read.csv("Fuentes/precios-gestion-menstrual_05-03-2019.csv", header = TRUE, sep = ",", dec = ".", fill = TRUE, encoding = "UTF-8")
+```
+
+* Variables del dataset
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(names(datos))
+```
+
+* Categorias
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(table(datos$Categoria, exclude = NULL))
+```
+
+* Marcas
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(table(datos$Marca, exclude = NULL))
+```
+
+* Presentación
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(table(datos$Presentacion, exclude = NULL))
+```
+
+* Provincias
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(table(datos$Provincia, exclude = NULL))
+```
+
+*Precio de lista
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(datos$Precio.de.lista)
+```
+
+Modifico la variable Presentacion, para quedarme con las unidades
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(Presentacion = as.character(Presentacion),
+         unidades = as.numeric(substr(Presentacion, 1, nchar(Presentacion)-4)))
+
+as.data.frame(table(datos$unidades, exclude = NULL))
+```
+
+Hay casos que, de acuerdo a la descripción en Nombre, tienen mal la cantidad de unidades en Presentacion (y por ende en unidades), afectando el calculo de precios unitarios.           
+         
+Utilizando expresiones regulares me quedo con los dígitos, sean uno o más, que están seguidos de "Un" o "un".
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(unidades.regex = as.numeric(str_extract(Nombre, '\\d+(?=\\s*[Uu]n)')))
+
+as.data.frame(table(datos$unidades.regex, exclude = NULL))
+```
+
+Corrijo las unidades, para que quede lo del regex en los casos en que no coincide.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(unidades = case_when(unidades == unidades.regex ~ unidades,
+                              is.na(unidades.regex) ~ unidades,
+                              !is.na(unidades.regex) & (unidades != unidades.regex) ~ unidades.regex))
+
+as.data.frame(table(datos$unidades, exclude = NULL))
+```
+
+A partir de esta modifición baja la frecuencia de la presentación de 1 unidad, suben las de 8, 16 y 20 unidades, desaparecen las de 12, 27, 50 y 54 unidades, y aparece la de 30 unidades.          
+           
+Calculo el Precio por unidad
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(precio.por.unidad = round(Precio.de.lista/unidades, 2))
+
+summary(datos$precio.por.unidad)
+```
+
+Gráfico de boxplot de los precios unitarios por categoría
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(datos, aes(x = Categoria, y = precio.por.unidad)) +
+  geom_boxplot()
+```
+
+Cargo la estimación, por provincia, de personas que menstrúan. Esto sale de las proyecciones poblacionales del INDEC para 2019, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional.      
+                 
+Además, dada la cantidad de outliers vista en los gráficos de boxplot, a la hora de calcular los promedios de precios provinciales remuevo las colas, utilizando una media alfa podada:      
+* alfa = 2.5%
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+menstruan <- read_xls("Fuentes/poblaciones.xls", sheet = 1)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+menstruan <- menstruan %>% 
+  mutate(total = sum(Menstruan),
+         pond = Menstruan/total) %>% 
+  select(Provincia, pond)
+```
+
+# Resultados
+
+## Total Nacional
+
+### Toallitas
+
+* Precio promedio por unidad
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+toallitas <- datos %>% 
+  filter(Categoria == "toallitas") %>%
+  group_by(Provincia) %>% 
+  summarise(prom = mean(precio.por.unidad, trim = 0.025)) %>% 
+  left_join(., menstruan, by = "Provincia")
+
+valor.toallitas <- weighted.mean(toallitas$prom, toallitas$pond)
+
+print(paste("Toallitas: El precio promedio por unidad es de $", round(valor.toallitas, 2)))
+```
+
+* Gasto por año por persona
+
+Teniendo en cuenta:     
+ciclos por año: 13      
+productos utilizados por ciclo: 22
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ciclos.por.anio <- 13
+productos.por.ciclo <- 22
+productos.por.anio <- ciclos.por.anio * productos.por.ciclo
+
+gasto.por.anio.toallitas <- valor.toallitas * productos.por.anio
+
+print(paste("Toallitas: El gasto promedio por año por persona es de $", round(gasto.por.anio.toallitas, 2)))
+```
+
+### Tampones
+
+* Precio promedio por unidad
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tampones <- datos %>% 
+  filter(Categoria == "tampones") %>%
+  group_by(Provincia) %>% 
+  summarise(prom = mean(precio.por.unidad, trim = 0.025)) %>% 
+  left_join(., menstruan, by = "Provincia")
+
+valor.tampones <- weighted.mean(tampones$prom, tampones$pond)
+
+print(paste("Tampones: El precio promedio por unidad es de $", round(valor.tampones, 2)))
+```
+
+* Gasto por año por persona
+
+Teniendo en cuenta:     
+ciclos por año: 13      
+productos utilizados por ciclo: 22
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gasto.por.anio.tampones <- valor.tampones * productos.por.anio
+
+print(paste("Tampones: El gasto promedio por año por persona es de $", round(gasto.por.anio.tampones, 2)))
+```
+
+## Por provincia
+
+### Toallitas
+
+Gasto por año por persona, según provincia
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+toallitas <- toallitas %>% 
+  mutate(gasto.por.anio = round(prom * productos.por.anio, 2)) %>% 
+  select(-prom, -pond)
+
+toallitas
+```
+
+### Tampones
+
+Gasto por año por persona, según provincia
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tampones <- tampones %>% 
+  mutate(gasto.por.anio = round(prom * productos.por.anio, 2)) %>% 
+  select(-prom, -pond)
+
+tampones
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lista <- list("Gasto anual toallitas" = gasto.por.anio.toallitas,
+              "Gasto anual tampones" = gasto.por.anio.tampones,
+              "Toallitas por provincia" = toallitas, 
+              "Tampones por provincia " = tampones)
+
+openxlsx::write.xlsx(lista, "Resultados marzo 2019.xlsx")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

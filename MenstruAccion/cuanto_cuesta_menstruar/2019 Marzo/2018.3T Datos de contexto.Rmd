@@ -1,0 +1,93 @@
+---
+title: "Datos para Menstru"
+subtitle: "Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2018."
+date: "Mayo de 2019"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    depth: 4
+---
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+options(rpubs.upload.method = "internal")
+rm(list = ls())
+library(tidyverse)
+library(httr)
+library(stringr)
+library(openxlsx)
+library(haven)
+library(readxl)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(ggalt)
+library(kableExtra)
+library(formattable)
+library(eph)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+date <- "3er trimestre 2018"
+```
+
+```{r}
+individual <- get_microdata(year = 2018, trimester = 3, type = 'individual')
+hogar <- get_microdata(year = 2018, trimester = 3, type = 'hogar')
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+individual <- individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"))
+```
+
+# % de hogares con mujeres de entre 13 y 49 años
+```{r}
+mujeres.menstruan <- individual %>% 
+  filter(Sexo == "Mujeres", CH06 >= 13 & CH06 <= 49) %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  summarise(n = n()) %>% 
+  left_join(., hogar, by = c("CODUSU", "NRO_HOGAR"))
+
+dato1 <- sum(mujeres.menstruan$PONDERA)
+dato1
+
+poblacion1 <- sum(hogar$PONDERA)
+poblacion1
+
+proporcion1 <- round(dato1/poblacion1*100, 1)
+proporcion1
+```
+
+# % de hogares con ingreso principal de mujeres
+
+```{r}
+principal.mujeres <- individual %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(es.principal = case_when(P47T == max(P47T) ~ 1,
+                                  TRUE ~ 0)) %>% 
+  select(CODUSU, NRO_HOGAR, Sexo, es.principal, P47T, PONDII, PONDERA) %>% 
+  filter(Sexo == "Mujeres" & es.principal == 1)
+
+dato2 <- sum(principal.mujeres$PONDERA)
+dato2
+
+poblacion2 <- sum(hogar$PONDERA)
+poblacion2
+
+proporcion2 <- round(dato2/poblacion2*100, 1)
+proporcion2
+```
+
+
+
+
+
+
+
+
+
