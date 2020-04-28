@@ -7,7 +7,7 @@ output:
     df_print: paged
   html_notebook:
     theme: flatly
-subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2018.
+subtitle: Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2019.
 urlcolor: null
 ---
 
@@ -28,7 +28,7 @@ urlcolor: null
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-date <- "4to trimestre 2018"
+date <- "2do trimestre 2019"
 aglo_date <- paste0("Total de aglomerados urbanos. ", date)
 fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
 ```
@@ -88,8 +88,8 @@ source("../../R/funciones formato.R")
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
 # (funciones del paquete 'eph')
-base_individual <- get_microdata(year = 2018, trimester = 4, type = "individual")
-base_hogar <- get_microdata(year = 2018, trimester = 4, type = "hogar")
+base_individual <- get_microdata(year = 2019, trimester = 2, type = "individual")
+base_hogar <- get_microdata(year = 2019, trimester = 2, type = "hogar")
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
