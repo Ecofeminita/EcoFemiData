@@ -3,10 +3,10 @@ title: "La desigualdad de género se puede medir"
 author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para Economía Femini(s)ta"
 date: "Abril de 2020"
 output:
-  html_document:
-    df_print: paged
   html_notebook:
     theme: flatly
+  html_document:
+    df_print: paged
 subtitle: Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2019.
 urlcolor: null
 ---
@@ -61,7 +61,7 @@ Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabaj
 <br><br>
 ^4^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe, que incluye la descarga automática de las bases de la EPH utilizadas, una serie de funciones útiles y la elaboración de cuadros y gráficos con el lenguaje R.
 <br><br>
-^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2018_04/informe.nb.html"
+^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2019_03/informe.nb.html"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles

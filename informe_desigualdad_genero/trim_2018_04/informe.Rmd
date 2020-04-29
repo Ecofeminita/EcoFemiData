@@ -3,10 +3,10 @@ title: "La desigualdad de género se puede medir"
 author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para Economía Femini(s)ta"
 date: "Abril de 2020"
 output:
-  html_document:
-    df_print: paged
   html_notebook:
     theme: flatly
+  html_document:
+    df_print: paged
 subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2018.
 urlcolor: null
 ---
