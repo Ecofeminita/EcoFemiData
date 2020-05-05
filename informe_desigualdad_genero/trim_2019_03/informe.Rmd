@@ -493,10 +493,11 @@ Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Ingreso Total Individual
+# as.numeric porque salia como NA por ser integer demasiado grande, mayor de lo que se puede representar en R
 tabla7.1 <- base_individual %>% 
   filter(P47T > 0) %>% 
   group_by(Sexo) %>% 
-  summarise(Media.ITI = round(weighted.mean(P47T, PONDII))) %>% 
+  summarise( Media.ITI = round(weighted.mean(as.numeric(P47T) , as.numeric(PONDII)))) %>% 
   spread(., Sexo, Media.ITI) %>% 
   mutate(Población = "Perceptores de ingresos",
          Ingreso = "Ingreso Total Individual")
