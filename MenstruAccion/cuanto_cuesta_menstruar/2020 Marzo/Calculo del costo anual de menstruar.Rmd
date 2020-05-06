@@ -1,0 +1,267 @@
+---
+title: "#MenstruAcción"
+subtitle: "Datos de 2020 - Marzo"
+date: "Mayo de 2020"
+output: html_notebook
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(EnvStats)
+library(tidyverse)
+library(ggridges)
+library(openxlsx)
+library(viridis)
+library(readxl)
+library(magrittr)
+library(scales)
+library(kableExtra)
+```
+
+```{r}
+datos <- readRDS("Fuentes/precios-gestion-menstrual-2020-03-23-limpio.RDS")
+```
+
+Ordenadas las provincias por precio promedio, de menor a mayor.      
+
+Cargo la estimación, por provincia, de personas que menstrúan. Esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional.      
+                 
+Además, considerando que hay outliers (valores atípicos) en los precios unitarios, a la hora de calcular los promedios de precios provinciales remuevo las colas, utilizando una media alfa podada:     
+
+- alfa = 2.5%
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+menstruan <- read_excel("Fuentes/poblaciones.xls")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+menstruan <- menstruan %>% 
+  mutate(total = sum(Menstruan),
+         pond = Menstruan/total) %>% 
+  select(Provincia, pond)
+```
+
+# Resultados
+
+## Total Nacional
+
+### Toallitas
+
+* Precio promedio por unidad
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+toallitas <- datos %>% 
+  filter(Categoría == "toallitas") %>%
+  group_by(Provincia) %>% 
+  summarise(prom = mean(precio_unidad, trim = 0.025)) %>% 
+  left_join(., menstruan, by = "Provincia")
+
+valor_toallitas <- weighted.mean(toallitas$prom, toallitas$pond)
+
+print(paste("Toallitas: El precio promedio por unidad es de $", round(valor_toallitas, 2)))
+```
+
+* Gasto por año por persona
+
+Teniendo en cuenta:     
+ciclos por año: 13      
+productos utilizados por ciclo: 22
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ciclos_por_anio <- 13
+productos_por_ciclo <- 22
+productos_por_anio <- ciclos_por_anio * productos_por_ciclo
+
+gasto_por_anio_toallitas <- valor_toallitas * productos_por_anio
+
+print(paste("Toallitas: El gasto promedio por año por persona es de $", round(gasto_por_anio_toallitas, 2)))
+```
+
+### Tampones
+
+* Precio promedio por unidad
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tampones <- datos %>% 
+  filter(Categoría == "tampones") %>%
+  group_by(Provincia) %>% 
+  summarise(prom = mean(precio_unidad, trim = 0.025)) %>% 
+  left_join(., menstruan, by = "Provincia")
+
+valor_tampones <- weighted.mean(tampones$prom, tampones$pond)
+
+print(paste("Tampones: El precio promedio por unidad es de $", round(valor_tampones, 2)))
+```
+
+* Gasto por año por persona
+
+Teniendo en cuenta:     
+ciclos por año: 13      
+productos utilizados por ciclo: 22
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gasto_por_anio_tampones <- valor_tampones * productos_por_anio
+
+print(paste("Tampones: El gasto promedio por año por persona es de $", round(gasto_por_anio_tampones, 2)))
+```
+
+## Por provincia
+
+### Toallitas
+
+Gasto por año por persona, según provincia
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+toallitas <- toallitas %>% 
+  mutate(gasto_por_anio = round(prom * productos_por_anio, 2)) %>% 
+  select(-prom, -pond)
+
+toallitas
+```
+
+### Tampones
+
+Gasto por año por persona, según provincia
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tampones <- tampones %>% 
+  mutate(gasto_por_anio = round(prom * productos_por_anio, 2)) %>% 
+  select(-prom, -pond)
+
+tampones
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lista <- list("Gasto anual toallitas" = gasto.por.anio.toallitas,
+              "Gasto anual tampones" = gasto.por.anio.tampones,
+              "Toallitas por provincia" = toallitas, 
+              "Tampones por provincia " = tampones)
+
+openxlsx::write.xlsx(lista, "../Resultados/Resultados septiembre 2019.xlsx")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Aumentos
+
+__A precios de marzo 2019:__
+
+- Toallitas: El precio promedio por unidad es de $6.75
+- Tampones: El precio promedio por unidad es de $7.44
+
+Aumento unitario toallitas
+```{r}
+valor.toallitas0 <- 6.75
+inf_toallitas_un <- (valor.toallitas - valor.toallitas0)/valor.toallitas0 * 100
+inf_toallitas_un
+```
+
+Aumento unitario tampones
+```{r}
+valor.tampones0 <- 7.44
+inf_tampones_un <- (valor.tampones - valor.tampones0)/valor.tampones0 * 100
+inf_tampones_un
+```
+
+#### Comparación de la evolución con IPC
+
+Copio los datos de _ipc_marzo_septiembre_2019.xls_ (recorte de _sh_ipc_10_19.xls_)
+```{r}
+ipc <- tibble::tribble(
+                                  ~Mes, ~'Mar-19', ~'Apr-19', ~'May-19', ~'Jun-19', ~'Jul-19', ~'Aug-19', ~'Sep-19',
+                       "Nivel General",     206,   213.1,   219.6,   225.5,   230.5,   239.6,   253.7,
+  "Alimentos y bebidas no alcohólicas",   210.6,     216,   221.3,   226.9,     232,   242.5,   256.4,
+                               "Salud",   210.4,   217.7,   228.8,   236.9,   246.7,   259.5,   281.1
+  ) %>% 
+  gather(.,mes, valor, 2:8) %>% 
+  spread(.,Mes, valor) %>% 
+  mutate(mes = lubridate::parse_date_time(mes,orders = 'my')) %>% 
+  arrange(mes) %>% 
+  rename(alimentos='Alimentos y bebidas no alcohólicas', general = 'Nivel General', salud=Salud) %>% 
+  mutate(alimentos = alimentos/first(alimentos)*100,
+         general = general/first(general)*100,
+         salud = salud/first(salud)*100)
+
+ipc
+```
+
+```{r}
+comparo_variaciones <- ipc %>% 
+  filter(mes== parse_date('2019-09-01')) %>% 
+  select(-mes) %>% 
+  mutate(alimentos = alimentos - 100,
+         general = general - 100,
+         salud = salud - 100,
+         toallitas_un = inf_toallitas_un,
+         tampones_un = inf_tampones_un) %>% 
+  gather(., Grupo, Variacion) %>% 
+  mutate(Grupo = case_when(Grupo == "general" ~ "Nivel General",
+                           Grupo == "alimentos" ~ "Alimentos\n y bebidas\n no alcohólicas",
+                           Grupo == "salud" ~ "Salud",
+                           Grupo == "toallitas_un" ~ "Toallitas\n (p/u)",
+                           Grupo == "tampones_un" ~ "Tampones\n (p/u)"),
+         Grupo = factor(Grupo, levels = c("Nivel General", 
+                                          "Alimentos\n y bebidas\n no alcohólicas",
+                                          "Salud", 
+                                          "Toallitas\n (p/u)",
+                                          "Tampones\n (p/u)")),
+         Variacion = round(Variacion, 1)) %>% 
+  arrange(Grupo)
+
+comparo_variaciones
+```
+
+```{r}
+colorcitos <- c('royalblue4', 'royalblue2', 'royalblue', 
+                'violetred', 'red')
+
+ggplot(comparo_variaciones, aes(x = Grupo, y = Variacion, fill = Grupo, 
+                                label = paste(Variacion, "%"))) +
+  geom_col() +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.y = element_blank()) +
+  scale_fill_manual(values = colorcitos)+
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  labs(title = "Variación de precios: Nivel general y grupos del IPC, toallitas y tampones",
+       subtitle = "Marzo 2019 - Septiembre 2019",
+       x = "",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+
+Limites: 
+
+- posibles sesgos de la información de la página
+- copas?
+- no tenemos ponderadores de consumo toallitas/tampones
+- algo sobre ingresos (histograma? deciles?)
+- población trans (eph y censo 2020)
+- comparación IPC general, leche u otros productos
+
+
+
+
+
+
+
+
+
+
+
+
+
+

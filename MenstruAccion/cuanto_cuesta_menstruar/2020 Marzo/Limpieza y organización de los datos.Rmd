@@ -1,0 +1,386 @@
+---
+title: "#MenstruAcción"
+subtitle: "Datos de 2020 - Marzo"
+date: "Mayo de 2020"
+output: html_notebook
+---
+
+### Organización y limpieza de los datos
+
+El #MenstruScrapper fue ejecutado el día 23 de marzo de 2020 sobre la página Precios Claros. Se obtuvieron 88.154 observaciones en total.
+
+Se obtuvieron 86 ids de productos de la categoría tampones
+2112 sucursales de 86 productos de la categoría tampones
+Se obtuvieron 17211 precios de productos de la categoría tampones
+
+Se obtuvieron 168 ids de productos de la categoría toallitas
+2112 sucursales de 168 productos de la categoría toallitas
+Se obtuvieron 70943 precios de productos de la categoría toallitas
+
+tardó 5 hs en correr
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(EnvStats)
+library(tidyverse)
+library(ggridges)
+library(openxlsx)
+library(viridis)
+library(readxl)
+library(magrittr)
+library(scales)
+library(kableExtra)
+
+datos <- read.csv("Fuentes/precios-gestion-menstrual-2020-03-23.csv", 
+                  header = TRUE, sep = ",", dec = ".", 
+                  fill = TRUE, encoding = "UTF-8")
+
+regiones <- openxlsx::read.xlsx("Fuentes/provincias_regiones.xlsx")
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cant <- function(x){
+  format(x, digits = 0, big.mark = ".", decimal.mark = ",")}
+
+porc <- function(x){
+  format(x, digits = 1, big.mark = ".", decimal.mark = ",")}
+```
+
+```{r}
+date <- "Marzo 2020"
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- left_join(datos, regiones, by = "Provincia")
+rm(regiones)
+```
+
+Contamos con `r cant(nrow(datos))` observaciones!
+
+### Variables del dataset
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+as.data.frame(names(datos))
+```
+
+#### Categorías
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos %>% 
+  count(Categoría) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = percent(n/sum(n)))
+```
+
+Esta composición es de la disponibilidad de precios, no refleja la estructura del consumo.
+
+#### Marcas
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos %>% 
+  count(Marca) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+```
+
+#### Presentación
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+presentacion <- datos %>% 
+  count(Presentación) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+presentacion
+```
+
+#### Provincias
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos %>% 
+  count(Provincia) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+```
+
+#### Regiones
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos %>% 
+  count(Region) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+```
+
+#### Precio de lista
+
+Por Categoría
+```{r}
+ggplot(datos, aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
+  geom_density_ridges(scale = 3, bandwidth = 20) + # el bandwidth anterior estaba en 10
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred")) +
+  theme(legend.position = "none") +
+  labs(title = "Precio de lista de productos de gestión menstrual según categoría",
+       subtitle = date,
+       x = "Precio de lista",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Nota: bimodal en tampones debe ser por diferentes presentaciones.
+
+Por Categoría y Regiones
+```{r}
+#library(dichromat)
+#pal <- colorRampPalette(c("red", "violetred"))(6)
+#
+#ggplot(datos, aes(x = Precio.de.lista, y = Region, fill = Region)) +
+#  geom_density_ridges(scale = 2, bandwidth = 10) +
+#  theme_minimal() +
+#  scale_fill_manual(values = pal)+
+#  facet_wrap(. ~ Categoría) +
+#  theme(legend.position = "none")
+```
+
+```{r warning=FALSE}
+ggplot(datos, aes(x = Precio.de.lista, y = Region, fill = Categoría, alpha = Region)) +
+  geom_density_ridges(scale = 2, bandwidth = 20) + # el bandwidth anterior estaba en 10
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred"))+
+  facet_wrap(. ~ Categoría) +
+  theme(legend.position = "none") +
+  labs(title = "Precio de lista de productos de gestión menstrual según categoría y región",
+       subtitle = date,
+       x = "Precio de lista",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+#### Limpieza de la cantidad de unidades (Presentación)
+
+Modifico la variable Presentación, para quedarme con las unidades en formato numérico.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(Presentación = as.character(Presentación),
+         unidades = as.numeric(substr(Presentación, 1, nchar(Presentación)-4)))
+
+presentacion_nros <- datos %>% 
+  count(unidades) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+presentacion_nros
+```
+
+Hay casos que, de acuerdo a la descripción en Nombre, tienen mal la cantidad de unidades en Presentacion (y por ende en unidades), afectando el calculo de precios unitarios.     
+         
+Utilizando expresiones regulares me quedo con los dígitos, sean uno o más, que están seguidos de "Un" o "un".
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(unidades_regex = as.numeric(str_extract(Nombre, '\\d+(?=\\s*[Uu]n?)')))
+
+presentacion_regex <- datos %>% 
+  count(unidades_regex) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+presentacion_regex
+```
+
+```{r}
+datos <- datos %>% 
+  mutate(igual = case_when(unidades == unidades_regex ~ T,
+                           unidades != unidades_regex ~ F))
+
+comparo_unidades <- datos %>% 
+  count(unidades, unidades_regex) %>% 
+  mutate(igual = case_when(unidades == unidades_regex ~ T,
+                           unidades != unidades_regex ~ F))
+comparo_unidades
+```
+
+```{r}
+datos %>% 
+  group_by(igual) %>% 
+  summarise(n = n()) %>% 
+  mutate(porc = percent(n/sum(n)))
+```
+
+```{r}
+# Distribucion de los datos que queremos sacar entre las regiones
+datos %>% 
+  filter(igual == FALSE) %>% 
+  count(Region)
+
+# Distribucion de los datos que queremos sacar entre las marcas
+datos %>% 
+  filter(igual == FALSE) %>% 
+  count(Marca)
+```
+
+
+En el ejercicio anterior, prescindimos de los valores faltantes en `unidades_regex` (por más que tengan valor en `unidades`, aquella que surge de la variable `Presentación`). Verificamos aquellos casos en que `unidades_regex` (que surge del texto en `Nombre`) no coincide con la variable `unidades`. Establecimos que las cantidades referidas a las unidades por paquete parecen ser mejor captadas con el método de regex sobre el texto del `Nombre` del producto, respecto de lo surgido de la información de la página como `Presentación`. Nos quedamos con `unidades_regex` para calcular el precio por unidad de los productos.      
+Esta vez, dado que el porcentaje de aquellos casos en que no coinciden `unidades` y `unidades_regex`, junto a los casos en que `unidades_regex` figura como `NA`, alcanzan un 2% solamente, se prescindirá de todos ellos. __Se descartan 1.894 casos.__
+
+
+```{r eval=FALSE, include=FALSE}
+# Este codigo esta anulado. Es lo que estaba en el ejercicio anterior
+unidades.faltantes <- datos %>% 
+  filter(is.na(unidades.regex)) %>% 
+  select(Nombre, unidades.regex, Presentación, unidades) %>% 
+  group_by(Nombre, unidades.regex, Presentación, unidades) %>% 
+  summarise(n())
+
+datos <- datos %>% 
+  filter(!is.na(unidades.regex))
+
+kable(unidades.faltantes) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+verif <- datos %>% 
+  filter(unidades.regex != unidades) %>% 
+  group_by(Nombre, unidades, unidades.regex) %>% 
+  summarise(n=n()) %>% 
+  arrange(-n)
+
+kable(verif) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+
+```{r}
+datos <- datos %>% 
+  filter(igual == TRUE)
+```
+
+Ahora contamos con `r cant(nrow(datos))`.
+
+```{r}
+# Descarto las variables que no voy a usar
+datos <- datos %>% 
+  select(-Presentación, -unidades_regex, -igual)
+```
+        
+#### Precio por unidad
+
+Creo la variable `precio_unidad` a partir del `Precio.de.lista` y las `unidades`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(precio_unidad = round(Precio.de.lista/unidades, 2))
+```
+
+Por Categoría
+```{r fig.height=7, fig.width=7, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = Categoría)) +
+  geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 10
+  theme_minimal() +
+  scale_x_continuous(limits = c(0, 30)) + # En el anterior el limite estaba en 20
+  scale_fill_manual(values = c("red", "violetred")) +
+  theme(legend.position = "none") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
+       subtitle = date,
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Por Categoría y Regiones
+```{r}
+reg_ordenadas <- datos %>% 
+  group_by(Region) %>% 
+  summarise(promedio = mean(precio_unidad)) %>% 
+  arrange(promedio) %$% Region
+
+datos <- datos %>% 
+  mutate(Region = factor(Region, levels = reg_ordenadas))
+```
+
+```{r fig.height=8, fig.width=8, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Region, fill = Categoría, alpha = Region)) +
+  geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 1
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred"))+
+  facet_wrap(. ~ Categoría) +
+  theme(legend.position = "none") +
+  scale_x_continuous(limits = c(0, 20)) +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría y región",
+       subtitle = date,
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Ordenadas de menor a mayor precio promedio las regiones     
+__Nota:__ La distribución se parece mucho a la de GBA porque es la que más pesa en los datos.
+
+#### 2,5 % de los extremos de la distribución
+
+```{r warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = factor(..quantile..))) +
+  stat_density_ridges(geom = "density_ridges_gradient", 
+                      calc_ecdf = TRUE, quantiles = c(0.025, 0.975),
+                      bandwidth = 1.25, scale = 1.5) + # El bandwidth anterior estaba en 0.75
+  scale_fill_manual(name = "Probabilidad", 
+                    values = c("violetred1", "red2", "violetred1"),
+                    labels = c("2,5 %", "95,0 %", "2,5 %")) +
+  scale_x_continuous(limits = c(0, 30)) + # El limite anterior estaba en 20
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
+       subtitle = paste(date),
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Por Categoría y Regiones
+```{r warning=FALSE}
+prov_ordenadas <- datos %>% 
+  group_by(Provincia) %>% 
+  summarise(promedio = mean(precio_unidad)) %>% 
+  arrange(promedio) %$% 
+  Provincia
+
+datos <- datos %>% 
+  mutate(Provincia = factor(Provincia, levels = prov_ordenadas))
+```
+
+```{r fig.height=10, fig.width=9, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Provincia, 
+                  fill = factor(..quantile..))) +
+  stat_density_ridges(geom = "density_ridges_gradient", 
+                      calc_ecdf = TRUE, quantiles = c(0.025, 0.975),
+                      bandwidth = 1.25, scale = 2) +
+  scale_fill_manual(name = "Probabilidad", 
+                    values = c("violetred1", "red2", "violetred1"),
+                    labels = c("2,5 %", "95,0 %", "2,5 %")) +
+  scale_x_continuous(limits = c(0, 30)) + # El limite anterior estaba en 20
+  facet_wrap(. ~ Categoría) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría y provincia",
+       subtitle = paste(date, ". "),
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+```{r eval=FALSE, include=FALSE}
+saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2020-03-23-limpio.RDS")
+```
+
+
