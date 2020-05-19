@@ -1,0 +1,171 @@
+---
+title: "Datos para Menstru-Infografía"
+subtitle: "Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2019."
+date: "Octubre de 2019"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    depth: 4
+---
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+options(rpubs.upload.method = "internal")
+rm(list = ls())
+library(tidyverse)
+library(openxlsx)
+library(scales)
+library(eph)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+date <- "4to trimestre 2019"
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+individual <- get_microdata(year = 2019, trimester = 4, type = 'individual')
+hogar <- get_microdata(year = 2019, trimester = 4, type = 'hogar')
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+individual <- individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"))
+```
+
+# 1. Costo de menstruar
+
+De acuerdo al ejercicio de Marzo 2020:   
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gasto_toallitas <- 2933
+gasto_tampones <- 3782
+```
+
+
+__"En 2019 el costo de menstruar será de `r paste("$", gasto_toallitas)` en toallitas y `r paste("$", gasto_tampones)` en tampones,..."__
+
+# 2. Cartones de leche
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+precio_leche <- openxlsx::read.xlsx("../Fuentes/Precios leche.xlsx")
+precio_leche
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+precio_prom_leche <- weighted.mean(precio_leche$precio_leche_09_19, 
+                                   precio_leche$pond_ipc_reg)
+precio_prom_leche
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+toallitas_en_leche <- round(gasto_toallitas / precio_prom_leche, 0) 
+tampones_en_leche <- round(gasto_tampones / precio_prom_leche, 0)
+
+toallitas_en_leche
+tampones_en_leche
+```
+
+__"...equivalente a entre `r toallitas_en_leche` y `r tampones_en_leche` cartones de leche."__      
+
+__Nota:__ En cierta oportunidad los valores dieron apenas diferentes (49 y 59 sachet de leche, o 48 y 58) porque se calcularon con ponderadores de población de EPH y/o precios de agosto en lugar de septiembre. Finalmente se calcularon con ponderadores del IPC y precios de septiembre, que son más adecuados para este problema.
+
+# 3. Brecha del ingreso promedio
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+brecha <- individual %>%
+  filter(P47T > 0) %>% 
+  group_by(Sexo) %>% 
+  summarise(ing_prom = weighted.mean(P47T, PONDII)) %>% 
+  spread(., Sexo, ing_prom) %>% 
+  mutate(Brecha = round((Varones - Mujeres)/Varones*100, 1))
+
+brecha <- brecha$Brecha
+brecha
+```
+
+__"`r paste(brecha, "%")` es la brecha de ingreso promedio"__
+
+# 4. Asalariadas en situación de informalidad
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+no.registro <- individual %>% 
+  filter(ESTADO==1,
+         CAT_OCUP==3) %>% 
+  group_by(Sexo) %>% 
+  summarise(tasa_no_reg = round(sum(PONDERA[PP07H==2])/sum(PONDERA)*100, 1))
+
+no_reg_mujeres <- no.registro$tasa_no_reg[no.registro$Sexo == "Mujeres"]
+no_reg_mujeres
+```
+
+__"`r paste(no_reg_mujeres, "%")` de las asalariadas está en situación de informalidad,..."__
+
+# 5. Brecha entre asalariades informales
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+brecha_no_reg <- individual %>% 
+  filter(ESTADO == 1 &
+         CAT_OCUP == 3 & 
+         PP07H == 2) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media_IOP = round(weighted.mean(P21, PONDIIO), 2)) %>% 
+  spread(., Sexo, Media_IOP) %>% 
+  mutate(Brecha = round(((Varones-Mujeres)/Varones)*100, 1)) 
+
+brecha_no_reg <- brecha_no_reg$Brecha
+brecha_no_reg
+```
+
+__"... donde la brecha asciende al `r paste(brecha_no_reg, "%")`."__
+
+# 6. Hogares con mujeres de entre 13 y 49 años
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+mujeres.menstruan <- individual %>% 
+  filter(Sexo == "Mujeres", CH06 >= 13 & CH06 <= 49) %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  summarise(n = n()) %>% 
+  left_join(., hogar, by = c("CODUSU", "NRO_HOGAR"))
+
+dato1 <- sum(mujeres.menstruan$PONDERA)
+dato1
+
+poblacion1 <- sum(hogar$PONDERA)
+poblacion1
+
+proporcion1 <- round(dato1/poblacion1*100, 1)
+proporcion1
+```
+
+__"`r paste(proporcion1, "%")` de los hogares tienen al menos una mujer en edad reproductiva"__
+
+Se filtraron a las mujeres de entre 13 y 49 años, se agruparon según los hogares a los que pertenecen, se expandió el resultado de acuerdo a los ponderadores de cada hogar. Recordar que la cobertura es de 31 aglomerados urbanos.
+
+# 7. Hogares con ingreso principal de mujeres
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+principal.mujeres <- individual %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(es.principal = case_when(P47T == max(P47T) ~ 1,
+                                  TRUE ~ 0)) %>% 
+  select(CODUSU, NRO_HOGAR, Sexo, es.principal, P47T, PONDII, PONDERA) %>% 
+  filter(Sexo == "Mujeres" & es.principal == 1)
+
+dato2 <- sum(principal.mujeres$PONDERA)
+dato2
+
+poblacion2 <- sum(hogar$PONDERA)
+poblacion2
+
+proporcion2 <- round(dato2/poblacion2*100, 1)
+proporcion2
+```
+
+__"`r paste(proporcion2, "%")` de los hogares el ingreso principal proviene de una mujer"__
+
+Se marcaron los casos que son el ingreso principal del hogar, me quedé sólo con aquellos casos en que estas personas eran mujeres. Se expandió el resultado de acuerdo a los ponderadores de cada hogar. Recordar que la cobertura es de 31 aglomerados urbanos.
+
