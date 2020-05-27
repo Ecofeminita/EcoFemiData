@@ -15,6 +15,9 @@ library(readxl)
 library(magrittr)
 library(scales)
 library(kableExtra)
+library(ggrepel)
+library(directlabels)
+library(lubridate)
 ```
 
 ```{r}
@@ -128,119 +131,67 @@ tampones <- tampones %>%
 tampones
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-lista <- list("Gasto anual toallitas" = gasto.por.anio.toallitas,
-              "Gasto anual tampones" = gasto.por.anio.tampones,
-              "Toallitas por provincia" = toallitas, 
-              "Tampones por provincia " = tampones)
-
-openxlsx::write.xlsx(lista, "../Resultados/Resultados septiembre 2019.xlsx")
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #### Aumentos
 
-__A precios de marzo 2019:__
-
-- Toallitas: El precio promedio por unidad es de $6.75
-- Tampones: El precio promedio por unidad es de $7.44
-
-Aumento unitario toallitas
-```{r}
-valor.toallitas0 <- 6.75
-inf_toallitas_un <- (valor.toallitas - valor.toallitas0)/valor.toallitas0 * 100
-inf_toallitas_un
-```
-
-Aumento unitario tampones
-```{r}
-valor.tampones0 <- 7.44
-inf_tampones_un <- (valor.tampones - valor.tampones0)/valor.tampones0 * 100
-inf_tampones_un
-```
-
-#### Comparación de la evolución con IPC
-
-Copio los datos de _ipc_marzo_septiembre_2019.xls_ (recorte de _sh_ipc_10_19.xls_)
-```{r}
-ipc <- tibble::tribble(
-                                  ~Mes, ~'Mar-19', ~'Apr-19', ~'May-19', ~'Jun-19', ~'Jul-19', ~'Aug-19', ~'Sep-19',
-                       "Nivel General",     206,   213.1,   219.6,   225.5,   230.5,   239.6,   253.7,
-  "Alimentos y bebidas no alcohólicas",   210.6,     216,   221.3,   226.9,     232,   242.5,   256.4,
-                               "Salud",   210.4,   217.7,   228.8,   236.9,   246.7,   259.5,   281.1
-  ) %>% 
-  gather(.,mes, valor, 2:8) %>% 
-  spread(.,Mes, valor) %>% 
-  mutate(mes = lubridate::parse_date_time(mes,orders = 'my')) %>% 
-  arrange(mes) %>% 
-  rename(alimentos='Alimentos y bebidas no alcohólicas', general = 'Nivel General', salud=Salud) %>% 
-  mutate(alimentos = alimentos/first(alimentos)*100,
-         general = general/first(general)*100,
-         salud = salud/first(salud)*100)
-
-ipc
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+serie_inflacion <- read_excel("Fuentes/serie_inflacion.xlsx")
+precios_pgm <- read_excel("Fuentes/serie_precios_pgm.xlsx")
 ```
 
 ```{r}
-comparo_variaciones <- ipc %>% 
-  filter(mes== parse_date('2019-09-01')) %>% 
-  select(-mes) %>% 
-  mutate(alimentos = alimentos - 100,
-         general = general - 100,
-         salud = salud - 100,
-         toallitas_un = inf_toallitas_un,
-         tampones_un = inf_tampones_un) %>% 
-  gather(., Grupo, Variacion) %>% 
-  mutate(Grupo = case_when(Grupo == "general" ~ "Nivel General",
-                           Grupo == "alimentos" ~ "Alimentos\n y bebidas\n no alcohólicas",
-                           Grupo == "salud" ~ "Salud",
-                           Grupo == "toallitas_un" ~ "Toallitas\n (p/u)",
-                           Grupo == "tampones_un" ~ "Tampones\n (p/u)"),
-         Grupo = factor(Grupo, levels = c("Nivel General", 
-                                          "Alimentos\n y bebidas\n no alcohólicas",
-                                          "Salud", 
-                                          "Toallitas\n (p/u)",
-                                          "Tampones\n (p/u)")),
-         Variacion = round(Variacion, 1)) %>% 
-  arrange(Grupo)
-
-comparo_variaciones
+base100 <- serie_inflacion %>% 
+  mutate(`Nivel General` = `Nivel General`/first(`Nivel General`) * 100,
+         `Alimentos y bebidas no alcohólicas` = `Alimentos y bebidas no alcohólicas`/
+           first(`Alimentos y bebidas no alcohólicas`) * 100,
+         Salud = Salud/first(Salud) * 100)
 ```
 
 ```{r}
-colorcitos <- c('royalblue4', 'royalblue2', 'royalblue', 
+pgm_100 <- precios_pgm %>% 
+  mutate(Toallitas = Toallitas/first(Toallitas) * 100,
+         Tampones = Tampones/first(Tampones) * 100)
+```
+
+```{r}
+base100 <- base100 %>% 
+  left_join(., pgm_100, by = "Mes") %>% 
+  pivot_longer(-Mes, names_to = "Categoria", values_to = "Indice") %>% 
+  filter(!is.na(Indice)) %>% 
+  mutate(Grupo = case_when(Categoria %in% c("Nivel General", "Alimentos y bebidas no alcohólicas", "Salud") ~ "IPC",
+                           Categoria %in% c("Toallitas", "Tampones") ~ "PGM"))
+```
+
+```{r}
+colorcitos <- c('royalblue4', 'royalblue', 
                 'violetred', 'red')
-
-ggplot(comparo_variaciones, aes(x = Grupo, y = Variacion, fill = Grupo, 
-                                label = paste(Variacion, "%"))) +
-  geom_col() +
-  theme_minimal() +
-  theme(legend.position = "none",
-        axis.text.y = element_blank()) +
-  scale_fill_manual(values = colorcitos)+
-  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
-  labs(title = "Variación de precios: Nivel general y grupos del IPC, toallitas y tampones",
-       subtitle = "Marzo 2019 - Septiembre 2019",
-       x = "",
-       y = "",
-       caption = "Fuente: #MenstruAcción")
 ```
+
+```{r}
+base100bis <- base100 %>% 
+  mutate(Categoria = case_when(Categoria == "Alimentos y bebidas no alcohólicas" ~ "Alimentos",
+                               TRUE ~ Categoria)) %>% 
+  filter(Categoria != "Alimentos")
+```
+
+```{r}
+ggplot(base100bis, aes(x = Mes, y = Indice, group = Categoria, color = Categoria)) +
+  geom_line(data = base100bis %>% filter(Grupo == "PGM"), size = 1, alpha = 1) +
+  geom_line(data = base100bis %>% filter(Grupo == "IPC"), alpha = 1, size = 1) +
+  geom_point(data = base100bis %>% filter(Grupo == "PGM"), size = 2) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_color_manual(values = colorcitos) +
+  expand_limits(x = as.POSIXct(c("2019-03-01", "2020-05-01"))) +
+  geom_text(data = base100bis %>% filter(Mes == max(Mes)), aes(label = Categoria), 
+                   hjust = -0.1) +
+  labs(title = "Inflación de Toallitas y Tampones vs. Salud y Nivel General del IPC-INDEC",
+       subtitle = "Marzo 2019 - Marzo 2020. ",
+       x = "",
+       y = "Indice de precios",
+       caption = "Fuente: #MenstruAcción y EcoFeminitas") +
+  scale_x_datetime(date_labels = "%m-%y", date_breaks = "1 month")
+```
+
 
 
 Limites: 
