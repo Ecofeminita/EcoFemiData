@@ -1,7 +1,7 @@
 ---
 title: "Las trabajadoras de servicio doméstico en Argentina"
-subtitle: "3er trimestre de 2019"
-author: "Natsumi Shokida para Economía Femini(s)ta - Mayo de 2020"
+subtitle: "4to trimestre de 2019"
+author: "Natsumi Shokida para Economía Femini(s)ta - Junio de 2020"
 output: 
   html_notebook:
     theme: flatly
@@ -25,7 +25,7 @@ urlcolor: #FE1764
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-date <- "3er trimestre de 2019"                        # <-----------------
+date <- "4to trimestre de 2019"                        # <-----------------
 ```
 
 ## Secciones {.tabset .tabset-fade .tabset-pills}
@@ -40,7 +40,7 @@ El presente informe tiene como objetivo visibilizar las condiciones de trabajo, 
 <br><br>
 Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC, en este caso referidas al `r date`. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos (pensémoslo como las grandes ciudades del país). El documento se realizó utilizando el lenguaje de programación R, y para les curioses todo el código se encuentra disponible para su descarga.
 <br><br>
-Este reporte puede volverse un poco técnico por momentos, pero seguramente desde [Economía Femini(s)ta](http://economiafeminita.com/) realicemos también otras notas de carácter divulgatorio. Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^[Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida, Natsumi S. (05/03/2020) Las trabajadoras de servicio doméstico en Argentina. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_servicio_domestico/trim_2019_03/informe.nb.html"]. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+Este reporte puede volverse un poco técnico por momentos, pero seguramente desde [Economía Femini(s)ta](http://economiafeminita.com/) realicemos también otras notas de carácter divulgatorio. Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^[Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida, Natsumi S. (05/03/2020) Las trabajadoras de servicio doméstico en Argentina. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_servicio_domestico/trim_2019_04/informe.nb.html"]. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Se cargan librerías útiles
@@ -66,8 +66,8 @@ source("../../R/funciones formato.R")
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Cargo base de EPH con el paquete eph
-base_individual <- eph::get_microdata(year = 2019, trimester = 3, type =  "individual") # <-----------------
-base_hogar <- eph::get_microdata(year = 2019, trimester = 3, type =  "hogar")           # <-----------------
+base_individual <- eph::get_microdata(year = 2019, trimester = 4, type =  "individual") # <-----------------
+base_hogar <- eph::get_microdata(year = 2019, trimester = 4, type =  "hogar")           # <-----------------
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
