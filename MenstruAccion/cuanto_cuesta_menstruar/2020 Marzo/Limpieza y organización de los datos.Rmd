@@ -3,6 +3,8 @@ title: "#MenstruAcción"
 subtitle: "Datos de 2020 - Marzo"
 date: "Mayo de 2020"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ### Organización y limpieza de los datos
