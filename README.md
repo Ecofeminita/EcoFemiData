@@ -1,4 +1,4 @@
-![](img/logo.png)   
+![](img/logo2.png)   
 
 ## [Informes de desigualdad de género](informe_desigualdad_genero)
 

@@ -20,7 +20,7 @@ En el archivo `README` de la carpeta `Fuentes` se encuentran aclaradas todas las
 
 Comenzamos levantando las librerías necesarias, y cargando los datos que se encuentran en formato .RDS.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(EnvStats)
 library(tidyverse)
 library(ggridges)
@@ -35,19 +35,21 @@ library(directlabels)
 library(lubridate)
 ```
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 datos <- readRDS("Fuentes/precios-gestion-menstrual-2020-03-23-limpio.RDS")
 ```
 
-A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en las fuentes, esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional.      
-                 
-Además, considerando que hay outliers (valores atípicos) en los precios unitarios, a la hora de calcular los promedios de precios provinciales remuevo las colas, utilizando una media alfa podada:     
+A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional.
+<br><br>
+Además, considerando que hay outliers (valores atípicos) en los precios unitarios, a la hora de calcular los promedios de precios provinciales se remueven "las colas" de la distribución, utilizando una media alfa podada:     
 
 - alfa = 2.5%
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 menstruan <- read_excel("Fuentes/poblaciones.xls")
 ```
+
+Luego de levantar el archivo .xls, calculamos  
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 menstruan <- menstruan %>% 
