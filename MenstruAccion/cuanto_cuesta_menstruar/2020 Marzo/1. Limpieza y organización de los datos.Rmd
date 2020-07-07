@@ -10,7 +10,7 @@ output:
     toc_depth: 5
 ---
 
-### Presentación
+## Presentación
 
 En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminitas, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el #MenstruScrapper, desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 23 de marzo de 2020 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019. En esta instancia, se obtuvieron 88.154 observaciones en total, luego de 5hs que demoró en correr el programa.
 
@@ -19,7 +19,7 @@ En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo des
 
 En el archivo `README` de la carpeta `Fuentes` se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo. En otro script se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
-### Preparando el entorno de trabajo
+## Preparando el entorno de trabajo
 
 Comenzamos levantando las librerías necesarias, cargando los datos srappeados desde el archivo .csv, y un diccionario que indica a qué región pertenece cada provincia del país.
 
@@ -66,7 +66,7 @@ Guardamos el valor de la fecha a la que corresponde el ejercicio.
 date <- "Marzo 2020"
 ```
 
-### Exploración de los datos
+## Exploración de los datos
 
 Al dataframe `datos` le pegamos los valores de las regiones, usando como variable de identificación a la `Provincia`. A continuación podemos borrar de nuestro entorno de trabajo el elemento `regiones`. 
 
