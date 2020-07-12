@@ -12,6 +12,8 @@ output:
 
 https://github.com/luisDVA/annotater
 
+(modifcación random para mostrarle a las chicas como funciona git)
+
 ## Presentación
 
 Luego de la exploración, organización y limpieza de los datos obtenidos por el #MenstruScrapper (en otro script), en el presente documento de trabajo se encuentra el cálculo del costo de menstruar en Argentina, estimación realizada desde la campaña #MenstruAccion y EcoFeminitas.
