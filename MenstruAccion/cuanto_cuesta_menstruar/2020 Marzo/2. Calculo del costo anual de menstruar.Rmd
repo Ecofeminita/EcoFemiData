@@ -10,10 +10,6 @@ output:
     toc_depth: 5
 ---
 
-https://github.com/luisDVA/annotater
-
-(modifcación random para mostrarle a las chicas como funciona git)
-
 ## Presentación
 
 Luego de la exploración, organización y limpieza de los datos obtenidos por el #MenstruScrapper (en otro script), en el presente documento de trabajo se encuentra el cálculo del costo de menstruar en Argentina, estimación realizada desde la campaña #MenstruAccion y EcoFeminitas.
@@ -22,15 +18,21 @@ En el archivo `README` de la carpeta `Fuentes` se encuentran aclaradas todas las
 
 ## Preparando el entorno de trabajo
 
-Comenzamos levantando las librerías necesarias, y cargando los datos que se encuentran en formato .RDS.
+Comenzamos levantando las librerías necesarias, y cargando los datos que se encuentran en formato .RDS. Aprovechamos para tener una vista previa de los datos.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+```
+
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(EnvStats)
-library(tidyverse)
+
 library(ggridges)
 library(openxlsx)
 library(viridis)
-library(readxl)
+
 library(magrittr)
 library(scales)
 library(kableExtra)
@@ -45,7 +47,7 @@ datos <- readRDS("Fuentes/precios-gestion-menstrual-2020-03-23-limpio.RDS")
 head(datos)
 ```
 
-A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`.
+A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`. Obtenemos también una vista previa de la estructura de estos datos.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 menstruan <- read_excel("Fuentes/poblaciones.xls")
@@ -53,7 +55,7 @@ menstruan <- read_excel("Fuentes/poblaciones.xls")
 head(menstruan)
 ```
 
-A continuación, calculamos el total a nivel nacional de personas que menstrúan, sumando los datos de todas las provincias. Y, dividiendo los datos de cada provincia por dicho total, obtenemos las proporciones que nos van a servir para ponderar los promedios de precio según el peso de cada una de las provincias.
+A continuación, calculamos el total a nivel nacional de personas que menstrúan, sumando los datos de todas las provincias. Y, dividiendo los datos de cada provincia por dicho total, obtenemos las proporciones que nos van a servir para ponderar los promedios de precio según el peso de cada una de las provincias. Como guardo estas modificaciones bajo el mismo nombre, la información será pisada en la misma tabla `menstruan`, de la que se vuelve a presentar una vista previa.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 menstruan <- menstruan %>% 
@@ -71,6 +73,8 @@ Además, considerando que hay outliers (valores atípicos) en los precios unitar
 ![](img/pre_resultados.png)   
 
 ## Cálculo y Resultados
+
+A continuación ya procedemos a calcular los precios promedio de toallitas y tampones. Para el caso del total nacional, primero habrá que calcular los precios promedio (por unidad) de cada provincia para luego agregarlos en un promedio general. Una vez que tenemos precios representativos de toallitas y tampones, podremos estimar un costo anual por persona de acuerdo a las estimaciones de cuántos ciclos por año presentan las personas que menstrúan, y cuántos productos utilizan por ciclo.
 
 ### Total Nacional
 
