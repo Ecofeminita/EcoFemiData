@@ -26,7 +26,7 @@ library(readxl)
 ```
 
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 library(EnvStats)
 
 library(ggridges)
@@ -74,7 +74,7 @@ Además, considerando que hay outliers (valores atípicos) en los precios unitar
 
 ## Cálculo y Resultados
 
-A continuación ya procedemos a calcular los precios promedio de toallitas y tampones. Para el caso del total nacional, primero habrá que calcular los precios promedio (por unidad) de cada provincia para luego agregarlos en un promedio general. Una vez que tenemos precios representativos de toallitas y tampones, podremos estimar un costo anual por persona de acuerdo a las estimaciones de cuántos ciclos por año presentan las personas que menstrúan, y cuántos productos utilizan por ciclo.
+A continuación ya procedemos a calcular los precios promedio de toallitas y tampones. Para el caso del total nacional, primero habrá que calcular los precios promedio (por unidad) de cada provincia, para luego agregarlos en un promedio general. Una vez que tenemos precios representativos de toallitas y tampones, podremos estimar un costo anual por persona de acuerdo a las estimaciones de cuántos ciclos por año presentan las personas que menstrúan, y cuántos productos utilizan por ciclo.
 
 ### Total Nacional
 
@@ -82,7 +82,7 @@ A continuación ya procedemos a calcular los precios promedio de toallitas y tam
 
 ##### Promedio del precio por unidad
 
-Antes de calcular el promedio de los precios unitarios de las toallitas para el total nacional, calculamos el promedio de cada provincia. Para eso tomamos los datos, los filtramos para quedarnos únicamente con las toallitas, agrupando las observaciones según la variable `Provincia`. Con `summarise()` podemos definir indicadores que agregan la información para cada grupo, así que definimos el promedio provincial como una media alpha podada. 
+Para calcular el precio promedio de cada provincia tomamos los datos, los filtramos para quedarnos únicamente con las toallitas, agrupando las observaciones según la variable `Provincia`. Con `summarise()` podemos definir indicadores que agregan la información para cada grupo, así que definimos el promedio provincial como una media podada. Es en el parámetro `trim` que se aclara la proporción de los datos que se podan. Finalmente, anexamos en una nueva columna los ponderadores de cada provincia, así toda la información necesaria para el cálculo del promedio nacional se encuentra en la misma tabla.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 toallitas <- datos %>% 
@@ -94,7 +94,7 @@ toallitas <- datos %>%
 head(toallitas)
 ```
 
-Luego, el valor promedio para el total nacional se calcula como una media ponderada, utilizando los ponderadores previamente calculados para cada provincia. 
+Luego, el valor promedio para el total nacional se calcula como una media ponderada. La función `weighted.mean()` nos permite aclarar la variable a promediar, y la variable que funciona como ponderador.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 valor_toallitas <- weighted.mean(toallitas$prom, toallitas$pond)
@@ -122,6 +122,8 @@ print(paste("Toallitas: El gasto promedio por año por persona es de $", round(g
 ```
 
 #### Tampones
+
+Se realiza un procedimiento semejante para el caso de los tampones.
 
 ##### Promedio del precio por unidad
 
@@ -152,6 +154,8 @@ print(paste("Tampones: El gasto promedio por año por persona es de $", round(ga
 
 ### Por provincia
 
+Para obtener los datos de cada provincia el procedimiento es aún más sencillo. En la variable `gasto_por_anio`, cada precio promedio se multiplica por la cantidad de productos que se utilizan anualmente. Por una cuestión de exposición, se quitan de la tabla las columnas con aquellos precios promedios por unidad, y los ponderadores provinciales.
+
 #### Toallitas
 
 ##### Gasto por año por persona
@@ -178,10 +182,22 @@ tampones
 
 ### Aumentos
 
+Como esta es la tercera vez que realizamos este ejercicio de estimación semestral, podemos ver cómo evolucionaron los precios de toallitas y tampones en el último año. También, con los datos del Índice de Precios al Consumidor (IPC - INDEC), se puede realizar una comparación entre la evolución de estos productos de gestión menstrual y el nivel general de precios, el rubro alimentos y bebidas no alcohólicas, y el de Salud. Ambas series se levantan desde archivos de extensión .xlsx en las tablas `serie_inflacion` y `precios_pgm`.
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 serie_inflacion <- read_excel("Fuentes/serie_inflacion.xlsx")
 precios_pgm <- read_excel("Fuentes/serie_precios_pgm.xlsx")
 ```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+head(serie_inflacion)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+head(precios_pgm)
+```
+
+Asegurándonos de que los datos se encuentran ordenados por fecha, podemos transformar ambas series para que se encuentren expresadas con el mes de marzo 2019 = 100. De esta forma podremos comparar la evolución de ambas. Esto lo hacemos modificando las series con las que contamos dividiendo todos los valores por el primero de ellos (y multiplicando por 100). La selección del primer elemento de la serie se realizó con la función `first()`.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 base100 <- serie_inflacion %>% 
@@ -189,34 +205,47 @@ base100 <- serie_inflacion %>%
          `Alimentos y bebidas no alcohólicas` = `Alimentos y bebidas no alcohólicas`/
            first(`Alimentos y bebidas no alcohólicas`) * 100,
          Salud = Salud/first(Salud) * 100)
+
+head(base100)
 ```
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 pgm_100 <- precios_pgm %>% 
   mutate(Toallitas = Toallitas/first(Toallitas) * 100,
          Tampones = Tampones/first(Tampones) * 100)
+
+head(pgm_100)
 ```
 
+Podemos anexar la evolución de los precios de los productos de gestión menstrual a la serie de inflación, por más que esta última tenga valores mensuales y nuestros datos se hayan recolectado cada seis meses, utilizando `Mes` como variable de link. Luego reordenamos la información para que todas las variables, excepto `Mes`, se presenten en una variable `Categoría` (con valores "Nivel General", "Salud", "Toallitas", etc.), y los valores de cada serie se agrupen en la variable `Indice`. No habrá datos en diversos meses para toallitas y tampones, así que filtramos esas filas vacías, y finalmente creamos la variable `Grupo` para identificar como "IPC" a las categorías del índice de precios al consumidor, y como "PGM" a los productos de gestión menstrual.
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Esto se puede correr "de a poco" para ver cómo cambian las cosas en cada paso
 base100 <- base100 %>% 
   left_join(., pgm_100, by = "Mes") %>% 
   pivot_longer(-Mes, names_to = "Categoria", values_to = "Indice") %>% 
   filter(!is.na(Indice)) %>% 
   mutate(Grupo = case_when(Categoria %in% c("Nivel General", "Alimentos y bebidas no alcohólicas", "Salud") ~ "IPC",
                            Categoria %in% c("Toallitas", "Tampones") ~ "PGM"))
+
+head(base100)
 ```
+
+A fines de graficar esta información, por esta vez se prescinde de la serie de "Alimentos y bedidas no alcohólicas" porque no agrega tanta información en la comparabilidad, y sí ocupa espacio visual que puede obstruir la comparación de las demás series.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+base100bis <- base100 %>% 
+  filter(Categoria != "Alimentos y bebidas no alcohólicas")
+```
+
+Para el gráfico puedo definir un vector de colores que sirva para distinguir las series de IPC (en la gama de azules) y las de productos de gestión menstrual (en la gama del rojo).
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 colorcitos <- c('royalblue4', 'royalblue', 
                 'violetred', 'red')
 ```
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-base100bis <- base100 %>% 
-  mutate(Categoria = case_when(Categoria == "Alimentos y bebidas no alcohólicas" ~ "Alimentos",
-                               TRUE ~ Categoria)) %>% 
-  filter(Categoria != "Alimentos")
-```
+Finalmente, definimos nuestro gráfico. Tomando la tabla `base100bis`, 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 ggplot(base100bis, aes(x = Mes, y = Indice, group = Categoria, color = Categoria)) +
