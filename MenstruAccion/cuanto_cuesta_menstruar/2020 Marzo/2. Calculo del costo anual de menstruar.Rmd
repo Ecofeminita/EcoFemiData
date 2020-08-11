@@ -23,6 +23,7 @@ Comenzamos levantando las librerías necesarias, y cargando los datos que se enc
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readxl)
+library(DT)
 ```
 
 
@@ -165,7 +166,11 @@ toallitas <- toallitas %>%
   mutate(gasto_por_anio = round(prom * productos_por_anio, 2)) %>% 
   select(-prom, -pond)
 
-toallitas
+toallitas %>%
+    datatable(
+    extensions = 'Buttons', 
+    options = list(dom = 'Bfrtip', 
+                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
 ```
 
 #### Tampones
@@ -177,7 +182,11 @@ tampones <- tampones %>%
   mutate(gasto_por_anio = round(prom * productos_por_anio, 2)) %>% 
   select(-prom, -pond)
 
-tampones
+tampones %>% 
+    datatable(
+    extensions = 'Buttons', 
+    options = list(dom = 'Bfrtip', 
+                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
 ```
 
 ### Aumentos
