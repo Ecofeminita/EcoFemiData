@@ -125,9 +125,9 @@ colores = c("#FE1764", "#00BDD6")
 
 #### Trabajadoras de servicio doméstico 
 <br><br>
-El interés por analizar distintas características de las trabajadoras de servicio doméstico radica principalmente en la magnitud que dicha ocupación presenta, en su estrecho vínculo con la división sexual del trabajo y la feminización de este sector y, como veremos luego, por las particularmente diferenciadas condiciones, acceso a derechos y bajos ingresos que perciben a cambio de su trabajo. Entre las grandes ciudades del país, pueden contarse __más de 900 mil personas que componen al sector (¡esto es el equivalente a más de 13 canchas de River llenas!)__. A su vez, la tasa de feminidad del sector es del 97,9%. Es decir que __casi en su totalidad se trata de trabajadoras mujeres__. Es por esto que, a lo largo de todo el informe, utilizaremos pronombres femeninos a la hora de generalizar, aunque muchas veces estemos hablando del conjunto de les trabajadores que se dedican a esta actividad. A su vez, cabe destacar que el ejercicio debe ser realizado en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.
+El interés por analizar distintas características de las trabajadoras de servicio doméstico radica principalmente en la magnitud que dicha ocupación presenta, en su estrecho vínculo con la división sexual del trabajo y la feminización de este sector y, como veremos luego, por las particularmente diferenciadas condiciones, acceso a derechos y bajos ingresos que perciben a cambio de su trabajo. Entre las grandes ciudades del país, pueden contarse __casi 900 mil personas que componen al sector__. A su vez, la tasa de feminidad del sector es del 97,6%. Es decir que __casi en su totalidad se trata de trabajadoras mujeres__. Es por esto que, a lo largo de todo el informe, utilizaremos pronombres femeninos a la hora de generalizar, aunque muchas veces estemos hablando del conjunto de les trabajadores que se dedican a esta actividad. A su vez, cabe destacar que el ejercicio debe ser realizado en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.
 <br><br>
-Las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares representan un 17% dentro del total de ocupadas mujeres. Esto significa que __una de cada 6 ocupadas en Argentina trabaja en este sector de la economía__. Al mismo tiempo, estas más de 900.000 trabajadoras representan un 22% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares. Como veremos más adelante, se trata de __la ocupación más popular entre las mujeres__. 
+Las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares representan un 16% dentro del total de ocupadas mujeres. Esto significa que __una de cada 6 ocupadas en Argentina trabaja en este sector de la economía__. Al mismo tiempo, estas más de 850.000 trabajadoras representan un 21% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, alrededor de 1 de cada 5 tiene como ocupación principal el trabajo en hogares particulares. Como veremos más adelante, se trata de __la ocupación más popular entre las mujeres__. 
 
 ---
 
@@ -220,7 +220,7 @@ En esta sección se presentan algunas métricas respecto a la distribución etar
 
 ##### Edad
 <br>
-Mientras que casi la mitad de estas trabajadoras tienen entre 30 y 49 años, un 31% tiene entre 50 y 64 años. Por su parte, hay un 5,4% que continúa trabajando a pesar de haber superar los 65 años, y un 16.6% está compuesto por jóvenes que no llegan a los 30 años. Este último grupo está compuesto por más de 150 mil jóvenes.
+Mientras que un 45% de estas trabajadoras tienen entre 30 y 49 años, un 29% tiene entre 50 y 64 años. Por su parte, hay un 5% que continúa trabajando a pesar de haber superar los 65 años, y un 21% está compuesto por jóvenes que no llegan a los 30 años. Este último grupo está compuesto por más de 180 mil jóvenes.
 
 ---
 
@@ -240,7 +240,7 @@ serv.dom %>%
 
 ##### Lugar de nacimiento
 <br>
-Considerando a la población en general, casi un 12% se encuentra viviendo en una provincia distinta a la que tiene como lugar de nacimiento, y un 3,5% proviene de un país limítrofe. Por su parte, __en el caso de las trabajadoras de servicio doméstico__, casi un 20% ha migrado de provincia y casi un 10% proviene de un país limítrofe, es decir que __las personas migrantes se encuentran sobrerrepresentadas en dicho sector de la economía__. Puede observarse entonces que la ocupación está estrechamente relacionada con los fenómenos migratorios.
+Considerando a la población en general, casi un 12% se encuentra viviendo en una provincia distinta a la que tiene como lugar de nacimiento, y un 3,4% proviene de un país limítrofe. Por su parte, __en el caso de las trabajadoras de servicio doméstico__, más del 17% ha migrado de provincia y casi un 12% proviene de un país limítrofe, es decir que __las personas migrantes se encuentran sobrerrepresentadas en dicho sector de la economía__. Puede observarse entonces que la ocupación está estrechamente relacionada con los fenómenos migratorios.
 
 ---
 
@@ -288,7 +288,7 @@ rm(tabla1, tabla2)
 
 ##### Educación
 <br>
-Más de la mitad de las trabajadoras del sector finalizó el nivel primario de escolaridad, a lo que se suma un 35,7% que cuenta también con el nivel secundario, en tanto un 7,7% no posee instrucción formal.
+Más de la mitad de las trabajadoras del sector finalizó el nivel primario de escolaridad, a lo que se suma un 35,8% que cuenta también con el nivel secundario, en tanto un 6,2% no posee instrucción formal.
 
 ---
 
@@ -313,7 +313,7 @@ _Nota: La estimación correspondiente a aquellas que han finalizado un nivel sup
 
 <p style="color:#FE1764">__Las jóvenes y su formación educativa__</p>               
 
-Entre __las más jóvenes del sector, aquellas que tienen entre 14 y 29 años__, alrededor del 75% no asiste actualmente a un establecimiento educativo aunque asistió en el pasado, mientras que __un 23,4% (casi 1 de cada 4) estudia al mismo tiempo que se desempeña como trabajadora de servicio doméstico__. Este indicador se ubica 9 puntos por debajo de la correspondiente para aquellas jóvenes que no se dedican a esta tarea en particular. En promedio, __parece más difícil sostener estudio y trabajo en paralelo si se trabaja en el sector que estamos analizando__. Esto se refleja también en la posibilidad de acceder a estudios superiores: entre las mujeres jóvenes que trabajan y estudian la mayoría se encuentra cursando un terciario o una carrera universitaria, seguidas por las que se encuentran finalizando el secundario o el polimodal. Sin embargo, entre aquellas que se dedican a brindar servicio doméstico un 65,5% está cursando un terciario/universitario, en tanto entre aquellas que se dedican a otra ocupación esta cifra asciende al 85,5%.
+Entre __las más jóvenes del sector, aquellas que tienen entre 14 y 29 años__, alrededor del 74% no asiste actualmente a un establecimiento educativo aunque asistió en el pasado, mientras que __un 26% (casi 1 de cada 4) estudia al mismo tiempo que se desempeña como trabajadora de servicio doméstico__. Este indicador se ubica casi 6 puntos por debajo de la correspondiente para aquellas jóvenes que no se dedican a esta tarea en particular. En promedio, __parece más difícil sostener estudio y trabajo en paralelo si se trabaja en el sector que estamos analizando__. Esto se refleja también en la posibilidad de acceder a estudios superiores: entre las mujeres jóvenes que trabajan y estudian, la mayoría se encuentra cursando un terciario o una carrera universitaria, seguidas por las que se encuentran finalizando el secundario o el polimodal. Sin embargo, entre aquellas que se dedican a brindar servicio doméstico un 67,5% está cursando un terciario/universitario, en tanto entre aquellas que se dedican a otra ocupación esta cifra asciende al 81,1%.
 
 ---
 
@@ -409,9 +409,9 @@ _Nota: Las estimaciones correspondientes a otros niveles educativos en curso no 
 
 #### Intensidad del trabajo de las trabajadoras de servicio doméstico
 <br><br>
-En relación a la cantidad de horas que trabajan semanalmente las empleadas domésticas, un 54,1% son ocupadas "plenas", es decir que trabajan entre 35 y 45 horas semanales, o están conformes con la cantidad de horas que trabajan. Al mismo tiempo __un 33,2% se encuentra sub-ocupada__, trabaja menos de 35 horas semanales por causas involuntarias, estando dispuestas a trabajar más horas. Por su parte, __un 10,5% está sobre-ocupada__, trabaja más de 45 horas por semana.
+En relación a la cantidad de horas que trabajan semanalmente las empleadas domésticas, un 52,4% son ocupadas "plenas", es decir que trabajan entre 35 y 45 horas semanales, o están conformes con la cantidad de horas que trabajan. Al mismo tiempo __un 33,2% se encuentra sub-ocupada__, trabaja menos de 35 horas semanales por causas involuntarias, estando dispuestas a trabajar más horas. Por su parte, __un 13,2% está sobre-ocupada__, trabaja más de 45 horas por semana.
 <br><br>
-En cuanto a la cantidad de hogares en que se desempeñan, un 71,4% trabaja en una sola casa, por lo que al mismo tiempo casi un 30% de ellas trabaja en más de una vivienda. __Mientras que las que son contratadas por un sólo hogar trabajan cerca de 25 horas semanales (jornada part-time), aquellas que trabajan en más de una casa trabajan en promedio menos de 18 horas por semana en la ocupación principal, acercándose a las 24 o 26 horas semanales con las ocupaciones secundarias__.
+En cuanto a la cantidad de hogares en que se desempeñan, un 74,4% trabaja en una sola casa, por lo que al mismo tiempo casi un 25% de ellas trabaja en más de una vivienda. __Mientras que las que son contratadas por un sólo hogar trabajan cerca de 25 horas semanales (jornada part-time), aquellas que trabajan en más de una casa trabajan en promedio menos de 20 horas por semana en la ocupación principal, acercándose a las 25 o 30 horas semanales con las ocupaciones secundarias__.
 
 ---
 
@@ -443,7 +443,8 @@ _Nota: La estimación correspondiente a aquellas que no trabajaron en la semana 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 serv.dom %>% 
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
-         PP3E_TOT != 999) %>% 
+         PP3E_TOT != 999,
+         PP3F_TOT != 999) %>% 
   mutate(cantidad_hogares = case_when(PP04B2 == 1 ~ "1",
                                       PP04B2 == 2 ~ "2",
                                       PP04B2 >= 3 ~ "3 o más")) %>% 
@@ -470,7 +471,7 @@ serv.dom %>%
 
 #### Derechos laborales de las trabajadoras de servicio doméstico
 <br><br>
-Dentro del conjunto de asalariades, un 34,5% no se encuentra registrade en la seguridad social. Esta tasa asciende al 36,1% cuando hablamos de las asalariadas mujeres, pero también puede observarse que la problemática es particularmente incisiva entre las trabajadoras domésticas: __un 73,5% de ellas no percibe descuento jubilatorio. Asociado a esto, un 69,2% de estas trabajadoras no cuenta con vacaciones pagas, un 68,1% no percibe aguinaldos, un 72,2% no percibe el pago en caso de enfermedad, y un 72,6% no cuenta con cobertura de salud mediante obra social__.
+Dentro del conjunto de asalariades, un 35,9% no se encuentra registrade en la seguridad social. Esta tasa asciende al 38,2% cuando hablamos de las asalariadas mujeres, pero también puede observarse que la problemática es particularmente incisiva entre las trabajadoras domésticas: __un 75,8% de ellas no percibe descuento jubilatorio. Asociado a esto, un 70,7% de estas trabajadoras no cuenta con vacaciones pagas, un 69,9% no percibe aguinaldos, un 72,8% no percibe el pago en caso de enfermedad, y un 75,1% no cuenta con cobertura de salud mediante obra social__.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Total de asalariades. Empleo sin descuento jubilatorio
@@ -552,7 +553,7 @@ rm(tabla1, tabla2, tabla3, tabla4, tabla5)
 
 #### Ingresos de las trabajadoras de servicio doméstico
 <br><br>
-Las trabajadoras del sector perciben ingresos que, en promedio, rondan los $7.300 pesos mensuales por su ocupación principal. Al mismo tiempo, un 50% de ellas cobra $6.000 por mes por dicho trabajo. Esto equivale a que en promedio cobran unos $91 por hora, y el 50% cobra menos de $86 por hora. En el primer cuadro también pueden apreciarse los ingresos mensuales totales de fuente laboral (incluyendo ingresos de ocupaciones secundarias), los totales individuales (incluyendo ingresos que no provienen de una fuente laboral), los ingresos totales familiares que tienen en promedio los hogares de estas trabajadoras, y el ingreso per cápita familiar de estos mismos hogares.
+Las trabajadoras del sector perciben ingresos que, en promedio, rondan los $8.500 pesos mensuales por su ocupación principal. Al mismo tiempo, un 50% de ellas cobra menos de $7.200 por mes por dicho trabajo. Esto equivale a que en promedio cobran unos $110 por hora, y el 50% cobra menos de $94 por hora. En el primer cuadro también pueden apreciarse los ingresos mensuales totales de fuente laboral (incluyendo ingresos de ocupaciones secundarias), los totales individuales (incluyendo ingresos que no provienen de una fuente laboral), los ingresos totales familiares que tienen en promedio los hogares de estas trabajadoras, y el ingreso per cápita familiar de estos mismos hogares.
 <br><br>
 En el segundo cuadro puede apreciarse que hay una amplia diferencia entre los ingresos que perciben en promedio las trabajadoras que se encuentran registradas respecto de aquellas que no, tanto en términos mensuales como por hora trabajada. Además, aquellas que tienen descuento jubilatorio trabajan más horas en su ocupación principal respecto que aquellas que no.
 <br><br>
@@ -672,7 +673,7 @@ serv.dom %>%
 <br><br>
 Si esta vez ordenamos al total de las personas de acuerdo a sus ingresos per cápita familiares (aquellos que surgen de dividir el total de ingresos de la familia por la cantidad de miembros de la misma), de menor a mayor, y las agrupamos en 10 grupos de igual tamaño, obtenemos otra escala de deciles. En este caso también se puede apreciar que __las trabajadoras de servicio doméstico se concentran en los primeros deciles. Cabe destacar que los primeros tres deciles de esta escala suelen estar altamente relacionados con la situación de pobreza de los hogares__ (tomando como referencia la metodología oficial de cálculo de la misma).
 <br><br>
-Al mismo tiempo, mientras que __un 58,3% no es el primer sostén económico del hogar, un 41,7% sí lo es__. En ambos casos, la mayoría de ellas realizan las tareas domésticas en su hogar. Esto es así porque __casi el 75% de quienes trabajan de forma remunerada realizando trabajo doméstico también están a cargo de la realización de este trabajo en sus hogares__ de manera no-asalariada, y por tanto no remunerada. Una posible interpretación de este fenómeno es que en muchos hogares donde el ingreso principal no alcanza para llegar a fin de mes, las mujeres que realizan las tareas domésticas del hogar complementan los ingresos realizando este trabajo en otros hogares de forma remunerada, habitualmente (como hemos visto en otro apartado) en jornadas parciales.
+Al mismo tiempo, mientras que __un 59,6% no es el primer sostén económico del hogar, un 40,4% sí lo es__. En ambos casos, la mayoría de ellas realizan las tareas domésticas en su hogar. Esto es así porque __un 77,4% de quienes trabajan de forma remunerada realizando trabajo doméstico también están a cargo de la realización de este trabajo en sus hogares__ de manera no-asalariada, y por tanto no remunerada. Una posible interpretación de este fenómeno es que en muchos hogares donde el ingreso principal no alcanza para llegar a fin de mes, las mujeres que realizan las tareas domésticas del hogar complementan los ingresos realizando este trabajo en otros hogares de forma remunerada, habitualmente (como hemos visto en otro apartado) en jornadas parciales.
 
 ---
 
