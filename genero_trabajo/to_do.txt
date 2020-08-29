@@ -1,9 +1,5 @@
 Cosas q tiene que hacer la app:
 
--según el rango de años q ingrese la persona, descargar del paquete EPH las tablas de esos años. Hay que tener una seleccionada de forma predeterminada así funca el sliderinput, se tiene que ir modificando reactivamente. -> Listo
-
--Hacer una función que abra y unnestee todas las tablas que el usuario seleccione -> Listo 
-
--Hacer que sobre todas las tablas que se descargaron aplique las funciones de Natsu para juntarlas y poder hacer los gráficos. 
-
--elegir los gráficos que se ven. 
+quiero que la selección del input me trigeree un gráfico. las funciones para los gráficos ya están hechas entonces lo que hay que hacer es:
+-una lista con los tipos de indicadores que se pueden ver, hacerla manualmente.
+-que cada indicador trigeree la función que corresponde.

@@ -1,0 +1,858 @@
+---
+title: "Gráficos para la tesis"
+subtitle: "2004-06 / 2016-18"
+author: "Natsumi S. Shokida (@NatsuSh)"
+date: "Agosto de 2018"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    depth: 4
+editor_options: 
+  chunk_output_type: inline
+---
+
+Limpio la memoria y cargo las librerías.
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+rm(list = ls())
+library(tidyverse)
+library(httr)
+library(stringr)
+library(xlsx)
+library(haven)
+library(readxl)
+library(foreign)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(ggalt)
+library(kableExtra)
+library(formattable)
+library(zoo)
+library(directlabels)
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+resultados <- readRDS("Resultados/tablas_resultados.RDS")
+# colores = c("#aa165a","#16aa66")
+colores = c("#FE1764", "#00BDD6")
+```
+
+Función que grafica series
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series <- function(df="tasas_por_sexo_df", 
+                            filtro = FALSE, 
+                            variable = "indicador", 
+                            valores_filter = c("Tasa Actividad", "Tasa Empleo"),
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Titulo", 
+                            subtitulo = "Subtitulo",
+                            doble_facet = FALSE,
+                            faceta = "indicador",
+                            porcentaje = TRUE){
+  
+  datagraf <- resultados$tablas_16_19[[df]] %>%                             # Daraframe para 2016-19
+  mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",              # Identifico periodos
+                           TRUE ~ "2016-2019"),
+         grp = paste0(Sexo, dummy),                                           # Grupos por Sexo y Período (4 grupos)
+         # periodo = as.yearqtr(paste0(ANO4,".",TRIMESTRE), format="%Y.%q")), # Para trabajar con formato fecha 
+         periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),         # Periodo como factor y con formato 
+                          levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
+  
+  if (filtro) {                                    # Por si tengo que filtrar la base antes
+    datagraf <- datagraf %>% 
+      filter(eval(parse(text=variable)) %in% valores_filter)
+  }                                                  
+
+  grafico <- ggplot(datagraf, aes(periodo, valor, color = Sexo, group = grp)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        #plot.background = element_rect(fill="gray99", color = NA),
+        strip.text.y = element_text(angle = 0),
+        panel.grid.minor.y = element_blank()) +
+  scale_color_manual(values = colores) +
+  labs(title = titulo,
+       subtitle = subtitulo,
+       x = eje_x,
+       y = eje_y,
+       caption = "Fuente: Elaboración propia en base a EPH-INDEC")
+  #scale_x_yearqtr(format = "%yQ%q", n = 19)               # Para trabajar con formato fecha
+  
+  if(porcentaje){
+    grafico <- grafico + 
+      scale_y_continuous(labels = function(x) paste0(x, "%"))    # Para que se peque el valor y el signo de %
+}
+  
+  if (doble_facet) {
+    grafico <- grafico +
+        facet_grid(eval(parse(text=faceta)) ~ dummy, scales = "free_x", space = "free_x")
+  }else{
+    grafico <- grafico +
+        facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+  }
+  
+  return(grafico)
+}
+```
+
+función ordeno períodos
+```{r}
+ordeno_periodo <- function(df){
+  df %>% 
+  mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",
+                           TRUE ~ "2016-2018"),
+         periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),
+                          levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
+         }
+
+```
+
+
+
+# Tasas por sexo (14 años y más)
+
+## Tasas de actividad y empleo
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="tasas_por_sexo_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Actividad", "Tasa Empleo"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de actividad y empleo", 
+                subtitulo = "Población de 14 años y más. Por sexo y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "indicador")
+```
+
+## Tasas de desocupación y subocupación
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="tasas_por_sexo_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Desocupación", "Tasa Subocupación"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de desocupación y subocupación",
+                subtitulo = "Población de 14 años y más. Por sexo y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "indicador",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/2_TD_TS_Sexo.png")
+```
+
+# Tasas por sexo y grupos de edad (14 años y más)
+
+## Tasa de actividad
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
+  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+resultados$tablas_16_18$tasas_por_sexo_edad_df <- 
+  resultados$tablas_16_18$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+
+graficos_series(df="tasas_por_sexo_edad_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Actividad"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de actividad", 
+                subtitulo = "Población de 14 años y más. Por sexo, grupos de edad y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "GRUPO_EDAD",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/3_TA_Sexo_Edad.png")
+```
+
+## Tasa de empleo
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
+  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+resultados$tablas_16_18$tasas_por_sexo_edad_df <- 
+  resultados$tablas_16_18$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+
+graficos_series(df="tasas_por_sexo_edad_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Empleo"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de empleo", 
+                subtitulo = "Población de 14 años y más. Por sexo, grupos de edad y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "GRUPO_EDAD",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/4_TE_Sexo_Edad.png")
+```
+
+## Tasa de desocupación
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
+  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+resultados$tablas_16_18$tasas_por_sexo_edad_df <- 
+  resultados$tablas_16_18$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+
+
+graficos_series(df="tasas_por_sexo_edad_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Desocupación"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de desocupación", 
+                subtitulo = "Población de 14 años y más. Por sexo, grupos de edad y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "GRUPO_EDAD",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/5_TD_Sexo_Edad.png")
+```
+
+## Tasa de subocupación
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
+  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+resultados$tablas_16_18$tasas_por_sexo_edad_df <- 
+  resultados$tablas_16_18$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+
+
+graficos_series(df="tasas_por_sexo_edad_df", 
+                filtro = TRUE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Subocupación"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de subocupación", 
+                subtitulo = "Población de 14 años y más. Por sexo, grupos de edad y período. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "GRUPO_EDAD",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/6_TS_Sexo_Edad.png")
+```
+
+# Tasa de no registro (ocupades asalariades)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$tasas_no_registro_df <- resultados$tablas_04_06$tasas_no_registro_df %>% 
+  rename(valor = 'Proporción de no Registrados') %>% 
+  filter(!is.na(valor))
+resultados$tablas_16_18$tasas_no_registro_df <- resultados$tablas_16_18$tasas_no_registro_df %>% 
+  rename(valor = 'Proporción de no Registrados') %>% 
+  filter(!is.na(valor))
+
+graficos_series(df="tasas_no_registro_df", 
+                filtro = FALSE, 
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Tasas de no registro", 
+                subtitulo = "Ocupadas/os asalariadas/os. Por sexo y período. Total 31 aglomerados urbanos.",
+                doble_facet = FALSE,
+                guardar = TRUE,
+                nombre_archivo = "Resultados/7_TNR_Sexo.png")
+```
+
+# Jerarquías en cada sexo (ocupades con jerarquía válida)
+
+## Jefas/es y Dirección
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$sexo_segun_jerarquias_df <- resultados$tablas_04_06$sexo_segun_jerarquias_df %>% 
+  rename(valor = 'tasa')
+resultados$tablas_16_18$sexo_segun_jerarquias_df <- resultados$tablas_16_18$sexo_segun_jerarquias_df %>% 
+  rename(valor = 'tasa')
+
+graficos_series(df="sexo_segun_jerarquias_df", 
+                filtro = TRUE, 
+                variable = "JERARQUIA", 
+                valores_filter = c("Jefes", "Dirección"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según jerarquías (jefatura y dirección)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "JERARQUIA",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/8_Sexo_segun_jerarquias_jef_dir.png")
+```
+
+## Cuentapropias
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="sexo_segun_jerarquias_df", 
+                filtro = TRUE, 
+                variable = "JERARQUIA", 
+                valores_filter = c("Cuentapropia"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según jerarquías (cuentapropia)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = FALSE,
+                guardar = TRUE,
+                nombre_archivo = "Resultados/9_Sexo_segun_jerarquias_cpr.png")
+```
+
+## Asalariadas/os
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="sexo_segun_jerarquias_df", 
+                filtro = TRUE, 
+                variable = "JERARQUIA", 
+                valores_filter = c("Trabajadores Asalariados"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según jerarquías (trabajo asalariado)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = FALSE,
+                guardar = TRUE,
+                nombre_archivo = "Resultados/10_Sexo_segun_jerarquias_asa.png")
+```
+
+# Sexo en cada jerarquía (ocupades con jerarquía válida)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+datagraf <- resultados$tablas_04_06[["jerarquias_segun_sexo_df"]] %>% 
+  bind_rows(., resultados$tablas_16_18[["jerarquias_segun_sexo_df"]]) %>%            
+  rename(valor = "tasa") %>% 
+  filter(Sexo == "Mujeres") %>%
+  ordeno_periodo() %>% 
+  mutate(JERARQUIA = case_when(JERARQUIA == "Trabajadores Asalariados" ~ "Asalariados",
+                               JERARQUIA != "Trabajadores Asalariados" ~ as.character(JERARQUIA) ))
+  
+grafico <- ggplot(datagraf, aes(periodo, valor, color = JERARQUIA, group = JERARQUIA)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    scale_color_gdocs()+
+    labs(title = "Jerarquías según sexo: tasa de mujeres",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  #scale_x_yearqtr(format = "%yQ%q", n = 19) +               # Para trabajar con formato fecha
+  scale_y_continuous(labels = function(x) paste0(x, "%"))+    # Para que se peque el valor y el signo de %
+  #geom_dl(aes(label = JERARQUIA), method = list("smart.grid", cex=.75)) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/11_Jerarquias_segun_sexo.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del ingreso total individual (perceptores)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+grafico <- resultados$tablas_04_06$brecha_ITI_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_ITI_df) %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, brecha.ITI, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Brecha del Ingreso Total Individual",
+         subtitle = "Perceptores. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),            # Para que se pegue el valor y el signo de %
+                     limits = c(20, 40)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/12_brecha_ITI.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del ingreso de la ocupación principal (ocupades)
+
+```{r}
+grafico <- resultados$tablas_04_06$brecha_IOP_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_df) %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, brecha.IOP, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Brecha del Ingreso de la Ocupación Principal",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),            # Para que se pegue el valor y el signo de %
+                     limits = c(20, 40)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/13_brecha_IOP.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del ingreso de la ocupación principal (asalariades no registrades)
+
+```{r}
+grafico <- resultados$tablas_04_06$brecha_IOP_no_reg_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_no_reg_df) %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, brecha.IOP.nr, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Brecha del Ingreso de la Ocupación Principal",
+         subtitle = "Asalariadas/os no registradas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),            # Para que se pegue el valor y el signo de %
+                     limits = c(30, 50)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/14_brecha_IOP_no_reg.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+
+# Calificación en cada sexo (ocupades con calificación válida)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resultados$tablas_04_06$sexo_segun_calif_df <- resultados$tablas_04_06$sexo_segun_calif_df %>% 
+  rename(valor = 'tasa')
+resultados$tablas_16_18$sexo_segun_calif_df <- resultados$tablas_16_18$sexo_segun_calif_df %>% 
+  rename(valor = 'tasa')
+
+graficos_series(df="sexo_segun_calif_df", 
+                filtro = TRUE, 
+                variable = "CALIFICACION", 
+                valores_filter = c("Profesionales", "Técnicos"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según calificación (Profesionales y técnicos)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "CALIFICACION",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/15_Sexo_segun_calif_prof_tecn.png")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="sexo_segun_calif_df", 
+                filtro = TRUE, 
+                variable = "CALIFICACION", 
+                valores_filter = c("Operativos"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según calificación (Operativos)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "CALIFICACION",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/16_Sexo_segun_calif_operat.png")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+graficos_series(df="sexo_segun_calif_df", 
+                filtro = TRUE, 
+                variable = "CALIFICACION", 
+                valores_filter = c("No Calificados"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según calificación (No calificados)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "CALIFICACION",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/17_Sexo_segun_calif_nocalif.png")
+```
+
+# Sexo en cada calificación (ocupades con calificación válida)
+
+```{r}
+datagraf <- resultados$tablas_04_06$calif_segun_sexo_df %>% 
+  bind_rows(., resultados$tablas_16_18$calif_segun_sexo_df) %>% 
+  rename(valor = "tasa") %>% 
+  filter(Sexo == "Mujeres") %>%
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = CALIFICACION, group = CALIFICACION,label = CALIFICACION)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  # geom_dl(method = list("smart.grid", cex=.75)) +
+  scale_color_gdocs() +
+  labs(title = "Calificación según sexo: tasa de mujeres",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/18_Calificacion_segun_sexo.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del ingreso de la ocupación principal por calificación (ocupades con calificación válida)
+
+```{r}
+datagraf <- resultados$tablas_04_06$brecha_IOP_calif_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_calif_df) %>% 
+  rename(valor = "brecha.IOP.calif") %>% 
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = CALIFICACION, group = CALIFICACION, label = CALIFICACION)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  # geom_dl(method = list("smart.grid", cex=.75)) +
+  scale_color_gdocs() +
+  labs(title = "Brecha del ingreso de la ocupacion principal por calificación",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/19_brecha_IOP_calif_df.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Nivel educativo en cada sexo (ocupades con nivel educativo válido)
+
+```{r}
+resultados$tablas_04_06$sexo_segun_nivel_educ_df <- resultados$tablas_04_06$sexo_segun_nivel_educ_df %>% 
+  rename(valor = 'tasa')
+resultados$tablas_16_18$sexo_segun_nivel_educ_df <- resultados$tablas_16_18$sexo_segun_nivel_educ_df %>% 
+  rename(valor = 'tasa')
+
+graficos_series(df="sexo_segun_nivel_educ_df", 
+                filtro = TRUE, 
+                variable = "NIVEL_EDUCATIVO", 
+                valores_filter = c("Primaria", "Secundaria", "Superior"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Sexo según nivel educativo (Primaria, secundaria y superior)", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "NIVEL_EDUCATIVO",
+                guardar = TRUE,
+                nombre_archivo = "Resultados/20_Sexo_segun_nivel_educ.png")
+```
+
+# Sexo en cada nivel educativo (ocupades con nivel educativo válido)
+
+```{r}
+datagraf <- resultados$tablas_04_06$nivel_educ_segun_sexo_df %>% 
+  bind_rows(., resultados$tablas_16_18$nivel_educ_segun_sexo_df) %>% 
+  rename(valor = "tasa") %>% 
+  filter(Sexo == "Mujeres") %>% 
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = NIVEL_EDUCATIVO, group = NIVEL_EDUCATIVO, label = NIVEL_EDUCATIVO)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  scale_color_gdocs() +
+  labs(title = "Nivel educativo según sexo: tasa de mujeres",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/21_Nivel_educ_segun_sexo.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del ingreso de la ocupación principal por nivel educativo (ocupades con nivel educativo válido)
+
+```{r}
+datagraf <- resultados$tablas_04_06$brecha_IOP_nivel_educ_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_nivel_educ_df) %>% 
+  rename(valor = "brecha.IOP.nivel.educ") %>% 
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = NIVEL_EDUCATIVO, group = NIVEL_EDUCATIVO, label = NIVEL_EDUCATIVO)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  scale_color_gdocs() +
+  labs(title = "Brecha del ingreso de la ocupacion principal por nivel educativo",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/22_brecha_IOP_nivel_educ.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Horas (ocupades con horas positivas)
+
+```{r}
+resultados$tablas_04_06$horas_semanales_df <- resultados$tablas_04_06$horas_semanales_df %>% 
+  gather(., tipo, valor, 4:5) %>% 
+  mutate(tipo = case_when(tipo == "Media.hs.ocup.princ" ~ "Horas de la ocupación principal",
+                          tipo == "Media.hs.total.ocup" ~ "Horas totales"))
+resultados$tablas_16_18$horas_semanales_df <- resultados$tablas_16_18$horas_semanales_df %>% 
+  gather(., tipo, valor, 4:5) %>% 
+    mutate(tipo = case_when(tipo == "Media.hs.ocup.princ" ~ "Horas de la ocupación principal",
+                          tipo == "Media.hs.total.ocup" ~ "Horas totales"))
+
+graficos_series(df="horas_semanales_df", 
+                filtro = FALSE, 
+                eje_x = "Período",
+                eje_y = "Horas",
+                titulo = "Horas semanales trabajadas", 
+                subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                doble_facet = TRUE,
+                faceta = "tipo",
+                porcentaje = FALSE,
+                guardar = TRUE,
+                nombre_archivo = "Resultados/23_Horas_semanales.png")
+```
+
+# Brecha del INGHORA de la ocupación principal (ocupades con horas positivas)
+
+```{r}
+grafico <- resultados$tablas_04_06$brecha_IOP_hr_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_hr_df) %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, brecha.IOP.hr, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Brecha del ingreso horario de la ocupación principal",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),            # Para que se pegue el valor y el signo de %
+                     limits = c(-10, 20)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/24_brecha_IOP_hr.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del INGHORA de la ocupación principal por calificación (ocupades con calificación válida y horas positivas)
+
+```{r}
+datagraf <- resultados$tablas_04_06$brecha_IOP_hr_calif_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_hr_calif_df) %>% 
+  rename(valor = "brecha.IOP.hr.calif") %>% 
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = CALIFICACION, group = CALIFICACION, label = CALIFICACION)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  scale_color_gdocs() +
+  labs(title = "Brecha del ingreso horario de la ocupacion principal por calificación",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/25_brecha_IOP_hr_calif.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Brecha del INGHORA de la ocupación principal por nivel educativo (ocupades con nivel educativo válido
+# y horas positivas)
+
+```{r}
+datagraf <- resultados$tablas_04_06$brecha_IOP_hr_nivel_educ_df %>% 
+  bind_rows(., resultados$tablas_16_18$brecha_IOP_hr_nivel_educ_df) %>% 
+  rename(valor = "brecha.IOP.hr.nivel.educ") %>% 
+  ordeno_periodo(.)
+
+grafico <- ggplot(datagraf, aes(periodo, valor, color = NIVEL_EDUCATIVO, group = NIVEL_EDUCATIVO, label = NIVEL_EDUCATIVO)) +
+  geom_line(size = 1, alpha = 0.75) +
+  geom_point(size = 1) +
+  scale_color_gdocs() +
+  labs(title = "Brecha del ingreso horario de la ocupacion principal por nivel educativo",
+         subtitle = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +    # Para que se peque el valor y el signo de %
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "bottom",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/26_brecha_IOP_hr_nivel_educ.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Proporción de cada sexo entre las personas que realizan las tareas domésticas del hogar
+
+```{r}
+grafico <- resultados$tablas_04_06$tareas_domesticas_sexo_df %>% 
+  bind_rows(., resultados$tablas_16_18$tareas_domesticas_sexo_df) %>% 
+  filter(Sexo == "Mujeres") %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, proporcion, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Personas que realizan las tareas domésticas del hogar: tasa de mujeres",
+         subtitle = "Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     limits = c(70, 90)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/27_tareas_domesticas_sexo.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Proporción de cada sexo entre quienes se dedican al servicio doméstico
+
+```{r}
+grafico <- resultados$tablas_04_06$servicio_domestico_sexo_df %>% 
+  bind_rows(., resultados$tablas_16_18$servicio_domestico_sexo_df) %>% 
+  filter(Sexo == "Mujeres") %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, Proporcion, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Personas que se dedican al servicio doméstico: tasa de mujeres",
+         subtitle = "Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     limits = c(95, 100)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/28_servicio_domestico_sexo.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Función de proporción de mujeres que se dedican al servicio doméstico entre el total de ocupadas
+
+```{r}
+grafico <- resultados$tablas_04_06$servicio_domestico_ocupadas_df %>% 
+  bind_rows(., resultados$tablas_16_18$servicio_domestico_ocupadas_df) %>% 
+  filter(servicio.domestico == "Sí") %>% 
+  ordeno_periodo(.) %>% 
+  ggplot(., aes(periodo, proporcion, group = dummy, color = dummy)) +
+  geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
+  geom_point(size = 1, color = "#aa165a") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.7),
+        legend.position = "none",
+        panel.background = element_rect(fill = "gray99", color = "gray90"),
+        panel.grid.minor.y = element_blank()) +
+    labs(title = "Tasa de mujeres que se dedican al servicio doméstico sobre el total de ocupadas",
+         subtitle = "Por periodos. Total 31 aglomerados urbanos.",
+         x = "",
+         y = "",
+         caption = "Fuente: Elaboración propia en base a EPH-INDEC") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     limits = c(10, 20)) +    
+  facet_grid(.~ dummy, scales = "free_x", space = "free_x")
+
+ggsave("Resultados/29_servicio_domestico_ocupadas.png", plot = grafico, scale = 0.75, width = 10, height = 7, units = "in")
+
+grafico
+```
+
+# Función de la composición según sexo de los deciles de ingresos totales individuales (perceptores)
+
+# Función de la composición según sexo de los deciles del ingreso per cápita familiar (total de la población)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Todos los parámetros
+graficos_series(df="tasas_por_sexo_df", 
+                filtro = FALSE, 
+                variable = "indicador", 
+                valores_filter = c("Tasa Actividad", "Tasa Empleo"),
+                eje_x = "Período",
+                eje_y = "",
+                titulo = "Titulo", 
+                subtitulo = "Subtitulo",
+                doble_facet = FALSE,
+                faceta = "indicador",
+                guardar = FALSE,
+                nombre_archivo = "Resultados/1_grafico1.png")
+```
