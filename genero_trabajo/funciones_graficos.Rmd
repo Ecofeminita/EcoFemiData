@@ -154,10 +154,10 @@ graficos_series(df="tasas_por_sexo_df",
 ## Tasa de actividad
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
-  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
-resultados$tablas_16_18$tasas_por_sexo_edad_df <- 
-  resultados$tablas_16_18$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+#resultados$tablas_04_06$tasas_por_sexo_edad_df <- 
+#  resultados$tablas_04_06$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
+resultados$tablas_16_19$tasas_por_sexo_edad_df <- 
+  resultados$tablas_16_19$tasas_por_sexo_edad_df %>% filter(!is.na(GRUPO_EDAD))
 
 graficos_series(df="tasas_por_sexo_edad_df", 
                 filtro = TRUE, 
@@ -168,9 +168,7 @@ graficos_series(df="tasas_por_sexo_edad_df",
                 titulo = "Tasas de actividad", 
                 subtitulo = "Población de 14 años y más. Por sexo, grupos de edad y período. Total 31 aglomerados urbanos.",
                 doble_facet = TRUE,
-                faceta = "GRUPO_EDAD",
-                guardar = TRUE,
-                nombre_archivo = "Resultados/3_TA_Sexo_Edad.png")
+                faceta = "GRUPO_EDAD")
 ```
 
 ## Tasa de empleo
@@ -244,10 +242,11 @@ graficos_series(df="tasas_por_sexo_edad_df",
 # Tasa de no registro (ocupades asalariades)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-resultados$tablas_04_06$tasas_no_registro_df <- resultados$tablas_04_06$tasas_no_registro_df %>% 
-  rename(valor = 'Proporción de no Registrados') %>% 
-  filter(!is.na(valor))
-resultados$tablas_16_18$tasas_no_registro_df <- resultados$tablas_16_18$tasas_no_registro_df %>% 
+#resultados$tablas_04_06$tasas_no_registro_df <- resultados$tablas_04_06$tasas_no_registro_df %>% 
+#  rename(valor = 'Proporción de no Registrados') %>% 
+#  filter(!is.na(valor))
+data<-resultados$tablas_16_19$tasas_no_registro_df
+resultados$tablas_16_19$tasas_no_registro_df <- resultados$tablas_16_19$tasas_no_registro_df %>% 
   rename(valor = 'Proporción de no Registrados') %>% 
   filter(!is.na(valor))
 
@@ -257,9 +256,7 @@ graficos_series(df="tasas_no_registro_df",
                 eje_y = "",
                 titulo = "Tasas de no registro", 
                 subtitulo = "Ocupadas/os asalariadas/os. Por sexo y período. Total 31 aglomerados urbanos.",
-                doble_facet = FALSE,
-                guardar = TRUE,
-                nombre_archivo = "Resultados/7_TNR_Sexo.png")
+                doble_facet = FALSE)datagraf
 ```
 
 # Jerarquías en cada sexo (ocupades con jerarquía válida)
@@ -267,9 +264,9 @@ graficos_series(df="tasas_no_registro_df",
 ## Jefas/es y Dirección
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-resultados$tablas_04_06$sexo_segun_jerarquias_df <- resultados$tablas_04_06$sexo_segun_jerarquias_df %>% 
-  rename(valor = 'tasa')
-resultados$tablas_16_18$sexo_segun_jerarquias_df <- resultados$tablas_16_18$sexo_segun_jerarquias_df %>% 
+#resultados$tablas_04_06$sexo_segun_jerarquias_df <- resultados$tablas_04_06$sexo_segun_jerarquias_df %>% 
+#  rename(valor = 'tasa')
+resultados$tablas_16_19$sexo_segun_jerarquias_df <- resultados$tablas_16_19$sexo_segun_jerarquias_df %>% 
   rename(valor = 'tasa')
 
 graficos_series(df="sexo_segun_jerarquias_df", 
@@ -323,7 +320,7 @@ graficos_series(df="sexo_segun_jerarquias_df",
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 datagraf <- resultados$tablas_04_06[["jerarquias_segun_sexo_df"]] %>% 
   bind_rows(., resultados$tablas_16_18[["jerarquias_segun_sexo_df"]]) %>%            
-  rename(valor = "tasa") %>% 
+  #rename(valor = "tasa") %>% 
   filter(Sexo == "Mujeres") %>%
   ordeno_periodo() %>% 
   mutate(JERARQUIA = case_when(JERARQUIA == "Trabajadores Asalariados" ~ "Asalariados",

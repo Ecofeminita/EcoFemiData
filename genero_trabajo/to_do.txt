@@ -1,5 +1,0 @@
-Cosas q tiene que hacer la app:
-
-quiero que la selección del input me trigeree un gráfico. las funciones para los gráficos ya están hechas entonces lo que hay que hacer es:
--una lista con los tipos de indicadores que se pueden ver, hacerla manualmente.
--que cada indicador trigeree la función que corresponde.

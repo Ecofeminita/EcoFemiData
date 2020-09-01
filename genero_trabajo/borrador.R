@@ -22,36 +22,60 @@ library(zoo)
 library(directlabels)
 
 #Subo los resultados y colores
-resultados <- readRDS("Resultados/tablas_resultados.RDS")
+resultados <- readRDS("Resultados/tablas_resultados.RDS") 
 colores = c("#FE1764", "#00BDD6")
 
 #Indicadores que vamos incorporando:
 
-indicadores <- c("Actividad y empleo","Ocupación y subocupación")
+indicadores<- c("Actividad y empleo","Ocupación y subocupación", "Tasas de no registro",
+                "Puestos en dirección y jefaturas","Cuentapropistas", "Asalariades")
 
 #Funciones
 #separo la función que devuelve las tasas en serie y gráficos en una de serie y otra de gráficos.
 
 #series:
 series <- function(df="tasas_por_sexo_df", 
-                            filtro = FALSE, 
-                            variable = "indicador", 
-                            valores_filter = c("Tasa Actividad", "Tasa Empleo")){
+                   filtro = FALSE,
+                   variable = "indicador", 
+                   valores_filter = c("Tasa Actividad", "Tasa Empleo"),
+                   input1=input$aniosID[1],
+                   input2=input$aniosID[2],
+                   renombrar=FALSE,
+                   cols="Proporción de no registrados"
+                   ){
   
-  datagraf <- resultados$tablas_16_19[[df]] %>% # Daraframe para 2016-19
-    mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",              # Identifico periodos
-                             TRUE ~ "2016-2019"),
-           grp = paste0(Sexo, dummy),                                           # Grupos por Sexo y Período (4 grupos)
-           # periodo = as.yearqtr(paste0(ANO4,".",TRIMESTRE), format="%Y.%q")), # Para trabajar con formato fecha 
-           periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),         # Periodo como factor y con formato 
-                            levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
-
-  datagraf <- if (filtro) {# Por si tengo que filtrar la base antes
+  datagraf<-resultados$tablas_16_19[[df]] %>% # Daraframe para 2016-19
+                mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",              # Identifico periodos
+                                         TRUE ~ "2016-2019"),
+                grp = paste0(Sexo, dummy),                                           # Grupos por Sexo y Período (4 grupos)
+                # periodo = as.yearqtr(paste0(ANO4,".",TRIMESTRE), format="%Y.%q")), # Para trabajar con formato fecha 
+                periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),         # Periodo como factor y con formato 
+                                      levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
+  
+  datagraf <- (if (filtro==TRUE) {# Por si tengo que filtrar la base antes
     datagraf %>% 
       filter(eval(parse(text=variable)) %in% valores_filter)
   }
+  else if (filtro == FALSE){
+    datagraf
+  })
   
-  return(datagraf)
+  datagraf <- (if (renombrar==TRUE){
+    datagraf <- datagraf %>% 
+      rename("valor"=cols) %>% 
+      filter(!is.na(valor))
+  }
+  else if (renombrar == FALSE){
+    datagraf
+  })
+
+  df.filt <- reactive({
+    datagraf %>% filter(ANO4>= input1 &
+                    ANO4 <= input2)
+  })
+  
+  
+  return(df.filt)
 }
 
 #gráficos:
@@ -100,15 +124,13 @@ graficos <- function(df=df.filt,
 
 
 #función que ordena períodos toda comentada porque todavía no se usó
-#ordeno_periodo <- function(df){
-#  df %>% 
-#    mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",
-#                             TRUE ~ "2016-2018"),
-#           periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),
-#                            levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
-#}
-
-
+ordeno_periodo <- function(df){
+    df %>% 
+    mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",
+                             TRUE ~ "2016-2018"),
+           periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),
+                            levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
+}
 
 ui <- fluidPage(
   sidebarLayout(
@@ -126,20 +148,17 @@ ui <- fluidPage(
 )
 
 server <- function(input,output,session){
-
+  
   observeEvent(input$boton1,{
     if (input$indicadoresID == "Actividad y empleo"){
       
-      df <- series(df="tasas_por_sexo_df", 
+      df.filt <- series(df="tasas_por_sexo_df", 
                       filtro = TRUE, 
                       variable = "indicador", 
-                      valores_filter = c("Tasa Actividad", "Tasa Empleo"))
-      
-      df.filt <- reactive({
-        df %>% filter(ANO4>= input$aniosID[1] &
-                        ANO4 <= input$aniosID[2])
-      })
-      
+                      valores_filter = c("Tasa Actividad", "Tasa Empleo"),
+                      input1=input$aniosID[1],
+                      input2=input$aniosID[2],
+                      renombrar=FALSE)
       
       graphPlot <- graficos(df=df.filt(), 
                             eje_x = "Período",
@@ -152,7 +171,113 @@ server <- function(input,output,session){
       output$grafico_final <- renderPlot(graphPlot)
       
     }
+    
+    else if (input$indicadoresID == "Ocupación y subocupación"){
+      
+      df.filt <- series(df="tasas_por_sexo_df", 
+                   filtro = TRUE, 
+                   variable = "indicador", 
+                   valores_filter = c("Tasa Desocupación", "Tasa Subocupación"),
+                   input1=input$aniosID[1],
+                   input2=input$aniosID[2],
+                   renombrar=FALSE)
+      
+      graphPlot <- graficos(df=df.filt(), 
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Tasas de desocupación y subocupación", 
+                            subtitulo = "Población de 14 años y más. Por sexo y período. Total 31 aglomerados urbanos.",
+                            doble_facet = TRUE,
+                            faceta = "indicador")
+      
+      output$grafico_final <- renderPlot(graphPlot)
+      
+    }
+    else if (input$indicadoresID == "Tasas de no registro"){
+      
+      df.filt <- series(df="tasas_no_registro_df", 
+                        filtro = FALSE, 
+                        input1=input$aniosID[1],
+                        input2=input$aniosID[2],
+                        renombrar= TRUE,
+                        cols="Proporción de no Registrados"
+                        )
+      
+      graphPlot <- graficos(df=df.filt(), 
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Tasas de no registro", 
+                            subtitulo = "Ocupadas/os asalariadas/os. Por sexo y período. Total 31 aglomerados urbanos.",
+                            doble_facet = FALSE)
+
+      output$grafico_final<-renderPlot(graphPlot)
+    }
+    else if (input$indicadoresID == "Puestos en dirección y jefaturas"){
+      
+      df.filt <- series(df="sexo_segun_jerarquias_df", 
+                        filtro = TRUE, 
+                        variable = "JERARQUIA", 
+                        valores_filter = c("Jefes", "Dirección"),
+                        input1=input$aniosID[1],
+                        input2=input$aniosID[2],
+                        renombrar= TRUE,
+                        cols="tasa")
+      
+      graphPlot <- graficos(df=df.filt(), 
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Sexo según jerarquías (jefatura y dirección)", 
+                            subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                            doble_facet = TRUE,
+                            faceta = "JERARQUIA")
+      
+      output$grafico_final<-renderPlot(graphPlot)
+      
+    }
+    else if (input$indicadoresID == "Cuentapropistas"){
+      
+      df.filt <- series(df="sexo_segun_jerarquias_df", 
+                        filtro = TRUE, 
+                        variable = "JERARQUIA", 
+                        valores_filter = c("Cuentapropia"),
+                        input1=input$aniosID[1],
+                        input2=input$aniosID[2],
+                        renombrar= TRUE,
+                        cols="tasa")
+      
+      graphPlot <- graficos(df=df.filt(), 
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Sexo según jerarquías (cuentapropia)", 
+                            subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                            doble_facet = FALSE)
+      
+      output$grafico_final<-renderPlot(graphPlot)
+      
+    }
+    else if (input$indicadoresID == "Asalariades"){
+      
+      df.filt <- series(df="sexo_segun_jerarquias_df", 
+                        filtro = TRUE, 
+                        variable = "JERARQUIA", 
+                        valores_filter = c("Trabajadores Asalariados"),
+                        input1=input$aniosID[1],
+                        input2=input$aniosID[2],
+                        renombrar= TRUE,
+                        cols="tasa")
+      
+      graphPlot <- graficos(df=df.filt(), 
+                            eje_x = "Período",
+                            eje_y = "",
+                            titulo = "Sexo según jerarquías (trabajo asalariado)", 
+                            subtitulo = "Ocupadas/os. Por periodos. Total 31 aglomerados urbanos.",
+                            doble_facet = FALSE)
+      
+      output$grafico_final<-renderPlot(graphPlot)
+      
+    }
   }
-)}
+  )}
+
 
 shinyApp(ui,server)
