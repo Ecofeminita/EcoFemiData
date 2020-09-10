@@ -318,9 +318,8 @@ graficos_series(df="sexo_segun_jerarquias_df",
 # Sexo en cada jerarquía (ocupades con jerarquía válida)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-datagraf <- resultados$tablas_04_06[["jerarquias_segun_sexo_df"]] %>% 
-  bind_rows(., resultados$tablas_16_18[["jerarquias_segun_sexo_df"]]) %>%            
-  #rename(valor = "tasa") %>% 
+datagraf <- resultados$tablas_16_19[["jerarquias_segun_sexo_df"]]%>% 
+  rename(valor = tasa) %>% 
   filter(Sexo == "Mujeres") %>%
   ordeno_periodo() %>% 
   mutate(JERARQUIA = case_when(JERARQUIA == "Trabajadores Asalariados" ~ "Asalariados",
@@ -353,8 +352,7 @@ grafico
 # Brecha del ingreso total individual (perceptores)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-grafico <- resultados$tablas_04_06$brecha_ITI_df %>% 
-  bind_rows(., resultados$tablas_16_18$brecha_ITI_df) %>% 
+grafico <- resultados$tablas_16_19$brecha_ITI_df %>% 
   ordeno_periodo(.) %>% 
   ggplot(., aes(periodo, brecha.ITI, group = dummy, color = dummy)) +
   geom_line(size = 1, alpha = 0.75, color = "#aa165a") +
@@ -381,8 +379,7 @@ grafico
 # Brecha del ingreso de la ocupación principal (ocupades)
 
 ```{r}
-grafico <- resultados$tablas_04_06$brecha_IOP_df %>% 
-  bind_rows(., resultados$tablas_16_18$brecha_IOP_df) %>% 
+grafico <- resultados$tablas_16_19$brecha_IOP_df %>% 
   ordeno_periodo(.) %>% 
   ggplot(., aes(periodo, brecha.IOP, group = dummy, color = dummy)) +
   geom_line(size = 1, alpha = 0.75, color = "#aa165a") +

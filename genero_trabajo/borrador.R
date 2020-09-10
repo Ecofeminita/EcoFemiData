@@ -45,12 +45,12 @@ series <- function(df="tasas_por_sexo_df",
                    ){
   
   datagraf<-resultados$tablas_16_19[[df]] %>% # Daraframe para 2016-19
-                mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",              # Identifico periodos
+                mutate(dummy = case_when(ANO4 %in% c(2004:2006) ~ "2004-2006",  # Identifico periodos
                                          TRUE ~ "2016-2019"),
                 grp = paste0(Sexo, dummy),                                           # Grupos por Sexo y Período (4 grupos)
                 # periodo = as.yearqtr(paste0(ANO4,".",TRIMESTRE), format="%Y.%q")), # Para trabajar con formato fecha 
-                periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE),         # Periodo como factor y con formato 
-                                      levels = unique(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE))))
+                periodo = factor(paste0(substr(ANO4, 3, 4), "T", TRIMESTRE)))%>%
+                arrange(ANO4)
   
   datagraf <- (if (filtro==TRUE) {# Por si tengo que filtrar la base antes
     datagraf %>% 

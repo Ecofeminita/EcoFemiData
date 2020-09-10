@@ -435,4 +435,3 @@ Finalmente, guardamos esta nueva versión del dataset en formato .RDS para conti
 ```{r echo=TRUE}
 # saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2020-03-23-limpio.RDS")
 ```
-
