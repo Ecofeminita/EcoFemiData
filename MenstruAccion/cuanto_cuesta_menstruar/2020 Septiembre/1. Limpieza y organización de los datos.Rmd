@@ -1,4 +1,4 @@
----
+  ---
 title: "Limpieza y organización de los datos del #MenstruScrapper"
 subtitle: "#MenstruAcción - Datos de Septiembre 2020"
 author: "Natsumi Shokida para EcoFemiData"
@@ -14,10 +14,10 @@ editor_options:
 
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminitas, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el #MenstruScrapper, desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 6 de Septiembre de 2020 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019 y Marzo de 2020. En esta instancia, se obtuvieron 106.639 observaciones en total, luego de 5hs que demoró en correr el programa.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminitas, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el #MenstruScrapper, desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 6 de Septiembre de 2020 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019 y Marzo de 2020. En esta instancia, se obtuvieron 106.639 observaciones en total.
 
-+ Respecto de los tampones: Se obtuvieron 86 ids de productos, 2112 sucursales, 17211 precios de productos.
-+ Respecto de las toallitas: Se obtuvieron 168 ids de productos, 2112 sucursales, 70943 precios de productos.
++ Respecto de los tampones: Se obtuvieron 20.069 precios.
++ Respecto de las toallitas: Se obtuvieron 86.570 precios.
 
 En el archivo `README` de la carpeta `Fuentes` se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo. En otro script se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
@@ -108,7 +108,7 @@ datos %>%
          acumulado = percent(acumulado))
 ```
 
-Contamos con 22 marcas de productos, aunque con 9 de ellas se completa el 90% del total de productos. Las primeras 3 marcas concentran la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de "concentración de mercado".
+Contamos con 29 marcas de productos, aunque con 10 de ellas se completa el 90% del total de productos. Las primeras 3 marcas concentran casi la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de una "concentración de mercado".
 
 #### Presentación
 
@@ -136,7 +136,7 @@ datos %>%
          acumulado = percent(acumulado))
 ```
 
-Si bien más de la mitad de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, 90 observaciones en Misiones) se trata de una cantidad pasible de proveernos estimaciones útiles.
+Si bien más de la mitad de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, 235 observaciones en La Rioja) se trata de una cantidad pasible de proveernos estimaciones útiles.
 
 #### Regiones
 
@@ -253,7 +253,7 @@ comparo_unidades <- datos %>%
 comparo_unidades
 ```
 
-En particular, hay casos que fueron informados como de 1 o 27 unidades y en realidad eran de 16 (tiene sentido que este último sea el verdadero valor), o casos que fueron informados como de 1 o 54 unidades y en realidad eran de 8. Como puede verse a continuación, hay en total 1771 casos en que la información no coincide, lo que representa el 2% de la información.
+En particular, hay casos que fueron informados como de 1 o 27 unidades y en realidad eran de 16 (tiene sentido que este último sea el verdadero valor), o casos que fueron informados como de 1 o 54 unidades y en realidad eran de 8. Como puede verse a continuación, hay en total 2250 casos en que la información no coincide, lo que representa el 2% de la información.
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -262,7 +262,7 @@ datos %>%
   mutate(porc = percent(n/sum(n)))
 ```
 
-Vale la pena destacar que estos errores se presentan en todas las regiones, y concentrados en 5 marcas diferentes, aunque de las más populares en nuestro dataset. 
+Vale la pena destacar que estos errores se presentan en todas las regiones, y concentrados en 5 marcas diferentes, aunque de las más populares en nuestro dataset.
 
 ```{r message=FALSE, warning=FALSE}
 # Distribucion de los datos que queremos sacar entre las regiones
@@ -278,7 +278,7 @@ datos %>%
 
 #### Aclaración
 
-En el ejercicio anterior (septiembre 2019), prescindimos de los valores faltantes en `unidades_regex` (por más que tengan valor en `unidades`, aquella que surge de la variable `Presentación`). Verificamos aquellos casos en que `unidades_regex` (que surge del texto en `Nombre`) no coincide con la variable `unidades`. Establecimos que las cantidades referidas a las unidades por paquete parecen ser mejor captadas con el método de regex sobre el texto del `Nombre` del producto, respecto de lo surgido de la información de la página como `Presentación`. Nos quedamos con `unidades_regex` para calcular el precio por unidad de los productos.
+En un ejercicio anterior (septiembre 2019), prescindimos de los valores faltantes en `unidades_regex` (por más que tengan valor en `unidades`, aquella que surge de la variable `Presentación`). Verificamos aquellos casos en que `unidades_regex` (que surge del texto en `Nombre`) no coincide con la variable `unidades`, y establecimos que las cantidades referidas a las unidades por paquete parecen ser mejor captadas con el método de regex sobre el texto del `Nombre` del producto, respecto de lo surgido de la información de la página como `Presentación`. Nos quedamos con `unidades_regex` para calcular el precio por unidad de los productos.
 
 ```{r eval=FALSE, include=FALSE}
 # Este codigo esta anulado. Es lo que estaba en el ejercicio anterior
@@ -313,7 +313,7 @@ datos <- datos %>%
   filter(igual == TRUE)
 ```
 
-__Se descartan 1.894 casos__ y ahora contamos con `r cant(nrow(datos))` observaciones. También podemos deshacernos de variables que no vamos a utilizar en el ejercicio de estimación.
+__Se descartan 2.416 casos__ y ahora contamos con `r cant(nrow(datos))` observaciones. También podemos deshacernos de variables que no vamos a utilizar en el ejercicio de estimación.
 
 ```{r message=FALSE, warning=FALSE}
 # Descarto las variables que no voy a usar
@@ -348,7 +348,7 @@ ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = Categoría)) +
        caption = "Fuente: #MenstruAcción")
 ```
 
-En este caso, la distribución de los precios de los tampones se entiende como más concentrada (ya no está tan marcada una bimodal) y con un rango de precios superior al de las toallitas.
+En este caso, la distribución de los precios de los tampones se entiende como más concentrada (ya no está tan marcada una bimodal).
 <br><br>
 Esta vez, para realizar el gráfico por categorías y regiones, podemos ordenar a estas últimas según su precio promedio en el gráfico. Para ello construimos un vector que las aloje en orden, llamado `reg_ordenadas`. Luego, pisamos la variable `Region` en los datos para que sea de tipo factor, y el orden de la misma esté determinado según el vector previamente definido.
 
