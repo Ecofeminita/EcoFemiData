@@ -41,13 +41,13 @@ Ver https://www.nhs.uk/conditions/periods/
 Archivo original, descargado de INDEC > Estadísticas > Economía > Precios > Precios al consumidor (IPC):
 
 _Índices y variaciones porcentuales mensuales e interanuales según divisiones de la canasta, bienes y servicios, clasificación de grupos. Diciembre de 2016-agosto de 2020_
-#ACTUALIZAR
+
 https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31
-#ACTUALIZAR
-https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_05_20.xls
+
+https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_09_20.xls
 
 - __serie_inflacion.xlsx__
-#ACTUALIZAR
+
 Del archivo anterior, se toman los datos de la pestaña _Índices IPC Cobertura Nacional_ correspondientes al Total Nacional de las categorías _Nivel general, Alimentos y bebidas no alcohólicas, Salud_. Se trata de una serie de números índice.
 
 - __serie_precios_pgm.xlsx__
