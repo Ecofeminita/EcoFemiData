@@ -9,3 +9,7 @@ En esta serie de informes se presentan indicadores sociales con el objetivo de v
 Se presentan diversos indicadores referidos a las condiciones de trabajo de las trabajadoras que prestan servicio doméstico en hogares particulares. La información proviene de la base usuaria de la EPH (Encuesta Permanente de Hogares - INDEC - Argentina) y refiere a los 31 aglomerados urbanos relevados por la misma.
 <br><br>
 Quienes estén interesados en reproducir los cálculos necesarios para obtener la información que aquí se presenta, pueden obtener la sintaxis en lenguaje R.
+
+## [¿Cuánto cuesta menstruar?](MenstruAccion)
+
+Tutoriales que detallan la metodología utilizada para calcular, cada semestre, el costo anual de menstruar en Argentina y la comparación con la evolución general de precios. Dirigido a quienes tengan un conocimiento básico de programación en R Software.

@@ -277,15 +277,6 @@ ggplot(base100bis, aes(x = Mes, y = Indice, group = Categoria, color = Categoria
 
 
 
-Limites: 
-
-- posibles sesgos de la información de la página
-- copas?
-- no tenemos ponderadores de consumo toallitas/tampones
-- algo sobre ingresos (histograma? deciles?)
-- población trans (eph y censo 2020)
-- comparación IPC general, leche u otros productos
-
 
 
 
