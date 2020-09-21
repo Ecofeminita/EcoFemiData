@@ -1,4 +1,4 @@
-  ---
+---
 title: "Limpieza y organización de los datos del #MenstruScrapper"
 subtitle: "#MenstruAcción - Datos de Septiembre 2020"
 author: "Natsumi Shokida para EcoFemiData"
@@ -8,8 +8,6 @@ output:
     toc: true
     toc_float: true
     toc_depth: 5
-editor_options: 
-  chunk_output_type: inline
 ---
 
 ## Presentación
@@ -434,6 +432,6 @@ ggplot(datos, aes(x = precio_unidad, y = Provincia,
 
 Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
 
-```{r echo=TRUE}
- saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2020-09-06-limpio.RDS")
+```{r eval=FALSE, include=FALSE}
+ #saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2020-09-06-limpio.RDS")
 ```
