@@ -2,7 +2,7 @@
 
 Realizados con la Encuesta Permanente de Hogares (EPH) del INDEC (Argentina)
 
-## [2do trimestre de 2020](trim_2020_01/informe.nb.html)
+## [2do trimestre de 2020](trim_2020_02/informe.nb.html)
 
 ## [1er trimestre de 2020](trim_2020_01/informe.nb.html)
 
