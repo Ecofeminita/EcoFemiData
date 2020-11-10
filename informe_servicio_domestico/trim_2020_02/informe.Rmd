@@ -47,7 +47,7 @@ El documento se realizó utilizando el lenguaje de programación R, y para les c
 <br><br>
 Este reporte puede volverse un poco técnico por momentos, pero desde [EcoFeminita](http://economiafeminita.com/) realizamos también otras notas de carácter divulgatorio. Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 <br><br>
-Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida, Natsumi S. (07/11/2020) Las trabajadoras de servicio doméstico en Argentina. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_servicio_domestico/trim_2020_02/informe.nb.html"
+Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida, Natsumi S. (XX/XX/XXXX) Las trabajadoras de servicio doméstico en Argentina. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_servicio_domestico/trim_2020_02/informe.nb.html"
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Se cargan librerías útiles
