@@ -1,7 +1,7 @@
 ---
 title: "Las trabajadoras de servicio doméstico en Argentina"
 subtitle: "2do trimestre de 2020"
-author: "Natsumi Shokida para #EcoFemiData, equipo de dato de EcoFeminita - Noviembre de 2020"
+author: "Natsumi Shokida para #EcoFemiData, equipo de datos de Economía Feminita - Noviembre de 2020"
 output: 
   html_notebook:
     theme: flatly
