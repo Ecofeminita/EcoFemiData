@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para Economía Femini(s)ta"
+author: "Equipo de #EcoFemiData, el equipo de datos de Economía Feminita"
 date: "Noviembre de 2020"
 output:
   html_notebook:
@@ -30,7 +30,7 @@ urlcolor: null
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 date <- "2do trimestre 2020"
 aglo_date <- paste0("Total de aglomerados urbanos. ", date)
-fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
+fuente <- "#EcoFemiData y EcoFeminita en base a EPH-INDEC"
 ```
 
 # Secciones {.tabset .tabset-fade .tabset-pills}
@@ -41,27 +41,23 @@ fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
 
 ### Introducción
 <br><br>
-El objetivo de este informe es visibilizar las diferencias que, de acuerdo al género de las personas, pueden encontrarse en el ámbito del mercado de trabajo, los ingresos que perciben, la cantidad de horas que trabajan semanalmente, la distribución de las tareas domésticas. También se indaga sobre la expresión de estos mismos fenómenos en la distribución del ingreso a nivel social. Para ello se presenta una serie de indicadores, cuadros y gráficos de elaboración propia, que intentan responder preguntas como ¿Cómo se compone el mercado de trabajo de acuerdo al género de las personas?, ¿Hay diferencia entre varones y mujeres cuando hablamos de trabajo informal?¿Y cuando hablamos de cargos jerárquicos?, ¿Qué tanta diferencia hay entre los ingresos de los varones y de las mujeres?, ¿Los varones cobran más por cada hora trabajada?, ¿Trabajan las mujeres menos horas que los varones?, ¿Y qué pasa si consideramos trabajo no sólo a lo que se remunera sino también al trabajo doméstico?.
+El objetivo de este informe es visibilizar las diferencias que, de acuerdo al género de las personas, pueden encontrarse en el ámbito del mercado de trabajo, los ingresos que perciben, la cantidad de horas que trabajan semanalmente, la distribución de las tareas domésticas. También se indaga sobre la expresión de estos mismos fenómenos en la distribución del ingreso a nivel social. Para ello se presenta una serie de indicadores, cuadros y gráficos de elaboración propia, que intentan responder preguntas como __¿Cómo se compone el mercado de trabajo de acuerdo al género de las personas?, ¿Hay diferencia entre varones y mujeres cuando hablamos de trabajo informal?¿Y cuando hablamos de cargos jerárquicos?, ¿Qué tanta diferencia hay entre los ingresos de los varones y de las mujeres?, ¿Los varones cobran más por cada hora trabajada?, ¿Trabajan las mujeres menos horas que los varones?, ¿Y qué pasa si consideramos trabajo no sólo a lo que se remunera sino también al trabajo doméstico?__.
 <br><br>
-Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
+Para realizar los cálculos se utilizan bases de datos publicadas por la __Encuesta Permanente de Hogares del INDEC__. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
+<br><br>
+Respecto del __impacto de la pandemia por COVID-19 y el aislamiento social preventivo y obligatorio (ASPO)__, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados.
 <br><br>
 Los indicadores presentados se encuentran desagregados según la variable disponible, que indica el _sexo_ declarado por las personas respondentes de la encuesta, de acuerdo a una distinción _binaria_. Bregamos por la incorporación definitiva de una pregunta que nos permita tener información sobre la identidad de género de las personas en el próximo censo nacional, además de la referida al sexo asignado al nacer. La población trans-travesti históricamente ha sido excluida mediante violencia física, simbólica, psicológica, sexual y económica del sistema educativo, de salud y del trabajo formal. Dada la situación de vulnerabilidad a la que muches se enfrentan, resulta fundamental que estén presentes en las estadísticas oficiales.
 <br><br>
-El documento se realizó utilizando el lenguaje de programación R, y para les curioses todo el código se encuentra disponible para su descarga^4^. 
+El documento se realizó utilizando el lenguaje de programación R, y para les curioses todo el código se encuentra disponible para su descarga^1^. 
 <br><br>
-Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^5^. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc^2^. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 
 ---
 
-^1^ Julieta Moure es economista (FCE-UBA) y se encuentra maestrando en Políticas Públicas en la UTDT. 
+^1^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe.
 <br><br>
-^2^ Daiana Serpa es economista (FCE-UBA) especializada en análisis de datos.
-<br><br>
-^3^ Natsumi Shokida es economista (FCE-UBA) y maestranda en Información y Ciencias de la Computación en la Universidad de Luxemburgo. Coordinadora de EcoFemiData, el área de datos de [Economía Femini(s)ta](http://economiafeminita.com).
-<br><br>
-^4^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe.
-<br><br>
-^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2020_02/informe.nb.html"
+^2^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/XXXX) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2020_02/informe.nb.html"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
