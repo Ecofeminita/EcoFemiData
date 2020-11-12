@@ -177,7 +177,7 @@ En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel i
 <br><br>
 La __tasa de actividad__ es la relación entre aquellos que participan en el mercado de trabajo (ya sea como ocupados o como desocupados) y la población total. En este caso, dicha tasa es ampliamente mayor entre los varones (la diferencia ronda los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La __tasa de empleo__, por su parte, exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso ronda los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.
 <br><br>
-Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos.
+Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos. En este trimestre en particular, ambas tasas se vieron fuertemente reducidas.
 <br><br>
 
 __Figura 1.__
@@ -208,7 +208,7 @@ ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ---
 
-A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. En este caso, ambas tasas son mayores para las mujeres que para los varones. Esto señala que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa.
+A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. Sin embargo, en este trimestre, la tasa de desocupación subió a pico histórico y se mantiene mayor entre las mujeres, en tanto la subocupación pasó a ser superior entre los varones.
 <br><br>
 En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino.
 <br><br>
