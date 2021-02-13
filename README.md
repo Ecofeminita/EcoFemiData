@@ -1,4 +1,11 @@
-![](img/logo2.png)   
+
+
+<img src="img/logo2.png" width="200">
+
+[![DOI](https://zenodo.org/badge/235862458.svg)](https://zenodo.org/badge/latestdoi/235862458)
+
+
+
 
 ## [Informes de desigualdad de género](informe_desigualdad_genero)
 
