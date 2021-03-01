@@ -1,13 +1,13 @@
 ---
 title: "La desigualdad de género se puede medir"
 author: "Equipo de #EcoFemiData, el equipo de datos de Economía Feminita"
-date: "Noviembre de 2020"
+date: "Marzo de 2021"
 output:
   html_notebook:
     theme: flatly
   html_document:
     df_print: paged
-subtitle: Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2020.
+subtitle: Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2020.
 urlcolor: null
 ---
 
@@ -77,7 +77,7 @@ library(magrittr)
 library(DT)
 library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
 # Como fuente tomamos un script con el código que permite construir las ramas de la ocupación de acuerdo al nomenclador, y otro con funciones de formato para los datos.
-source("../../R/funciones rama.R")
+#source("../../R/funciones rama.R") No necesitamos mas esto porque se incorporo al paquete eph ;)
 source("../../R/funciones formato.R")
 ```
 
@@ -177,7 +177,7 @@ En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel i
 <br><br>
 La __tasa de actividad__ es la relación entre aquellos que participan en el mercado de trabajo (ya sea como ocupados o como desocupados) y la población total. En este caso, dicha tasa es ampliamente mayor entre los varones (la diferencia ronda los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La __tasa de empleo__, por su parte, exhibe la proporción de ocupados entre la población total. La diferencia entre varones y mujeres en este caso ronda los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.
 <br><br>
-Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos. En este trimestre en particular, ambas tasas se vieron fuertemente reducidas.
+Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos.
 <br><br>
 
 __Figura 1.__
@@ -208,7 +208,7 @@ ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ---
 
-A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. Sin embargo, en este trimestre, la tasa de desocupación subió a pico histórico y se mantiene mayor entre las mujeres, en tanto la subocupación pasó a ser superior entre los varones.
+A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. 
 <br><br>
 En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino.
 <br><br>
@@ -279,8 +279,8 @@ tabla2v <- tabla2 %>%
   spread(., GRUPO_EDAD, Varones)
 
 tabla3 <- left_join(tabla2m, tabla2v, by = "Indicadores") %>% 
-  select(Indicadores, Mujeres = `de 14 a 29 años.x`, Varones = `de 14 a 29 años.y`,
-         Mujeres = `de 30 a 64 años.x`, Varones = `de 30 a 64 años.y`)
+  select(Indicadores, `1. Mujeres` = `de 14 a 29 años.x`, `1. Varones` = `de 14 a 29 años.y`,
+         `2. Mujeres` = `de 30 a 64 años.x`, `2. Varones` = `de 30 a 64 años.y`)
 
 inline_3 <- tabla2m %>% 
   filter(Indicadores == "Tasa Desocupación") %>% 
@@ -428,8 +428,8 @@ rm(tabla5)
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tabla6 <- base_individual %>% 
-  mutate(Rama = entra.cuchillo.salen.las.ramas(PP04B_COD)) %>% 
+tabla6 <- organize_caes(base_individual) %>% 
+  mutate(Rama = caes_eph_label) %>% 
   filter(ESTADO == 1,
          PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999,
@@ -439,20 +439,23 @@ tabla6 <- base_individual %>%
             ingreso_promedio = weighted.mean(P21, PONDIIO),
             ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
   arrange(-tasa_feminizacion) %>% 
+  filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud", 
+  "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+  "Construccion")) %>% 
   transmute("Rama de la ocupación" = Rama,
             "Tasa de feminización" = tasa_feminizacion,
             "Ingreso mensual promedio" = formato_pesos(round(ingreso_promedio, -2), 0),
             "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
 ```
 
-La siguiente tabla representa al total de ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
+La siguiente tabla representa a ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
 <br><br>
 Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. 
 <br><br>
 
 __Figura 6.__
 <br>
-<p style="color:#FE1764">__Indicadores por ramas de la ocupación__</p>
+<p style="color:#FE1764">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla6 %>% 
   kable(align = 'lrrr', 
@@ -556,7 +559,7 @@ inline_13 <- tabla7 %>%
 
 Como se ve en el siguiente cuadro, para el caso de todas las personas perceptoras de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de __`r inline_9`__. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones.
 <br><br>
-Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un __`r inline_10`__ menos que los varones (`r inline_11` vs. `r inline_12` ). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal.
+Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un __`r inline_10`__ menos que los varones (_`r inline_11`_ vs. _`r inline_12`_). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal.
 <br><br>
 Si tomamos en cuenta únicamente a aquellas personas que no poseen descuentos jubilatorios, se observa cómo las mujeres ganan en promedio un __`r inline_13`__ menos que sus pares. Es decir que la brecha de ingresos entre las y los trabajadores se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.
 <br><br>
@@ -647,8 +650,8 @@ inline_19 <- tabla8 %>%
   percent(., 1)
 ```
 
-El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de `r inline_14`, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de `r inline_15`, es decir, un __`r inline_16`__ menos que los varones.    
-En los puestos no calificados, los varones ganan `r inline_17` en promedio, al tiempo que las mujeres ganan alrededor de `r inline_18`. Esta brecha es del __`r inline_19`__.
+El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de _`r inline_14`_, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de _`r inline_15`_, es decir, un __`r inline_16`__ menos que los varones.    
+En los puestos no calificados, los varones ganan _`r inline_17`_ en promedio, al tiempo que las mujeres ganan alrededor de _`r inline_18`_. Esta brecha es del __`r inline_19`__.
 <br><br>
 
 __Figura 8.__
@@ -1108,6 +1111,7 @@ __Figura 15.__
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla15_graf <-base_individual %>% 
   select(DECCFR, IPCF, PONDIH, Sexo) %>% 
+  mutate(DECCFR = as.numeric(DECCFR)) %>% 
   filter(DECCFR %in% c(1:10)) %>% 
   group_by(DECCFR) %>% 
   mutate(Pob = sum(PONDIH)) %>% 
@@ -1142,8 +1146,9 @@ Decimos entonces que los estratos de menores ingresos están feminizados, al tie
 __Figura 16.__ 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla16_graf <-base_individual %>% 
-    select(DECINDR, P47T, PONDII, Sexo) %>% 
-    filter(DECINDR %in% c(1:10)) %>% 
+  select(DECINDR, P47T, PONDII, Sexo) %>% 
+  mutate(DECINDR = as.numeric(DECINDR)) %>% 
+  filter(DECINDR %in% c(1:10)) %>% 
   group_by(DECINDR) %>% 
   mutate(Pob = sum(PONDII)) %>% 
   group_by(DECINDR, Sexo) %>%
