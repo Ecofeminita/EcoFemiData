@@ -44,7 +44,7 @@ _Índices y variaciones porcentuales mensuales e interanuales según divisiones 
 
 https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31
 
-https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_09_20.xls
+https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_03_21.xls
 
 - __serie_inflacion.xlsx__
 

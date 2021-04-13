@@ -1,11 +1,11 @@
 ---
 title: "Limpieza y organización de los datos del #MenstruScrapper"
-subtitle: "#MenstruAcción - Datos de Septiembre 2020"
+subtitle: "#MenstruAcción - Datos de Marzo 2021"
 author: "Natsumi Shokida para EcoFemiData"
-date: "Septiembre de 2020"
+date: "Marzo de 2021"
 output:
   html_notebook:
-    toc: true
+    toc: false
     toc_float: true
     toc_depth: 5
 ---
@@ -430,7 +430,9 @@ ggplot(datos, aes(x = precio_unidad, y = Provincia,
        caption = "Fuente: #MenstruAcción")
 ```
 
-# Precios iguales a cero
+# Apéndice: Precios iguales a cero
+
+Análisis exploratorio de los precios que están en cero, y la posibilidad de quitarlos de la base.
 
 ```{r}
 summary(datos$Precio.de.lista)
@@ -438,12 +440,14 @@ summary(datos$Precio.de.lista)
 ```{r}
 summary(datos$precio_unidad)
 ```
+Cantidad de casos
+
 ```{r}
 datos %>% 
   filter(Precio.de.lista == 0) %>% 
   count()
 ```
-un 1.66% de los precios estan en cero.
+un 1.66% de los precios están en cero.
 
 ```{r}
 library(hrbrthemes)  
@@ -471,7 +475,7 @@ datos %>%
   filter(Comercio == "DIARCO") %>% 
   count()
 ```
-Todos los precios en cero corresponden al comercio DIARCO. Se van a sacar en el siguiente script, para comparar facilmente los resultados con o sin ellos.
+Todos los precios en cero corresponden al comercio DIARCO. Se van a sacar en el siguiente script, para comparar fácilmente los resultados con o sin ellos. Nota de ed: Quitando los valores con precios cero, el promedio prácticamente no se mueve (unos centavos). Evidentemente es muy efectiva la medida de calcular medias podadas. Para tampoco tener que modificar todos los cálculos anteriores, se deja así. 
 
 Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
 

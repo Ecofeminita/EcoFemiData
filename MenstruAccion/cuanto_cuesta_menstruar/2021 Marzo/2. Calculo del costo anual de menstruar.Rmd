@@ -1,12 +1,13 @@
 ---
 title: "Cálculo: ¿Cuánto cuesta menstruar?"
-subtitle: "#MenstruAcción - Datos de Septiembre 2020"
+subtitle: "#MenstruAcción - Datos de Marzo 2021"
 author: "Natsumi Shokida para EcoFemiData"
-date: "Septiembre de 2020"
+date: "Marzo de 2021"
 output:
   html_notebook:
-    toc: true
+    toc: false
     toc_float: true
+    toc_collapsed: true
     toc_depth: 5
 ---
 
@@ -27,7 +28,7 @@ library(DT)
 ```
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-datos <- readRDS("Fuentes/precios-gestion-menstrual-2020-09-06-limpio.RDS")
+datos <- readRDS("Fuentes/precios-gestion-menstrual-2021-03-12-limpio.RDS")
 
 head(datos)
 ```
@@ -35,7 +36,8 @@ head(datos)
 A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2020, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`. Obtenemos también una vista previa de la estructura de estos datos.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-menstruan <- read_excel("Fuentes/poblaciones.xls")
+menstruan <- read_excel("Fuentes/poblaciones.xls") %>% 
+  select(Provincia, Menstruan) # Para sacar las columnas con comentarios
 
 head(menstruan)
 ```
@@ -54,8 +56,6 @@ head(menstruan)
 Además, considerando que hay outliers (valores atípicos) en los precios unitarios, a la hora de calcular los promedios de precios provinciales se remueven "las colas" de la distribución, utilizando una media alfa podada:     
 
 - alfa = 2.5%
-
-![](img/pre_resultados.png)   
 
 ## Cálculo y Resultados
 
