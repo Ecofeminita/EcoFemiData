@@ -24,7 +24,7 @@ https://github.com/nportas/menstruscrapper
 
 https://github.com/nportas/menstruscrapper/blob/master/Fuentes/precios-gestion-menstrual-2021-03-12.csv
 
-- __precios-gestion-menstrual-2020-09-06-limpio.RDS__
+- __precios-gestion-menstrual-2021-03-12-limpio.RDS__
 
 Base de datos luego de la limpieza y organización de los datos (realizado con el script __Limpieza y organización de los datos.Rmd__)
 
@@ -36,15 +36,15 @@ Diccionario de regiones: Especifica a qué región pertenece cada provincia.
 
 Ver https://www.nhs.uk/conditions/periods/
 
-- __sh_ipc_05_20.xls__    
+- __sh_ipc_04_21.xls__    
 
 Archivo original, descargado de INDEC > Estadísticas > Economía > Precios > Precios al consumidor (IPC):
 
-_Índices y variaciones porcentuales mensuales e interanuales según divisiones de la canasta, bienes y servicios, clasificación de grupos. Diciembre de 2016-agosto de 2020_
+_Índices y variaciones porcentuales mensuales e interanuales según divisiones de la canasta, bienes y servicios, clasificación de grupos. Diciembre de 2016-marzo de 2020_
 
 https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31
 
-https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_03_21.xls
+https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_04_21.xls
 
 - __serie_inflacion.xlsx__
 
