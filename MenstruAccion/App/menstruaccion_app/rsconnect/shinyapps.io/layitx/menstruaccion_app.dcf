@@ -1,0 +1,13 @@
+name: menstruaccion_app
+title: menstruaccion_app
+username:
+account: layitx
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2254356
+bundleId: 4550885
+url: https://layitx.shinyapps.io/menstruaccion_app/
+when: 1620050826.16606
+lastSyncTime: 1620050826.16606
+asMultiple: FALSE
+asStatic: FALSE

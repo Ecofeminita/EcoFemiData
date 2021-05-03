@@ -1,0 +1,11 @@
+name: ui-server-deploy
+title:
+username:
+account: layitx
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4048048
+bundleId: 4532254
+url: https://layitx.shinyapps.io/ui-server-deploy/
+when: 1619648380.93395
+lastSyncTime: 1619648380.93395
