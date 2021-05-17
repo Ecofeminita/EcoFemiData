@@ -12,7 +12,7 @@ df_tampones<-read.csv("data_tampones_b.csv",encoding='UTF-8')
 #data_group<-read.csv("menstruaccion_app/data_group.csv", encoding="UTF-8") %>% 
 #        left_join(st_read
 #        ("pxpciadatosok.shp"),by=c("Provincia"="provincia"))%>%
-#        select(Provincia,CategorÃÂ­a,precio_x_unidad,geometry)
+#        select(Provincia,Categoría,precio_x_unidad,geometry)
 
 ui <- fluidPage( tags$head(tags$style(
         HTML('
