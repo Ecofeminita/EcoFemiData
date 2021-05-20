@@ -55,7 +55,7 @@ Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabaj
 
 ^1^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe.
 <br><br>
-^2^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, & Santellán Celina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
+^2^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, Santellán Celina, Pradier Carolina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
@@ -431,10 +431,11 @@ tabla6 <- organize_caes(base_individual) %>%
   filter(ESTADO == 1,
          PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999,
-         P21 > 0) %>%  # Ingresos positivos
+         P21 > 0,
+         PONDIIO > 0) %>%  # Ingresos positivos
   group_by(Rama) %>% 
   summarise(tasa_feminizacion = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
-            ingreso_promedio = weighted.mean(P21, PONDIIO),
+            ingreso_promedio = weighted.mean(P21, PONDIIO/sum(PONDIIO)),
             ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
   arrange(-tasa_feminizacion) %>% 
   filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud", 
@@ -503,7 +504,7 @@ tabla7.1 <- base_individual %>%
 tabla7.2 <- base_individual %>% 
   filter(ESTADO == 1) %>% 
   group_by(Sexo) %>% 
-  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO))) %>% 
+  summarise(Media.IOP = round(weighted.mean(P21, PONDIIO/sum(PONDIIO)))) %>% 
   spread(., Sexo, Media.IOP) %>% 
   mutate(Población = "Ocupadas/os",
          Ingreso = "Ingreso de la Ocupación Principal")
