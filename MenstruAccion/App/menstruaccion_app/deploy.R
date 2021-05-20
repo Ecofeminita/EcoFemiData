@@ -9,6 +9,5 @@ rsconnect::setAccountInfo(name='layitx',
 setwd("C:/Users/Usuario/Desktop/EcoFeminita/App/menstruaccion_app")
 shinyAppDir(".")
 
-#deployApp()
 #runApp()
 #rsconnect::showLogs()
