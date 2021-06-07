@@ -45,6 +45,8 @@ El objetivo de este informe es visibilizar las diferencias que, de acuerdo al g�
 <br><br>
 Para realizar los cálculos se utilizan bases de datos publicadas por la __Encuesta Permanente de Hogares del INDEC__. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
 <br><br>
+Respecto del __impacto de la pandemia por COVID-19 y el aislamiento social preventivo y obligatorio (ASPO)__, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados.
+<br><br>
 Los indicadores presentados se encuentran desagregados según la variable disponible, que indica el _sexo_ declarado por las personas respondentes de la encuesta, de acuerdo a una distinción _binaria_. Bregamos por la incorporación definitiva de una pregunta que nos permita tener información sobre la identidad de género de las personas en el próximo censo nacional, además de la referida al sexo asignado al nacer. La población trans-travesti históricamente ha sido excluida mediante violencia física, simbólica, psicológica, sexual y económica del sistema educativo, de salud y del trabajo formal. Dada la situación de vulnerabilidad a la que muches se enfrentan, resulta fundamental que estén presentes en las estadísticas oficiales.
 <br><br>
 El documento se realizó utilizando el lenguaje de programación R, y para les curioses todo el código se encuentra disponible para su descarga^1^. 
@@ -741,7 +743,7 @@ __Figura 9.__
 <p style="color:#E5616E">__Nivel educativo de mujeres y varones__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla9.1 %>% 
-  mutate(Mujeres = color_tile("#FFE6EE", colores[1])((Mujeres)),
+  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
          Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
   select('Nivel Educativo', Mujeres, Varones) %>% 
   kable(escape = FALSE, digits = 1, align = 'lrr',
