@@ -47,7 +47,7 @@ El documento se realizó utilizando el lenguaje de programación R, y para les c
 <br><br>
 Este reporte puede volverse un poco técnico por momentos, pero desde [EcoFeminita](http://economiafeminita.com/) realizamos también otras notas de carácter divulgatorio. Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabajos, infografías, etc. Además, si te gusta lo que hacemos podés apoyarnos potenciando nuestros proyectos, haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 <br><br>
-Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, & Santellán Celina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
+Si necesitás citarnos en un trabajo, podés hacerlo como: "Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, Santellán Celina, Pradier Carolina, Lee Justina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Se cargan librerías útiles
@@ -65,6 +65,7 @@ library(kableExtra)
 library(formattable)
 library(questionr)
 library(hrbrthemes)
+#install.packages('https://cran.r-project.org/src/contrib/Archive/spatstat/spatstat_1.64-1.tar.gz', repos=NULL,type="source", INSTALL_opts = "--no-lock") #instalo la versión vieja de spatstat por el error en la linea 500 (antes tuve que desinstallar la versión actualizada)
 library(spatstat) #lo sumé yo (celi) ahora porque me lo pedía en la linea 500
 library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
 # Como fuente tomamos un script con funciones de formato para los datos.
