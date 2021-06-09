@@ -389,7 +389,9 @@ inline_15 <- serv.dom %>%
   filter(DONDE_NACIO == "En un país limítrofe") %>%
   pull(n) %>% 
   as.numeric(.)
+```
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 left_join(tabla2, tabla3, by = "DONDE_NACIO") %>% 
   filter(DONDE_NACIO != "En otro país",
          DONDE_NACIO != "NS/NR") %>% 
@@ -1076,7 +1078,7 @@ asal.ramas <- asalariades %>%
             prop_en_mujeres = round(sum(PONDERA[Sexo == "Mujeres"])/unique(total_mujeres)*100, 1),
             prop_en_varones = round(sum(PONDERA[Sexo == "Varones"])/unique(total_varones)*100, 1),
             tasa_no_registro = round(sum(PONDERA[PP07H == 2])/sum(PONDERA)*100, 1),
-            ingreso_mensual = weighted.mean(P21, PONDIIO))
+            ingreso_mensual = weighted.mean(P21, PONDIIO/sum(PONDIIO)))
 
 asal.ramas2 <- asalariades %>% 
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
