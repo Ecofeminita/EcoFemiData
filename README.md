@@ -24,7 +24,7 @@ Tutoriales que detallan la metodología utilizada para calcular, cada semestre, 
 
 ## [Para citar nuestro trabajo](http://doi.org/10.5281/zenodo.4540185)
 
-Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, & Santellán Celina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo.  http://doi.org/10.5281/zenodo.4540185
+Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer Micaela, Espiñeira Lucía, Santellán Celina, Lee Justina & Pradier Carolina. (2021). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo.  http://doi.org/10.5281/zenodo.4540185
 
 ### BibTeX Export:
 
@@ -35,7 +35,9 @@ Shokida Natsumi, Serpa Daiana, Domenech Laia, Moure Julieta, Fernández Erlauer 
                         Moure Julieta and
                         Fernández Erlauer Micaela and
                         Espiñeira Lucía and
-                        Santellán Celina},
+                        Santellán Celina and
+                        Lee Justina and
+                        Pradier Carolina},
         title        = {Ecofeminita/EcoFemiData: informes ecofemidata},
         month        = feb,
         year         = 2021,
