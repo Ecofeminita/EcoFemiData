@@ -830,6 +830,100 @@ inline_38 <- tabla2a %>%
 
 ```
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Ingresos mensuales, de la ocupación principal
+tabla1a <- serv.dom %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO),
+            "50% cobra menos de" = spatstat::weighted.median(P21, PONDIIO)) %>% 
+  mutate(Ingresos =  "Mensuales, de la ocupación principal")
+
+tabla1 <- tabla1a %>% 
+  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+  
+
+# Ingresos por hora, de la ocupación principal
+tabla2a <- serv.dom %>% 
+  filter(PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  summarise("Ingreso promedio" = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO),
+            "50% cobra menos de" = (spatstat::weighted.median(P21/(PP3E_TOT * 30 / 7), PONDIIO))) %>% 
+  mutate(Ingresos =  "Por hora, de la ocupación principal")
+
+tabla2 <- tabla2a %>% 
+  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+
+# Ingresos mensuales, total de fuente laboral
+tabla3a <- serv.dom %>% 
+  summarise("Ingreso promedio" = weighted.mean(P47T - T_VI, PONDII),
+            "50% cobra menos de" = spatstat::weighted.median(P47T - T_VI, PONDII)) %>% 
+  mutate(Ingresos =  "Mensuales, total de fuente laboral")
+
+tabla3 <- tabla3a %>% 
+    summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+  
+# Ingresos mensuales, totales individuales
+tabla4a <- serv.dom %>% 
+  summarise("Ingreso promedio" = weighted.mean(P47T, PONDII),
+            "50% cobra menos de" = spatstat::weighted.median(P47T, PONDII)) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso total individual")
+
+tabla4 <- tabla4a %>% 
+  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+
+# Ingresos mensuales, totales familiares
+tabla5a <- serv.dom %>% 
+  summarise("Ingreso promedio" = weighted.mean(ITF, PONDIH),
+            "50% cobra menos de" = spatstat::weighted.median(ITF, PONDIH)) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso total familiar")
+
+tabla5 <-  tabla5a %>% 
+  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+
+# Ingresos mensuales, per capita familiar
+tabla6a <- serv.dom %>% 
+  summarise("Ingreso promedio" = weighted.mean(IPCF, PONDIH, na.rm = TRUE), #saqué los NA pero no estoy segura de que esté bien 
+            "50% cobra menos de" = spatstat::weighted.median(IPCF, PONDIH)) %>% 
+  mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
+
+tabla6 <- tabla6a %>% 
+  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
+            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
+            Ingresos)
+
+inline_35 <- tabla1a %>% 
+  pull(`Ingreso promedio`) %>% 
+  as.numeric(.) %>% 
+  round(., -2)
+
+inline_36 <- tabla1a %>% 
+  pull(`50% cobra menos de`) %>% 
+  as.numeric(.) %>% 
+  round(., -2)
+
+inline_37 <- tabla2a %>% 
+  pull(`Ingreso promedio`) %>% 
+  as.numeric(.) %>% 
+  round(., 0)
+
+inline_38 <- tabla2a %>% 
+  pull(`50% cobra menos de`) %>% 
+  as.numeric(.) %>% 
+  round(., 0)
+
+```
+
 #### Ingresos de las trabajadoras de servicio doméstico
 <br><br>
 Las trabajadoras del sector perciben ingresos que, en promedio, rondan los _$`r inline_35`_ pesos mensuales por su ocupación principal. Al mismo tiempo, un 50% de ellas cobra menos de _$`r inline_36`_ por mes por dicho trabajo. Esto equivale a que en promedio cobran unos _$`r inline_37`_ por hora, y el 50% cobra menos de _$`r inline_38`_ por hora. En el primer cuadro también pueden apreciarse los ingresos mensuales totales de fuente laboral (incluyendo ingresos de ocupaciones secundarias), los totales individuales (incluyendo ingresos que no provienen de una fuente laboral), los ingresos totales familiares que tienen en promedio los hogares de estas trabajadoras, y el ingreso per cápita familiar de estos mismos hogares.
@@ -855,6 +949,8 @@ bind_rows(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6) %>%
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6,tabla1a, tabla2a, tabla3a, tabla4a, tabla5a, tabla6a)
 ```
+
+_Nota: Las remuneraciones mensuales fueron calculadas sin incluir a las trabajadoreas que no trabajaron en el período de referencia pero de todas formas percibieron un salario. Se trata de `r inline_xx` trabajadoras, de acuerdo a `r inline_xx` casos muestrales. De realizar el cálculo contemplandolas el salario promedio seria de `r inline_xx`. Antes de la pandemia estos casos eran minoritarios y no modificaban el ingreso promedio._  
 
 ---
    
