@@ -831,96 +831,39 @@ inline_38 <- tabla2a %>%
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# CORREMOS LOS INGRESOS MENSUALES DE LA OCUPACIÓN PRINCIPAL SIN EL FILTRO DE HS TRABAJADAS POSITIVAS PARA ACLARAR LA DIFERENCIA
+
 # Ingresos mensuales, de la ocupación principal
-tabla1a <- serv.dom %>% 
-  filter(PP3E_TOT > 0, # Horas trabajadas positivas
-         PP3E_TOT != 999) %>% 
+tabla1ab <- serv.dom %>% 
+  filter(PP3E_TOT != 999) %>% 
   summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO),
             "50% cobra menos de" = spatstat::weighted.median(P21, PONDIIO)) %>% 
   mutate(Ingresos =  "Mensuales, de la ocupación principal")
 
-tabla1 <- tabla1a %>% 
-  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
-            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
-            Ingresos)
-  
-
-# Ingresos por hora, de la ocupación principal
-tabla2a <- serv.dom %>% 
-  filter(PP3E_TOT > 0, # Horas trabajadas positivas
-         PP3E_TOT != 999) %>% 
-  summarise("Ingreso promedio" = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO),
-            "50% cobra menos de" = (spatstat::weighted.median(P21/(PP3E_TOT * 30 / 7), PONDIIO))) %>% 
-  mutate(Ingresos =  "Por hora, de la ocupación principal")
-
-tabla2 <- tabla2a %>% 
+tabla1b <- tabla1ab %>% 
   summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
             "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
             Ingresos)
 
-# Ingresos mensuales, total de fuente laboral
-tabla3a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(P47T - T_VI, PONDII),
-            "50% cobra menos de" = spatstat::weighted.median(P47T - T_VI, PONDII)) %>% 
-  mutate(Ingresos =  "Mensuales, total de fuente laboral")
+# Calculo la cantidad de casos muestrales y la expansión de los casos que no tienen horas trabajadas positivas pero si ingresos > 0
 
-tabla3 <- tabla3a %>% 
-    summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
-            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
-            Ingresos)
-  
-# Ingresos mensuales, totales individuales
-tabla4a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(P47T, PONDII),
-            "50% cobra menos de" = spatstat::weighted.median(P47T, PONDII)) %>% 
-  mutate(Ingresos =  "Mensuales, ingreso total individual")
+# Tabla intermedia. Casos de servicio doméstico. Chequeo cantidades muestrales.
+tabla7 <- serv.dom %>%
+  filter(PP3E_TOT != 999 & PP3E_TOT <= 0,
+         P21 > 0) %>% 
+  summarise(n=n(),
+            Cantidad = formato_cantidad(sum(PONDERA)))
 
-tabla4 <- tabla4a %>% 
-  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
-            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
-            Ingresos)
-
-# Ingresos mensuales, totales familiares
-tabla5a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(ITF, PONDIH),
-            "50% cobra menos de" = spatstat::weighted.median(ITF, PONDIH)) %>% 
-  mutate(Ingresos =  "Mensuales, ingreso total familiar")
-
-tabla5 <-  tabla5a %>% 
-  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
-            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
-            Ingresos)
-
-# Ingresos mensuales, per capita familiar
-tabla6a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(IPCF, PONDIH, na.rm = TRUE), #saqué los NA pero no estoy segura de que esté bien 
-            "50% cobra menos de" = spatstat::weighted.median(IPCF, PONDIH)) %>% 
-  mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
-
-tabla6 <- tabla6a %>% 
-  summarise("Ingreso promedio" = formato_pesos(`Ingreso promedio`),
-            "50% cobra menos de" = formato_pesos(`50% cobra menos de`),
-            Ingresos)
-
-inline_35 <- tabla1a %>% 
+inline_39 <- tabla1ab %>% 
   pull(`Ingreso promedio`) %>% 
   as.numeric(.) %>% 
   round(., -2)
 
-inline_36 <- tabla1a %>% 
-  pull(`50% cobra menos de`) %>% 
-  as.numeric(.) %>% 
-  round(., -2)
+inline_40 <- tabla7 %>% 
+  pull(`n`)
 
-inline_37 <- tabla2a %>% 
-  pull(`Ingreso promedio`) %>% 
-  as.numeric(.) %>% 
-  round(., 0)
-
-inline_38 <- tabla2a %>% 
-  pull(`50% cobra menos de`) %>% 
-  as.numeric(.) %>% 
-  round(., 0)
+inline_41 <- tabla7 %>% 
+  pull(`Cantidad`)
 
 ```
 
@@ -947,10 +890,10 @@ bind_rows(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6) %>%
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-rm(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6,tabla1a, tabla2a, tabla3a, tabla4a, tabla5a, tabla6a)
+rm(tabla1, tabla2, tabla3, tabla4, tabla5, tabla6, tabla7, tabla1a, tabla1ab, tabla1b, tabla2a, tabla3a, tabla4a, tabla5a, tabla6a)
 ```
 
-_Nota: Las remuneraciones mensuales fueron calculadas sin incluir a las trabajadoreas que no trabajaron en el período de referencia pero de todas formas percibieron un salario. Se trata de `r inline_xx` trabajadoras, de acuerdo a `r inline_xx` casos muestrales. De realizar el cálculo contemplandolas el salario promedio seria de `r inline_xx`. Antes de la pandemia estos casos eran minoritarios y no modificaban el ingreso promedio._  
+_Nota: Las remuneraciones mensuales fueron calculadas sin incluir a las trabajadoras que no trabajaron en el período de referencia pero de todas formas percibieron un salario. Se trata de `r inline_41` trabajadoras, de acuerdo a `r inline_40` casos muestrales. De realizar el cálculo contemplandolas el salario promedio seria de $`r inline_39`. Antes de la pandemia estos casos eran minoritarios y no modificaban el ingreso promedio._  
 
 ---
    
@@ -1046,19 +989,19 @@ matriz <- serv.dom %>%
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-inline_39 <- matriz %>% 
+inline_42 <- matriz %>% 
   filter(es_principal == "No") %>% 
   summarise(Porcentaje = sum(Porcentaje)) %>% 
   pull(.) %>% 
   formato_porc(.)
 
-inline_40 <- matriz %>% 
+inline_43 <- matriz %>% 
   filter(es_principal == "Sí") %>% 
   summarise(Porcentaje = sum(Porcentaje)) %>% 
   pull(.) %>% 
   formato_porc(.)
 
-inline_41 <- matriz %>% 
+inline_44 <- matriz %>% 
   filter(realiza == "Sí") %>% 
   summarise(Porcentaje = sum(Porcentaje)) %>% 
   pull(.) %>% 
@@ -1070,7 +1013,7 @@ inline_41 <- matriz %>%
 <br><br>
 Si esta vez ordenamos al total de las personas de acuerdo a sus ingresos per cápita familiares (aquellos que surgen de dividir el total de ingresos de la familia por la cantidad de miembros de la misma), de menor a mayor, y las agrupamos en 10 grupos de igual tamaño, obtenemos otra escala de deciles. En este caso también se puede apreciar que __las trabajadoras de servicio doméstico se concentran en los primeros deciles. Cabe destacar que los primeros tres deciles de esta escala suelen estar altamente relacionados con la situación de pobreza de los hogares__ (tomando como referencia la metodología oficial de cálculo de la misma).
 <br><br>
-Al mismo tiempo, mientras que __un `r inline_39`% no es el primer sostén económico del hogar, un `r inline_40`% sí lo es__. En ambos casos, la mayoría de ellas realizan las tareas domésticas en su hogar. Esto es así porque __un `r inline_41`% de quienes trabajan de forma remunerada realizando trabajo doméstico también están a cargo de la realización de este trabajo en sus hogares__ de manera no-asalariada, y por tanto no remunerada.
+Al mismo tiempo, mientras que __un `r inline_42`% no es el primer sostén económico del hogar, un `r inline_43`% sí lo es__. En ambos casos, la mayoría de ellas realizan las tareas domésticas en su hogar. Esto es así porque __un `r inline_44`% de quienes trabajan de forma remunerada realizando trabajo doméstico también están a cargo de la realización de este trabajo en sus hogares__ de manera no-asalariada, y por tanto no remunerada.
 
 ---
 
