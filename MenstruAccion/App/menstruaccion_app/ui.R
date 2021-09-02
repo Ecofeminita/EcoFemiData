@@ -9,23 +9,16 @@ df_toallitas <- read.csv("data_toallitas_b.csv",encoding='UTF-8')
 
 df_tampones<-read.csv("data_tampones_b.csv",encoding='UTF-8')
 
-#data_group<-read.csv("menstruaccion_app/data_group.csv", encoding="UTF-8") %>% 
-#        left_join(st_read
-#        ("pxpciadatosok.shp"),by=c("Provincia"="provincia"))%>%
-#        select(Provincia,Categoría,precio_x_unidad,geometry)
-
 ui <- fluidPage( tags$head(tags$style(
         HTML('
-         #sidebar {
-            background-color: #dec4de;
-        }
-
+         #sidebar {color: #f8f5ee}
+        a {color: #8594c6}
         body, label, input, button, select { 
-          font-family: "Arial";
+          font-family: "Montserrat Regular";
         }')
         )),
                 navbarPage(title="¿Cuánto te cuesta menstruar en un año?",
-                 tabPanel("Home",
+                           tabPanel("Home",
                  sidebarLayout(
                    sidebarPanel(
                      radioButtons('regularono',
@@ -61,19 +54,21 @@ ui <- fluidPage( tags$head(tags$style(
                                                   multiple = F)),
                      br(),
                      actionButton("boton","Ver gasto",style="color: #fff;
-                                  background-color: #ff1493"),
-                     br(),        
+                                  background-color: #8594c6"),
                      br(),
-                     br()
+                     br(),
+                     HTML('<center><img src="toallitas.png" width="90"></center>'),
+                     br(), 
+                     align = "center"
                      
                    ),
                    mainPanel(
                      tags$style("#tota_gasto {font-size:20px;
-               color:deeppink;
+               color:#e5616e;
                display:block;
                font-weight:bold;}"),
                      tags$style("#sin_iva {font-size:15px;
-               color:deeppink;
+               color:#e5616e;
                display:block;}"),
                      div(style="text-align:center;
         #box-shadow: 10px 10px 5px #888888;
@@ -81,14 +76,14 @@ ui <- fluidPage( tags$head(tags$style(
         #height:200px;
         #padding-top:70px;
         #position:relative;",
+                         br(),
                          textOutput('tota_gasto'),
-                         h3(actionLink("boton2","¿Por qué es importante saberlo?",style="color:#FF1493'")),
+                         h4(actionLink("boton2","¿Por qué es importante saberlo?",style="color:#8cddd3'")),
                          h4(htmlOutput('texto1')),
                          h4(htmlOutput('texto2')),
-                         br(),
                          textOutput('sin_iva'),
                          br(),
-                         img(src="5aa040897bac3_1004x971.jpg",width="40%"),
+                         img(src="menstru_logo.png",width="30%"),
                          br(),
                          br(),
                          (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Marzo 2021."),
