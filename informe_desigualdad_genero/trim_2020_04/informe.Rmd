@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-author: "Equipo de #EcoFemiData, el equipo de datos de Economía Feminita"
+author: "Equipo de #EcoFemiData, el equipo de datos de EcoFeminita"
 date: "Junio de 2021"
 output:
   html_notebook:
@@ -16,7 +16,7 @@ urlcolor: null
     position: relative;
     display: block;
     padding: 10px 15px;
-    color: ##E5616E;
+    color: #E5616E;
 }
 
  .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {

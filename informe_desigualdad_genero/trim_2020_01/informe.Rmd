@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para Economía Femini(s)ta"
+author: "Julieta Moure^1^, Daiana Serpa^2^, Natsumi Shokida^3^ para EcoFeminita"
 date: "Agosto de 2020"
 output:
   html_notebook:
@@ -16,12 +16,12 @@ urlcolor: null
     position: relative;
     display: block;
     padding: 10px 15px;
-    color: #FE1764;
+    color: #E5616E;
 }
 
  .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
     color: #ffffff;
-    background-color: #FE1764;
+    background-color: #E5616E;
 }
 </style>
 
@@ -30,7 +30,7 @@ urlcolor: null
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 date <- "1er trimestre 2020"
 aglo_date <- paste0("Total de aglomerados urbanos. ", date)
-fuente <- "Fuente: Economía Femini(s)ta en base a EPH-INDEC"
+fuente <- "#EcoFemiData y EcoFeminita en base a EPH-INDEC"
 ```
 
 # Secciones {.tabset .tabset-fade .tabset-pills}
@@ -57,11 +57,11 @@ Obviamente, estás invitade a utilizar estos datos en notas, reflexiones, trabaj
 <br><br>
 ^2^ Daiana Serpa es economista (FCE-UBA) especializada en análisis de datos.
 <br><br>
-^3^ Natsumi Shokida es economista (FCE-UBA), coordinadora de EcoFemiData, el área de datos de [Economía Femini(s)ta](http://economiafeminita.com).
+^3^ Natsumi Shokida es economista (FCE-UBA), coordinadora de EcoFemiData, el área de datos de [EcoFeminita](http://ecofeminita.com).
 <br><br>
 ^4^ Presionando en_  __Code > Download Rmd__ _se accede a la descarga de la sintaxis completa de este informe, que incluye la descarga automática de las bases de la EPH utilizadas, una serie de funciones útiles y la elaboración de cuadros y gráficos con el lenguaje R.
 <br><br>
-^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _Economía Femini(s)ta_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2020_01/informe.nb.html"
+^5^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Moure, J.; Serpa, D.; Shokida, N. (XX/XX/2020) La desigualdad de género se puede medir. `r date`. _EcoFeminita_. Recuperado de https://ecofeminita.github.io/EcoFemiData/informe_desigualdad_genero/trim_2020_01/informe.nb.html"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
@@ -127,7 +127,7 @@ base_individual <- base_individual %>%
                                 CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años"))
 
 # colores = c("#aa165a","#16aa66")
-colores = c("#FE1764", "#00BDD6")
+colores = c("#E5616E", "#c9c9c9")
 ```
 
 ## Mercado de Trabajo
@@ -283,8 +283,8 @@ tabla2v <- tabla2 %>%
   spread(., GRUPO_EDAD, Varones)
 
 tabla3 <- left_join(tabla2m, tabla2v, by = "Indicadores") %>% 
-  select(Indicadores, Mujeres = `de 14 a 29 años.x`, Varones = `de 14 a 29 años.y`,
-         Mujeres = `de 30 a 64 años.x`, Varones = `de 30 a 64 años.y`)
+  select(Indicadores, `1. Mujeres` = `de 14 a 29 años.x`, `1. Varones` = `de 14 a 29 años.y`,
+         `2. Mujeres` = `de 30 a 64 años.x`, `2. Varones` = `de 30 a 64 años.y`)
 
 inline_3 <- tabla2m %>% 
   filter(Indicadores == "Tasa Desocupación") %>% 
@@ -304,7 +304,7 @@ Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo 
 
 __Figura 3.__
 <br>
-<p style="color:#FE1764">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
+<p style="color:#E5616E">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3 %>% 
   kable(align = "lcccc",
@@ -352,7 +352,7 @@ La falta de descuento jubilatorio suele ser un indicador que aproxima la falta d
 
 __Figura 4.__
 <br>
-<p style="color:#FE1764">__Empleo sin descuento jubilatorio por sexo__</p>
+<p style="color:#E5616E">__Empleo sin descuento jubilatorio por sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla4 %>% 
   kable(caption = paste("Ocupadas/os asalariadas/os. ", aglo_date),
@@ -456,7 +456,7 @@ Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal
 
 __Figura 6.__
 <br>
-<p style="color:#FE1764">__Indicadores por ramas de la ocupación__</p>
+<p style="color:#E5616E">__Indicadores por ramas de la ocupación__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla6 %>% 
   kable(align = 'lrrr', 
@@ -569,7 +569,7 @@ Finalmente, puede observarse que también existe una brecha, aunque mucho menor,
 
 __Figura 7.__
 <br>
-<p style="color:#FE1764">__Brechas de ingresos mensuales__</p>
+<p style="color:#E5616E">__Brechas de ingresos mensuales__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla7 %>% 
   select(Población, Ingreso, Brecha, Mujeres, Varones) %>% 
@@ -736,11 +736,11 @@ Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trab
 
 __Figura 9.__
 <br>
-<p style="color:#FE1764">__Nivel educativo de mujeres y varones__</p>
+<p style="color:#E5616E">__Nivel educativo de mujeres y varones__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla9.1 %>% 
-  mutate(Mujeres = color_tile("#FFE6EE", colores[1])((Mujeres)),
-         Varones = color_tile("#E6FCFF", colores[2])((Varones))) %>% 
+  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
+         Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
   select('Nivel Educativo', Mujeres, Varones) %>% 
   kable(escape = FALSE, digits = 1, align = 'lrr',
         caption = paste("Porcentaje por columnas. Ocupadas/os. ", aglo_date)) %>% 
@@ -845,7 +845,7 @@ Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada
 
 __Figura 11.__
 <br>
-<p style="color:#FE1764">__Brechas de ingresos horarios__</p>
+<p style="color:#E5616E">__Brechas de ingresos horarios__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla10, digits = 1, align = 'lccc', 
       caption = aglo_date) %>%
@@ -975,7 +975,7 @@ tabla12 <- bind_rows(tabla12.1, tabla12.2, tabla12.3) %>%
 
 __Figura 13.__
 <br>
-<p style="color:#FE1764">__Brechas de horas trabajadas__</p>
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla12, digits = 1, align = 'lccc', 
       caption = aglo_date) %>%
