@@ -93,22 +93,6 @@ server = function(input, output,session) {
       })
   })
   
- #observe ({
-   
-#    newvar13<-as.numeric(input$toallitasID)*as.numeric(ifelse(input$regularono == "Si", 12,input$noregular_1))
-#    newvar14<-as.numeric(input$tamponesID)*as.numeric(ifelse(input$regularono == "Si", 12,input$noregular_1))
-
-#    dataf <- globals$mydf_b 
-
-#    dataf$gasto_anual<-ifelse(dataf$CategorÃÂÃÂ­a=='toallitas',newvar13*dataf$precio_x_unidad,newvar14*dataf$precio_x_unidad)
-    
-#    })
- 
-# output$tabla<-renderTable({
-#   dataf
-#   })
- 
-  
 
   }
 

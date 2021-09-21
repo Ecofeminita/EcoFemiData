@@ -9,16 +9,23 @@ df_toallitas <- read.csv("data_toallitas_b.csv",encoding='UTF-8')
 
 df_tampones<-read.csv("data_tampones_b.csv",encoding='UTF-8')
 
-ui <- fluidPage( tags$head(tags$style(
+ui <- fluidPage( tags$head(
+        tags$style(
         HTML('
-         #sidebar {color: #f8f5ee}
+        .nav > li > a[data-value="Home"] {background-color:#e5616e;
+           color: #FFF} 
+        .nav > li > a[data-value="EcoFemiData"] {background-color:#e5616e;
+           color: #FFF} 
+        .nav > li[class=active]    > a {background-color:#d8d8d8} 
+        #sidebar {color: #f8f5ee}
         a {color: #8594c6}
         body, label, input, button, select { 
-          font-family: "Montserrat Regular";
+          font-family: "Arial";#
         }')
         )),
-                navbarPage(title="¿Cuánto te cuesta menstruar en un año?",
-                           tabPanel("Home",
+                navbarPage(
+                        title= "¿Cuánto te cuesta menstruar en un año?",
+                           tabPanel("Home", 
                  sidebarLayout(
                    sidebarPanel(
                      radioButtons('regularono',
@@ -78,7 +85,7 @@ ui <- fluidPage( tags$head(tags$style(
         #position:relative;",
                          br(),
                          textOutput('tota_gasto'),
-                         h4(actionLink("boton2","¿Por qué es importante saberlo?",style="color:#8cddd3'")),
+                         h4(strong(actionLink("boton2","¿Por qué es importante saberlo?",style="color:#8cddd3'"))),
                          h4(htmlOutput('texto1')),
                          h4(htmlOutput('texto2')),
                          textOutput('sin_iva'),
@@ -89,13 +96,10 @@ ui <- fluidPage( tags$head(tags$style(
                          (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Marzo 2021."),
                          br()
                      ))
-                   )#parentesis del sidebarlayout
-                 )#,#parentesis del tabpanel
-                 #tabPanel("Diferencias por provincia",
-                 #         
-                 #         renderTable('tabla_prueba')
-                 #        
-                 #)#parentesis del tabpanel
+                   )
+                 ),
+                 h5(strong("App diseñada y mantenida por:"), a(href="https://twitter.com/layitx", "@layitx")),
+                 tabPanel("EcoFemiData",tags$a(href = 'https://economiafeminita.com/'))
 )
 )
 
