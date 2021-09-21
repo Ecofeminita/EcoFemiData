@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-author: "Equipo de #EcoFemiData, el equipo de datos de Economía Feminita"
+author: "Equipo de #EcoFemiData, el equipo de datos de EcoFeminita"
 date: "Marzo de 2021"
 output:
   html_notebook:
@@ -16,12 +16,12 @@ urlcolor: null
     position: relative;
     display: block;
     padding: 10px 15px;
-    color: #FE1764;
+    color: #E5616E;
 }
 
  .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
     color: #ffffff;
-    background-color: #FE1764;
+    background-color: #E5616E;
 }
 </style>
 
@@ -123,7 +123,7 @@ base_individual <- base_individual %>%
                                 CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años"))
 
 # colores = c("#aa165a","#16aa66")
-colores = c("#FE1764", "#00BDD6")
+colores = c("#E5616E", "#c9c9c9")
 ```
 
 ## Mercado de Trabajo
@@ -300,7 +300,7 @@ Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo 
 
 __Figura 3.__
 <br>
-<p style="color:#FE1764">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
+<p style="color:#E5616E">__Principales Tasas del Mercado de Trabajo, por grupos de edad y sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3 %>% 
   kable(align = "lcccc",
@@ -348,7 +348,7 @@ La falta de descuento jubilatorio suele ser un indicador que aproxima la falta d
 
 __Figura 4.__
 <br>
-<p style="color:#FE1764">__Empleo sin descuento jubilatorio por sexo__</p>
+<p style="color:#E5616E">__Empleo sin descuento jubilatorio por sexo__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla4 %>% 
   kable(caption = paste("Ocupadas/os asalariadas/os. ", aglo_date),
@@ -455,7 +455,7 @@ Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal
 
 __Figura 6.__
 <br>
-<p style="color:#FE1764">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
+<p style="color:#E5616E">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla6 %>% 
   kable(align = 'lrrr', 
@@ -568,7 +568,7 @@ Finalmente, puede observarse que también existe una brecha, aunque mucho menor,
 
 __Figura 7.__
 <br>
-<p style="color:#FE1764">__Brechas de ingresos mensuales__</p>
+<p style="color:#E5616E">__Brechas de ingresos mensuales__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla7 %>% 
   select(Población, Ingreso, Brecha, Mujeres, Varones) %>% 
@@ -735,11 +735,11 @@ Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trab
 
 __Figura 9.__
 <br>
-<p style="color:#FE1764">__Nivel educativo de mujeres y varones__</p>
+<p style="color:#E5616E">__Nivel educativo de mujeres y varones__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla9.1 %>% 
-  mutate(Mujeres = color_tile("#FFE6EE", colores[1])((Mujeres)),
-         Varones = color_tile("#E6FCFF", colores[2])((Varones))) %>% 
+  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
+         Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
   select('Nivel Educativo', Mujeres, Varones) %>% 
   kable(escape = FALSE, digits = 1, align = 'lrr',
         caption = paste("Porcentaje por columnas. Ocupadas/os. ", aglo_date)) %>% 
@@ -844,7 +844,7 @@ Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada
 
 __Figura 11.__
 <br>
-<p style="color:#FE1764">__Brechas de ingresos horarios__</p>
+<p style="color:#E5616E">__Brechas de ingresos horarios__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla10, digits = 1, align = 'lccc', 
       caption = aglo_date) %>%
@@ -974,7 +974,7 @@ tabla12 <- bind_rows(tabla12.1, tabla12.2, tabla12.3) %>%
 
 __Figura 13.__
 <br>
-<p style="color:#FE1764">__Brechas de horas trabajadas__</p>
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla12, digits = 1, align = 'lccc', 
       caption = aglo_date) %>%

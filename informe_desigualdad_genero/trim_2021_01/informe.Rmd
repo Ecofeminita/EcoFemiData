@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-author: "Equipo de #EcoFemiData, el equipo de datos de Economía Feminita"
+author: "Equipo de #Ecofemidata, el equipo de datos de EcoFeminita"
 date: "Agosto de 2021"
 output:
   html_notebook:
@@ -203,7 +203,7 @@ ggplot(tabla1_graf1, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ---
@@ -236,7 +236,7 @@ ggplot(tabla1_graf2, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura2.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura2.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -418,7 +418,7 @@ ggplot(tabla5 %>% filter(JERARQUIA == "Dirección o Jefes"),
        
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -686,7 +686,7 @@ ggplot(tabla8_graf,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura8.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura8.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -792,7 +792,7 @@ ggplot(tabla9.2_graf,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura10.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura10.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -918,7 +918,7 @@ ggplot(tabla11_graf,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
-# ggsave("Figura13.png", scale = 0.7, dpi = 300, width = 10, height = 7)
+#ggsave("Figura13.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1063,6 +1063,9 @@ ggplot(df, aes(x = x, y = y, fill = Sexo)) +
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # ggsave("Graficos/Figura14.png", scale = 3)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura14.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1140,6 +1143,9 @@ ggplot(tabla15_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group = Sexo
              
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # ggsave("Graficos/Figura15.png", scale = 1)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura15.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1176,6 +1182,9 @@ ggplot(tabla16_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sexo
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # ggsave("Graficos/Figura16.png", scale = 1)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura16.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
 En la figura 15, las unidades de análisis son los hogares, sólo que luego se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en la figura 16 vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero es dentro de ésta que se mantiene la diferencia: de acuerdo a todo lo visto anteriormente, los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
