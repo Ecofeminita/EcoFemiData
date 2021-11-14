@@ -114,7 +114,7 @@ productos_por_anio <- ciclos_por_anio * productos_por_ciclo
 gasto_por_anio_toallitas <- valor_toallitas * productos_por_anio
 ```
 
-<font size="6"> Toallitas: El precio promedio por unidad es de $`r round(gasto_por_anio_toallitas, 2)` </font> 
+<font size="6"> Toallitas: El gasto promedio por año por persona es de $`r round(gasto_por_anio_toallitas, 2)` </font> 
 
 ### Tampones
 
@@ -132,7 +132,7 @@ tampones <- datos %>%
 valor_tampones <- weighted.mean(tampones$prom, tampones$pond)
 ```
 
-<font size="6"> Toallitas: El precio promedio por unidad es de $`r round(valor_tampones, 2)` </font> 
+<font size="6"> Tampones: El precio promedio por unidad es de $`r round(valor_tampones, 2)` </font> 
 
 ### Gasto por año por persona
 
@@ -145,7 +145,7 @@ El gasto anual por persona se calcula teniendo en cuenta:
 gasto_por_anio_tampones <- valor_tampones * productos_por_anio
 ```
 
-<font size="6"> Toallitas: El precio promedio por unidad es de $`r round(gasto_por_anio_tampones, 2)` </font> 
+<font size="6"> Tampones: El gasto promedio por año por persona es de $`r round(gasto_por_anio_tampones, 2)` </font> 
 
 ## Por provincia
 
