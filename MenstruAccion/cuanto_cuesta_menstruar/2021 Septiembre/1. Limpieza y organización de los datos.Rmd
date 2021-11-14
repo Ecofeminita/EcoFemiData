@@ -1,8 +1,7 @@
 ---
 title: "Limpieza y organización de los datos del #MenstruScrapper"
-subtitle: "#MenstruAcción - Datos de Septiembre 2021"
-author: "EcoFemiData"
-date: "Noviembre de 2021"
+subtitle: "Datos de Septiembre 2021"
+author: "Ecofeminita / #MenstruAcción / Ecofemidata"
 output:
   html_notebook:
     toc: false
@@ -10,14 +9,22 @@ output:
     toc_depth: 5
 ---
 
+<style type="text/css">
+  body{
+  font-size: 14pt;
+}
+</style>
+
+![](img/Logos EcoFeminita-03.png){width=130px} ![](img/MENSTRUACCION.png){width=110px} ![](img/Ecofemidata.png){width=100px}
+
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminitas, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el #MenstruScrapper, desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 17 de Septiembre de 2021 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, y Marzo de 2021. En esta instancia, se obtuvieron 83.317 observaciones en total.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminitas, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 17 de Septiembre de 2021 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, y Marzo de 2021. En esta instancia, se obtuvieron 83.317 observaciones en total.
 
 + Respecto de los tampones: Se obtuvieron 17.799 precios.
 + Respecto de las toallitas: Se obtuvieron 65.518 precios.
 
-En el archivo `README` de la carpeta `Fuentes` se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo. En otro script se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
+En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
 ## Preparando el entorno de trabajo
 
@@ -83,7 +90,7 @@ names(datos)
 
 A continuación, exploraremos el comportamiento de las diferentes variables. Con `count()` pedimos un conteo de observaciones para cada valor que toma la variable aclarada, con `arrange()` ordenamos los datos de forma decreciente según el conteo anterior, y en `mutate()` se definen nuevas variables para nuestro cuadro. Por ejemplo, el porcentaje es la cantidad de cada categoría sobre la suma de las mismas, expresada en formato de porcentaje.
 
-#### Categorías
+### Categorías
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -94,7 +101,7 @@ datos %>%
 
 Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. O sea, no podemos decir que se consumen en un 80% toallitas y en 20% tampones. Lo que sí sabemos es que tenemos una muestra muy grande de precios para ambas categorías, aunque debemos tener en cuenta que la página de Precios Claros puede tener un sesgo por no incluir los comercios tradicionales sino únicamente grandes cadenas.
 
-#### Marcas
+### Marcas
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -108,7 +115,7 @@ datos %>%
 
 Contamos con 28 marcas de productos, aunque con 10 de ellas se completa el 90% del total de productos. Las primeras 3 marcas concentran casi la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de una "concentración de mercado".
 
-#### Presentación
+### Presentación
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -122,7 +129,7 @@ datos %>%
 
 Casi el 90% de los productos vienen en paquetes de 8 o 16 unidades. Luego seguiremos analizando esta variable en particular, porque nos interesa para calcular los precios unitarios de los productos, y hay valores (como "1.0 un") que son raros y, en caso de tratarse de errores, podrían arrastrar problemas hacia el cálculo de esos precios.
 
-#### Provincias
+### Provincias
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -136,7 +143,7 @@ datos %>%
 
 Si bien más de la mitad de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, 165 observaciones en Catamarca) se trata de una cantidad pasible de proveernos estimaciones útiles.
 
-#### Regiones
+### Regiones
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -150,7 +157,7 @@ datos %>%
 
 En términos regionales seguimos viendo esa asimetría en la disponibilidad de datos, pero hay que tener en cuenta que efectivamente hay diferencias de escala de mercados en términos regionales.
 
-#### Precio de lista
+### Precio de lista
 
 Ahora graficamos la distribución de los precios de lista (o sea, sin tener en cuenta las unidades por paquete) según cada categoría. Para ello utilizamos `ggplot2`. 
 
@@ -214,7 +221,7 @@ datos %>%
 
 En este caso se encuentran diferencias más que nada entre los tampones, no así en el caso de las toallitas. Dado el peso de GBA entre las observaciones, tiene sentido que la distribución general se asemeje a la de dicha región.
 
-### Limpieza de la cantidad de unidades (Presentación)
+## Limpieza de la cantidad de unidades (Presentación)
 
 Como mencionábamos anteriormente, es necesario prestarle particular atención a la variable de `Presentación`, que indica la cantidad de unidades por cada paquete. En primer lugar, teniendo en cuenta que está expresada como "X un.", modificamos la variable para quedarnos únicamente con las unidades en formato numérico. Esto lo hacemos convirtiendo la variable al tipo character, y luego quedándonos con aquellos caracteres entre la primer posición y aquella que se encuentra 4 posiciones por detrás de la última (omitiendo así ".0 un"). En la tabla `presentacion_nros` resumimos el comportamiento de esta nueva variable `unidades`.
 
@@ -289,7 +296,7 @@ datos %>%
   count(Marca)
 ```
 
-#### Aclaración
+### Aclaración
 
 En un ejercicio anterior (septiembre 2019), prescindimos de los valores faltantes en `unidades_regex` (por más que tengan valor en `unidades`, aquella que surge de la variable `Presentación`). Verificamos aquellos casos en que `unidades_regex` (que surge del texto en `Nombre`) no coincide con la variable `unidades`, y establecimos que las cantidades referidas a las unidades por paquete parecen ser mejor captadas con el método de regex sobre el texto del `Nombre` del producto, respecto de lo surgido de la información de la página como `Presentación`. Nos quedamos con `unidades_regex` para calcular el precio por unidad de los productos.
 
@@ -334,7 +341,7 @@ datos <- datos %>%
   select(-Presentación, -unidades_regex, -igual)
 ```
         
-### Cálculo del precio por unidad
+## Cálculo del precio por unidad
 
 Creo la variable `precio_unidad`, dividiendo el `Precio.de.lista` por las `unidades`.
 
@@ -343,7 +350,7 @@ datos <- datos %>%
   mutate(precio_unidad = round(Precio.de.lista/unidades, 2))
 ```
 
-### Gráficos del precio por unidad
+## Gráficos del precio por unidad
 
 Ahora podemos observar la distribución de esta nueva variable con los mismos gráficos que utilizamos antes.
 
@@ -388,7 +395,7 @@ ggplot(datos, aes(x = precio_unidad, y = Region, fill = Categoría, alpha = Regi
        caption = "Fuente: #MenstruAcción")
 ```
 
-#### 2,5 % de los extremos de la distribución
+## 2,5 % de los extremos de la distribución
 
 Adicionalmente, como el cálculo lo realizaremos agregando los precios de acuerdo a una media alpha podada con alpha = 2,5% (o sea, ignorando los valores superiores e inferiores para evitar la intrusión de outliers a pesar de la limpieza), presentamos gráficos que justamente muestran las "colas" de la distribución que se estarían obviando.
 
@@ -443,7 +450,7 @@ ggplot(datos, aes(x = precio_unidad, y = Provincia,
        caption = "Fuente: #MenstruAcción")
 ```
 
-# Apéndice: Precios iguales a cero
+## Apéndice: Precios iguales a cero
 
 En esta ocasión, no hay precios iguales a cero, con lo que se prescinde de dicho análisis.
                 

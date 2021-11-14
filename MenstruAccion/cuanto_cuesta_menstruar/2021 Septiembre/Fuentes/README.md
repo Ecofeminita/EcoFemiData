@@ -24,7 +24,7 @@ https://github.com/nportas/menstruscrapper
 
 https://github.com/nportas/menstruscrapper/blob/master/Fuentes/precios-gestion-menstrual-2021-09-17.csv
 
-- __precios-gestion-menstrual-2021-03-12-limpio.RDS__ PENDIENTE
+- __precios-gestion-menstrual-2021-09-17-limpio.RDS__
 
 Base de datos luego de la limpieza y organización de los datos (realizado con el script __Limpieza y organización de los datos.Rmd__)
 
@@ -50,7 +50,7 @@ https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_10_21.xls
 
 Del archivo anterior, se toman los datos de la pestaña _Índices IPC Cobertura Nacional_ correspondientes al Total Nacional de las categorías _Nivel general, Alimentos y bebidas no alcohólicas, Salud_. Se trata de una serie de números índice.
 
-- __serie_precios_pgm.xlsx__ PENDIENTE
+- __serie_precios_pgm.xlsx__
 
 Serie de precios por unidad de toallitas y tampones de acuerdo a este mismo cálculo.
 
