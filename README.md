@@ -1,6 +1,6 @@
 
 
-<img src="img/logo2.png" width="200">
+<img src="img/Logos EcoFeminita-03.png" width="200">     <img src="img/Ecofemidata.png" width="160">
 
 [![DOI](https://zenodo.org/badge/235862458.svg)](https://zenodo.org/badge/latestdoi/235862458)
 
