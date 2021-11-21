@@ -920,7 +920,7 @@ serv.dom %>%
 
 ---
 
-<p style="color:#E5616E">__Trabajadoras de servicio domeśtico según deciles de ingreso de la ocupación principal__</p> 
+<p style="color:#E5616E">__Trabajadoras de servicio doméstico según deciles de ingreso de la ocupación principal__</p> 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 options(scipen=999999)
 
