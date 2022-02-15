@@ -1,11 +1,13 @@
 ---
 title: "Las trabajadoras de servicio doméstico en Argentina"
-subtitle: "2do trimestre de 2021"
-author: "#EcoFemiData, equipo de datos de Ecofeminita - Noviembre de 2021"
-output: 
+author: '#EcoFemiData, equipo de datos de Ecofeminita - Noviembre de 2021'
+subtitle: 2do trimestre de 2021
+output:
   html_notebook:
     theme: flatly
-urlcolor: #E5616E
+  html_document:
+    df_print: paged
+urlcolor: null
 ---
 
 <style>
@@ -612,6 +614,7 @@ serv.dom %>%
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999,
          PP3F_TOT != 999) %>% 
+  filter(PP04B2 > 0) %>% #C asos con información sobre cantidad de hogares en los que trabajan
   mutate(cantidad_hogares = case_when(PP04B2 == 1 ~ "1",
                                       PP04B2 == 2 ~ "2",
                                       PP04B2 >= 3 ~ "3 o más")) %>% 
@@ -788,7 +791,7 @@ tabla4 <- tabla4a %>%
 
 # Ingresos mensuales, totales familiares
 tabla5a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(ITF, PONDIH),
+  summarise("Ingreso promedio" = weighted.mean(ITF, as.numeric(PONDIH)),
             "50% cobra menos de" = spatstat.geom::weighted.median(ITF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso total familiar")
 
@@ -799,7 +802,7 @@ tabla5 <-  tabla5a %>%
 
 # Ingresos mensuales, per capita familiar
 tabla6a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(IPCF, PONDIH, na.rm = TRUE), #saqué los NA pero no estoy segura de que esté bien 
+  summarise("Ingreso promedio" = weighted.mean(IPCF, as.numeric(PONDIH)), #saqué los NA pero no estoy segura de que esté bien 
             "50% cobra menos de" = spatstat.geom::weighted.median(IPCF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
 
