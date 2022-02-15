@@ -800,7 +800,7 @@ tabla4 <- tabla4a %>%
 
 # Ingresos mensuales, totales familiares
 tabla5a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(ITF, PONDIH),
+  summarise("Ingreso promedio" = weighted.mean(ITF, as.numeric(PONDIH)),
             "50% cobra menos de" = spatstat.geom::weighted.median(ITF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso total familiar")
 
@@ -811,7 +811,7 @@ tabla5 <-  tabla5a %>%
 
 # Ingresos mensuales, per capita familiar
 tabla6a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(IPCF, PONDIH, na.rm = TRUE), 
+  summarise("Ingreso promedio" = weighted.mean(IPCF, as.numeric(PONDIH)), 
             "50% cobra menos de" = spatstat.geom::weighted.median(IPCF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
 
