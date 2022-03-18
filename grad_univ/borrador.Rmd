@@ -1,0 +1,118 @@
+---
+title: "Informe graduades universitaries SIU"
+author: "Equipo de #Ecofemidata, el equipo de datos de EcoFeminita"
+date: "Febrero de 2022"
+output:
+  html_notebook:
+    theme: flatly
+  html_document:
+    df_print: paged
+#subtitle: Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2021.
+urlcolor: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importo datos, librerías y traigo colores de los gráficos
+```{r}
+library(tidyverse)
+library(readxl)
+library(scales)
+library(ggalt)
+
+colores <- c("#E5616E", "#c9c9c9")
+
+df <- read_csv('./data/base_araucano.csv')
+dict_disciplina <- read_xlsx("./data/diccionario.xlsx", sheet="cod_disciplina")
+```
+cosas a hacer para el informe:
+- agrupar la variable "disciplina", u ordenar los gráficos según las tasas más altas - más bajas 
+- 
+
+ideas para el informe: 
+- tasa feminización de ramas de estudios y disciplinas
+- brechas de ingresos 
+
+## Codificación
+```{r}
+df <- df %>% mutate_at(vars(genero_id), ~as.factor(
+  case_when(
+    . == 1 ~ "Mujer",
+    . == 2 ~ "Varón"
+  )
+))
+
+df <- df %>% mutate_at(vars(rama_id), ~as.factor(case_when(
+  . == 1 ~ "Ciencias Sociales",
+  . == 2 ~ "Ciencias Aplicadas",
+  . == 3 ~ "Ciencias de la salud",
+  . == 4 ~ "Ciencias Humanas",
+  . == 5 ~ "Ciencias Básicas",
+  . == 6 ~ "Sin rama"
+)))
+
+
+df <- df %>% left_join(dict_disciplina) %>% select(-disciplina_id)
+```
+
+## Algunos gráficos!
+
+### Porcentaje de varones/mujeres en las distintas disciplinas. ¿Pensar tasa de feminización en lugar de esto?
+```{r}
+df %>%
+  group_by(disciplina, genero_id)%>%
+  summarise(n=n())%>%
+  ungroup()%>%
+  group_by(disciplina)%>%
+  mutate(perc = (n/sum(n))*100)%>%
+  ggplot(aes(x=reorder(disciplina, -perc), y=n, fill=genero_id))+
+  geom_col(position='fill')+
+  coord_flip()
+```
+
+### Brecha de ingresos según rama de estudios
+```{r}
+tabla <- df %>% group_by(genero_id, rama_id)%>%
+          summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
+          ungroup() %>%
+          pivot_wider(id_cols = rama_id, names_from = genero_id, values_from = media_ingresos) %>%
+          mutate(brecha = percent(((Varón-Mujer)/Varón), 1),
+                 x = (Varón+Mujer)/2)
+
+ggplot(tabla, 
+       aes(x = Mujer, xend = Varón, y = rama_id, 
+           group = rama_id, label = brecha)) +
+  geom_dumbbell(color = "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla, 
+            aes(x, rama_id, label = brecha), nudge_y = .2) +
+  scale_color_manual(values = colores) +
+  theme_minimal()
+
+```
+### Brecha de ingresos según disciplina
+```{r}
+tabla2 <- df %>% group_by(genero_id, disciplina)%>%
+  summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
+  ungroup() %>%
+  pivot_wider(id_cols = disciplina, names_from = genero_id, values_from = media_ingresos) %>%
+  mutate(brecha = percent(((Varón-Mujer)/Varón), 1),
+         x = (Varón+Mujer)/2)
+
+ggplot(tabla2, 
+       aes(x = Mujer, xend = Varón, y = disciplina, 
+           group = disciplina, label = brecha)) +
+  geom_dumbbell(color = "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla2, 
+            aes(x, disciplina, label = brecha), nudge_y = .2) +
+  scale_color_manual(values = colores) +
+  theme_minimal()
+```
+
