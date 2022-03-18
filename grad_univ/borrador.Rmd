@@ -29,7 +29,7 @@ dict_disciplina <- read_xlsx("./data/diccionario.xlsx", sheet="cod_disciplina")
 ```
 cosas a hacer para el informe:
 - agrupar la variable "disciplina", u ordenar los gráficos según las tasas más altas - más bajas 
-- 
+- Normalizar por año y año de egreso. 
 
 ideas para el informe: 
 - tasa feminización de ramas de estudios y disciplinas
@@ -61,13 +61,20 @@ df <- df %>% left_join(dict_disciplina) %>% select(-disciplina_id)
 
 ### Porcentaje de varones/mujeres en las distintas disciplinas. ¿Pensar tasa de feminización en lugar de esto?
 ```{r}
-df %>%
+datagraf <- df %>%
   group_by(disciplina, genero_id)%>%
   summarise(n=n())%>%
   ungroup()%>%
   group_by(disciplina)%>%
-  mutate(perc = (n/sum(n))*100)%>%
-  ggplot(aes(x=reorder(disciplina, -perc), y=n, fill=genero_id))+
+  mutate(perc = (n/sum(n))*100)
+
+orden_disciplina <-  datagraf %>% 
+  filter(genero_id=='Mujer') %>% 
+  arrange(desc(perc)) %>% pull(disciplina)
+
+ datagraf %>% 
+   mutate(disciplina = factor(disciplina,orden_disciplina)) %>% 
+ggplot(aes(x=disciplina, y=n, fill=genero_id))+
   geom_col(position='fill')+
   coord_flip()
 ```
@@ -78,18 +85,20 @@ tabla <- df %>% group_by(genero_id, rama_id)%>%
           summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
           ungroup() %>%
           pivot_wider(id_cols = rama_id, names_from = genero_id, values_from = media_ingresos) %>%
-          mutate(brecha = percent(((Varón-Mujer)/Varón), 1),
+          mutate(brecha =  ((Varón-Mujer)/Varón),
+                  brecha_label = percent(brecha, 1),
+                 rama_id = fct_reorder(rama_id,brecha),
                  x = (Varón+Mujer)/2)
 
 ggplot(tabla, 
        aes(x = Mujer, xend = Varón, y = rama_id, 
-           group = rama_id, label = brecha)) +
+           group = rama_id, label = brecha_label)) +
   geom_dumbbell(color = "#808080",
                 size_x = 3, size_xend = 3,
                 colour_x = colores[1],
                 colour_xend = colores[2]) +
   geom_text(data = tabla, 
-            aes(x, rama_id, label = brecha), nudge_y = .2) +
+            aes(x, rama_id, label = brecha_label), nudge_y = .2) +
   scale_color_manual(values = colores) +
   theme_minimal()
 
@@ -100,19 +109,76 @@ tabla2 <- df %>% group_by(genero_id, disciplina)%>%
   summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
   ungroup() %>%
   pivot_wider(id_cols = disciplina, names_from = genero_id, values_from = media_ingresos) %>%
-  mutate(brecha = percent(((Varón-Mujer)/Varón), 1),
-         x = (Varón+Mujer)/2)
+            mutate(brecha =  ((Varón-Mujer)/Varón),
+                  brecha_label = percent(brecha, 1),
+                 disciplina = fct_reorder(disciplina,Mujer),
+                 disciplina2 = fct_reorder(disciplina,brecha),
+                 x = (Varón+Mujer)/2)
 
 ggplot(tabla2, 
        aes(x = Mujer, xend = Varón, y = disciplina, 
-           group = disciplina, label = brecha)) +
+           group = disciplina, label = brecha_label)) +
   geom_dumbbell(color = "#808080",
                 size_x = 3, size_xend = 3,
                 colour_x = colores[1],
                 colour_xend = colores[2]) +
   geom_text(data = tabla2, 
-            aes(x, disciplina, label = brecha), nudge_y = .2) +
+            aes(x, disciplina, label = brecha_label), nudge_y = .2) +
   scale_color_manual(values = colores) +
   theme_minimal()
+
+tabla2 %>% 
+  arrange(-brecha) %>% 
+  select(disciplina, Mujer, Varón,brecha=brecha_label ) %>% 
+  DT::datatable() %>% 
+  DT::formatCurrency(c('Mujer','Varón'),digits = 0,mark = ' ')
+
 ```
+
+```{r}
+cod_titulo <- read_excel("data/diccionario.xlsx", 
+    sheet = "cod_titulo")
+
+tabla3 <- df %>% group_by(genero_id, tipo_titulo_id)%>%
+  summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
+  left_join(cod_titulo,by = "tipo_titulo_id") %>%
+  ungroup() %>%
+  pivot_wider(id_cols = tipo_titulo, names_from = genero_id, values_from = media_ingresos) %>%
+            mutate(brecha =  ((Varón-Mujer)/Varón),
+                  brecha_label = percent(brecha, 1),
+                 tipo_titulo = fct_reorder(tipo_titulo,Mujer),
+                 x = (Varón+Mujer)/2)
+
+
+ggplot(tabla3, 
+       aes(x = Mujer, xend = Varón, y = tipo_titulo, 
+           group = tipo_titulo, label = brecha_label)) +
+  geom_dumbbell(color = "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla3, 
+            aes(x, tipo_titulo, label = brecha_label), nudge_y = .2) +
+  scale_color_manual(values = colores) +
+  theme_minimal()
+
+```
+
+```{r}
+df %>% group_by(genero_id, gestion_id,anio)%>%
+          summarise(media_ingresos = mean(salario, na.rm = TRUE)) %>% 
+          ungroup() %>%
+          pivot_wider(id_cols = c('gestion_id','anio'), names_from = genero_id, values_from = media_ingresos) %>%
+          mutate(brecha =  ((Varón-Mujer)/Varón),
+                  brecha_label = percent(brecha, 1),
+                 gestion = case_when(gestion_id == 1 ~ 'Pública',
+                                     gestion_id == 2 ~ 'Privada'),
+                 gestion = fct_reorder(gestion,brecha),
+                 x = (Varón+Mujer)/2) %>% 
+  select(anio,gestion, Mujer, Varón, brecha=brecha_label) %>% 
+  DT::datatable() %>% 
+  DT::formatCurrency(c('Mujer','Varón'),digits = 0,mark = ' ')
+
+```
+
 
