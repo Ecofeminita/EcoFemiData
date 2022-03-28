@@ -25,6 +25,7 @@ ui <- fluidPage( tags$head(
         )),
                 navbarPage(
                         title= "¿Cuánto te cuesta menstruar en un año?",
+                        id = "navibar",
                            tabPanel("Home", 
                  sidebarLayout(
                    sidebarPanel(
@@ -93,13 +94,13 @@ ui <- fluidPage( tags$head(
                          img(src="menstru_logo.png",width="30%"),
                          br(),
                          br(),
-                         (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Marzo 2021."),
+                         (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Marzo 2022."),
                          br()
                      ))
                    )
                  ),
                  h5(strong("App diseñada y mantenida por:"), a(href="https://twitter.com/layitx", "@layitx")),
-                 tabPanel("EcoFemiData",tags$a(href = 'https://economiafeminita.com/'))
+                 tabPanel("EcoFemiData")
 )
 )
 

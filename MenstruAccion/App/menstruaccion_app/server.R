@@ -11,12 +11,17 @@ df_tampones<-read.csv("data_tampones_b.csv",encoding='UTF-8')
 
 
 
-server = function(input, output,session) {
+server <- function(input, output,session) {
   
   globals <- reactiveValues(
     mydf=data
   )
   
+  observeEvent(input$navibar,{
+    if(input$navibar == "EcoFemiData"){
+      browseURL("https://ecofeminita.com/ecofemidata/")
+    }
+  })
   
   observe({
     newvar2 <- ifelse(input$regularono == "Si", 13,input$noregular_1)

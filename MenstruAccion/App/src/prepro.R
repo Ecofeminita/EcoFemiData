@@ -1,14 +1,14 @@
 library(tidyverse)
 
-df <- readRDS("data/precios-gestion-menstrual-2021-03-12-limpio.RDS")
+df <- readRDS("data/precios-gestion-menstrual-2022-03-13-limpio.RDS")
 
-df <- df %>% group_by(Categoría, Marca) %>%
+df <- df %>% group_by(CategorÃ­a, Marca) %>%
   summarise(Mean_precio = mean(precio_unidad)) %>%
-  rename(Categoria = Categoría)
+  rename(Categoria = CategorÃ­a)
 
 tampones <- df %>% filter(Categoria == "tampones")
 toallitas <- df %>% filter(Categoria == "toallitas")
 
-write.csv(tampones, "../ui-server-deploy/data_tampones_b.csv")
-write.csv(toallitas, "../ui-server-deploy/data_toallitas_b.csv")
-write.csv(df, "../ui-server-deploy/data_b.csv")
+write.csv(tampones, "../menstruaccion_app/data_tampones_b.csv")
+write.csv(toallitas, "../menstruaccion_app/data_toallitas_b.csv")
+write.csv(df, "../menstruaccion_app/data_b.csv")
