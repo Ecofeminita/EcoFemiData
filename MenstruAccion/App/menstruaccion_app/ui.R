@@ -99,8 +99,7 @@ ui <- fluidPage( tags$head(
                      ))
                    )
                  ),
-                 h5(strong("App diseñada y mantenida por:"), a(href="https://twitter.com/layitx", "@layitx")),
-                 tabPanel("EcoFemiData")
-)
+                 h5(strong(a(href="https://ecofeminita.com/ecofemidata/", "EcoFemiData"), "| App diseñada y mantenida por:"), a(href="https://twitter.com/layitx", "@layitx"))
+                 )
 )
 

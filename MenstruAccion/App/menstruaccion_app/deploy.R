@@ -1,6 +1,6 @@
 library(rsconnect)
 library(shiny)
-
+library(symengine)
 
 rsconnect::setAccountInfo(name='layitx',
                           token='11B35ED566F7027828D8C9A2049362A8',

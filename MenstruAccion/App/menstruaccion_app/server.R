@@ -17,12 +17,6 @@ server <- function(input, output,session) {
     mydf=data
   )
   
-  observeEvent(input$navibar,{
-    if(input$navibar == "EcoFemiData"){
-      browseURL("https://ecofeminita.com/ecofemidata/")
-    }
-  })
-  
   observe({
     newvar2 <- ifelse(input$regularono == "Si", 13,input$noregular_1)
     globals$mydf$Cant_periodos <- as.numeric(newvar2)
