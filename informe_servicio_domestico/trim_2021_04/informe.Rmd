@@ -311,11 +311,13 @@ En esta sección se presentan algunas métricas respecto a la edad, el lugar de 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Tabla intermedia. Porcentajes por Edad.
 tabla1 <- serv.dom %>% 
+  filter(CH06 > 13) %>% 
   group_by(GRUPO_EDAD) %>% 
   summarise(Cantidad = sum(PONDERA)) %>% 
   mutate(Porcentaje = formato_porc(Cantidad/sum(Cantidad)*100),
          Cantidad = formato_cantidad(Cantidad)) %>% 
   select(Edad = GRUPO_EDAD, Cantidad, Porcentaje)
+
 
 inline_7 <- tabla1 %>% 
   filter(Edad == "de 30 a 49 años") %>%
