@@ -1,0 +1,2808 @@
+---
+title: "La desigualdad de género se puede medir"
+date: "Agosto de 2022"
+output:
+  html_notebook:
+    theme: flatly
+  html_document:
+    df_print: paged
+subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2017.
+urlcolor: null
+---
+
+<style>
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: #E5616E;
+}
+
+ .nav-pills>li.active>a, .nav-pills>li.active>a:focus, .nav-pills>li.active>a:hover {
+    color: #ffffff;
+    background-color: #E5616E;
+}
+</style>
+
+---
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## Home
+
+---
+
+### 
+En este informe se pueden explorar las diferencias en la inserción en el mercado de trabajo, en los ingresos que perciben, en la cantidad de horas que trabajan semanalmente, y la distribución de las tareas domésticas entre varones y mujeres. Presentamos esta información para el país en general y desagregada por región. 
+<br><br>
+
+Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hacemos podés apoyarnos haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+
+---
+
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2022). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+# Reiniciar R
+library(tidyverse)
+library(httr)
+library(stringr)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(ggalt)
+library(kableExtra)
+library(formattable)
+library(openxlsx)
+library(gridExtra)
+library(ggridges)
+library(magrittr)
+library(DT)
+library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
+# Como fuente tomamos un script con el código de funciones para modificar el formato de los datos.
+options(scipen = 9999)
+source("../../R/funciones formato.R")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Se levantan las bases usuarias de la EPH del trimestre correspondiente
+# (funciones del paquete 'eph')
+base_individual <- get_microdata(year = 2017, trimester = 4, type = "individual")
+base_hogar <- get_microdata(year = 2017, trimester = 4, type = "hogar")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Subtitulo y fuente para graficos
+# date <- "1er trimestre 2022"
+date <- paste0(base_individual$TRIMESTRE[1], ifelse(base_individual$TRIMESTRE[1] %in% c(1,3), "er", ifelse(base_individual$TRIMESTRE[1]==2, "do", "to")), " trimestre ", base_individual$ANO4[1])
+aglo_date <- paste0("Total de aglomerados urbanos. ", date)
+fuente <- "#Ecofemidata y Ecofeminita en base a EPH-INDEC"
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+base_individual <- base_individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"),
+         Region = as.character(REGION),
+         Region = case_when(REGION=="1" ~ "Gran Buenos Aires",
+                            REGION=="40" ~ "NOA",
+                            REGION=="41" ~ "NEA",
+                            REGION=="42" ~ "Cuyo",
+                            REGION=="43" ~ "Pampeana",
+                            REGION=="44" ~ "Patagonia"),
+         PP04D_COD = as.character(PP04D_COD),
+         PP04D_COD = case_when(nchar(PP04D_COD) == 5 ~ PP04D_COD,
+                               nchar(PP04D_COD) == 4 ~ paste0("0", PP04D_COD),
+                               nchar(PP04D_COD) == 3 ~ paste0("00", PP04D_COD),
+                               nchar(PP04D_COD) == 2 ~ paste0("000", PP04D_COD),
+                               nchar(PP04D_COD) == 1 ~ paste0("0000", PP04D_COD)),
+         CALIFICACION = substr(PP04D_COD, 5, 5),
+         CALIFICACION = case_when(CALIFICACION=="1" ~ "Profesionales",
+                                  CALIFICACION=="2" ~ "Técnicos",
+                                  CALIFICACION=="3" ~ "Operativos",
+                                  CALIFICACION=="4" ~ "No Calificados",
+                                  TRUE ~ "0"),
+         CALIFICACION = factor(CALIFICACION, c("No Calificados", "Operativos", "Técnicos", "Profesionales")),
+         JERARQUIA = substr(PP04D_COD, 3, 3),
+         JERARQUIA = case_when(JERARQUIA %in% c("0", "2") ~ "Dirección o Jefes",
+                               JERARQUIA=="1" ~ "Cuentapropia",
+                               JERARQUIA=="3" ~ "Trabajadores Asalariados",
+                               TRUE ~ "0"),
+         JERARQUIA = factor(JERARQUIA, c("Dirección o Jefes", "Trabajadores Asalariados", "Cuentapropia")),
+         NIVEL_EDUCATIVO = case_when(NIVEL_ED %in% c(1, 7) ~ "Sin Instrucción",
+                                     NIVEL_ED %in% c(2, 3) ~ "Primaria",
+                                     NIVEL_ED %in% c(4, 5) ~ "Secundaria",
+                                     NIVEL_ED == 6         ~ "Superior",
+                                     NIVEL_ED == 9         ~ "NS/NR"),
+         NIVEL_EDUCATIVO = factor(NIVEL_EDUCATIVO, levels = c("Sin Instrucción", "Primaria", "Secundaria", "Superior")),
+         GRUPO_EDAD = case_when(CH06 >= 14 & CH06 <= 29 ~ "de 14 a 29 años",
+                                CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años"))
+
+# colores = c("#aa165a","#16aa66")
+colores = c("#E5616E", "#c9c9c9")
+coloresb = c("#8CDDD3", "#8594C6", "#F8F5EE")
+```
+
+## Mercado de Trabajo
+
+---
+
+### Sobre la composición del Mercado de Trabajo {.tabset .tabset-fade .tabset-pills}
+<br><br>
+En esta sección se intenta mostrar las asimetrías que existen en el mercado de trabajo en cuanto a su composición. Para esto se utilizan las tasas de actividad, empleo, desempleo y subocupación según el sexo de las personas. El objetivo es ver qué tan masculinizado se encuentra el mercado laboral y ver si las mujeres encuentran más problemas a la hora de conseguir un empleo. También se analizan estos indicadores teniendo en cuenta la edad de las personas y se examina la incidencia de la informalidad en las relaciones de dependencia de asalariados y asalariadas. A su vez, se grafica la diferencia en acceso a cargos jerárquicos y la estructura de las diferentes ramas de ocupación, vinculando estos datos a las ideas de segregación vertical y horizontal en el mercado de trabajo.
+
+---
+
+#### Tasas básicas
+<br>
+
+##### {.tabset .tabset-fade .tabset-pills}
+
+###### Total nacional
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1.1 <- base_individual %>% 
+  filter(CH06 >= 14) %>% 
+  group_by(Sexo) %>% 
+  summarise(Poblacion         = sum(PONDERA),
+            Ocupados          = sum(PONDERA[ESTADO == 1]),
+            Desocupados       = sum(PONDERA[ESTADO == 2]),
+            PEA               = Ocupados + Desocupados,
+            Ocupados_demand   = sum(PONDERA[ESTADO == 1 & PP03J ==1]),
+            Suboc_demandante  = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            Suboc_no_demand   = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            Subocupados       = Suboc_demandante + Suboc_no_demand,
+            'Tasa Actividad'                  = round(PEA/Poblacion, 3),
+            'Tasa Empleo'                     = round(Ocupados/Poblacion, 3),
+            'Tasa Desocupación'               = round(Desocupados/PEA, 3),
+            'Tasa Ocupados Demandantes'       = round(Ocupados_demand/PEA, 3),
+            'Tasa Subocupación'               = round(Subocupados/PEA, 3),
+            'Tasa Subocupación demandante'    = round(Suboc_demandante/PEA, 3),
+            'Tasa Subocupación no demandante' = round(Suboc_no_demand/PEA, 3)) %>% 
+  select(-c(2:9)) %>% 
+  pivot_longer(., cols = 2:8, names_to = "Indicadores", values_to = "Valor") %>% 
+  pivot_wider(., names_from = Sexo, values_from = Valor)
+
+inline_1 <- tabla1.1 %>% 
+  filter(Indicadores == "Tasa Actividad") %>% 
+  transmute(diferencia = round((Varones-Mujeres)*100, 0)) %>% 
+  pull(diferencia)
+
+inline_2 <- tabla1.1 %>% 
+  filter(Indicadores == "Tasa Empleo") %>% 
+  transmute(diferencia = round((Varones-Mujeres)*100, 0)) %>% 
+  pull(diferencia)
+```
+
+En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo. Para ahondar en los conceptos utilizados se puede explorar el glosario de este informe.
+<br><br>
+
+La __tasa de actividad__ es ampliamente mayor entre los varones (la diferencia ronda los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La __tasa de empleo__, por su parte, exhibe una diferencia entre varones y mujeres que ronda los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.
+<br><br>
+
+Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos.
+<br><br>
+
+<p style="color:#E5616E">__Tasas de actividad y empleo por sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.2 <- tabla1.1 %>% 
+  filter(Indicadores %in% c("Tasa Actividad", "Tasa Empleo")) %>% 
+  gather(., Sexo, proporcion, 2:3)
+
+ggplot(tabla1.2, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  scale_fill_manual(values = colores) +
+  facet_wrap(~Indicadores, strip.position = "bottom") +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+---
+
+A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. 
+<br><br>
+En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino.
+<br><br>
+
+<p style="color:#E5616E">__Tasas de desocupación y subocupación por sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.3 <- tabla1.1 %>% 
+  filter(Indicadores %in% c("Tasa Desocupación", "Tasa Subocupación")) %>% 
+  gather(., Sexo, proporcion, 2:3)
+
+ggplot(tabla1.3, aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  scale_fill_manual(values = colores) +
+  facet_wrap(~Indicadores, strip.position = "bottom") +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura2.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+###### Por región
+<br>
+A continuación se presentan las tasas de actividad, empleo, desocupación y desocupación para varones y mujeres según la región. 
+<br><br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#chequeamos cantidades muestrales
+tabla1.4 <- base_individual %>% 
+  filter(CH06 >= 14) %>% 
+  mutate(n = 1) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(n_Poblacion         = sum(n),
+            n_Ocupados          = sum(n[ESTADO == 1]),
+            n_Desocupados       = sum(n[ESTADO == 1]),
+            n_PEA               = n_Ocupados + n_Desocupados,
+            n_Ocupados_demand   = sum(n[ESTADO == 1 & PP03J ==1]),
+            n_Suboc_demandante  = sum(n[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            n_Suboc_no_demand   = sum(n[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            n_Subocupados       = n_Suboc_demandante + n_Suboc_no_demand)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#tabla de tasas básicas por región
+tabla1.5 <- base_individual %>% 
+  filter(CH06 >= 14) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(Poblacion         = sum(PONDERA),
+            Ocupados          = sum(PONDERA[ESTADO == 1]),
+            Desocupados       = sum(PONDERA[ESTADO == 2]),
+            PEA               = Ocupados + Desocupados,
+            Ocupados_demand   = sum(PONDERA[ESTADO == 1 & PP03J ==1]),
+            Suboc_demandante  = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            Suboc_no_demand   = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            Subocupados       = Suboc_demandante + Suboc_no_demand,
+            'Actividad'                  = round(PEA/Poblacion, 3),
+            'Empleo'                     = round(Ocupados/Poblacion, 3),
+            'Desocupación'               = round(Desocupados/PEA, 3),
+            'Subocupación'               = round(Subocupados/PEA, 3)) %>% 
+  select(-c(3:10)) %>% 
+  pivot_longer(., cols = 3:6, names_to = "Indicadores", values_to = "Valor") %>% 
+  mutate(Valor = percent(Valor, 1)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Valor) %>% 
+  mutate(Indicadores = factor(Indicadores, 
+                              levels = c("Actividad", "Empleo", "Desocupación", "Subocupación"))) %>% 
+  arrange(Indicadores)
+```
+
+<p style="color:#E5616E">__Tasas de actividad y empleo por región y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#cuadro de tasas básicas por región opción 2 de visualización
+tabla1.5_graf1 <- tabla1.5 %>% 
+  pivot_longer(., cols=3:4, names_to = "Sexo", values_to = "proporcion") %>% 
+  filter(Indicadores %in% c("Actividad", "Empleo"))
+
+ggplot(tabla1.5_graf1, aes(x = Indicadores, proporcion, fill = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas1region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+<p style="color:#E5616E">__Tasas de desocupación y subocupación__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.5_graf2 <- tabla1.5 %>% 
+  pivot_longer(., cols=3:4, names_to = "Sexo", values_to = "proporcion") %>% 
+  filter(Indicadores %in% c("Desocupación", "Subocupación"))
+
+ggplot(tabla1.5_graf2, aes(x = Indicadores, proporcion, fill = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.1, tabla1.2, tabla1.3, tabla1.4, tabla1.5, tabla1.5_graf1, tabla1.5_graf2)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1.6 <- base_individual %>% 
+  filter(CH06 >= 14) %>% 
+  group_by(Sexo, GRUPO_EDAD) %>% 
+  summarise(Poblacion         = sum(PONDERA),
+            Ocupados          = sum(PONDERA[ESTADO == 1]),
+            Desocupados       = sum(PONDERA[ESTADO == 2]),
+            PEA               = Ocupados + Desocupados,
+            Ocupados_demand   = sum(PONDERA[ESTADO == 1 & PP03J ==1]),
+            Suboc_demandante  = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            Suboc_no_demand   = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            Subocupados       = Suboc_demandante + Suboc_no_demand,
+            'Tasa Actividad'                  = percent(PEA/Poblacion, 1),
+            'Tasa Empleo'                     = percent(Ocupados/Poblacion, 1),
+            'Tasa Desocupación'               = percent(Desocupados/PEA, 1),
+            'Tasa Subocupación'               = percent(Subocupados/PEA, 1)) %>% 
+  select(-c(3:10)) %>% 
+  filter(!is.na(GRUPO_EDAD)) %>% 
+  gather(Indicadores, Valor, 3:6) %>% 
+  spread(., Sexo, Valor) %>% 
+  mutate(Indicadores = factor(Indicadores, 
+                              levels = c("Tasa Actividad", "Tasa Empleo", "Tasa Desocupación", "Tasa Subocupación"))) %>% 
+  arrange(Indicadores)
+
+tabla1.6m <- tabla1.6 %>% 
+  select(-Varones) %>% 
+  spread(., GRUPO_EDAD, Mujeres)
+
+tabla1.6v <- tabla1.6 %>% 
+  select(-Mujeres) %>% 
+  spread(., GRUPO_EDAD, Varones)
+
+tabla1.7 <- left_join(tabla1.6m, tabla1.6v, by = "Indicadores") %>% 
+  select(Indicadores, `Mujeres` = `de 14 a 29 años.x`, `Varones` = `de 14 a 29 años.y`,
+         ` Mujeres` = `de 30 a 64 años.x`, ` Varones` = `de 30 a 64 años.y`)
+
+inline_3 <- tabla1.6m %>% 
+  filter(Indicadores == "Tasa Desocupación") %>% 
+  pull(`de 14 a 29 años`)
+
+inline_4 <- tabla1.6v %>% 
+  filter(Indicadores == "Tasa Desocupación") %>% 
+  pull(`de 14 a 29 años`) %>% 
+  percent(., 0)
+```
+
+#### Por grupos de edad
+<br>
+A continuación se exponen los mismos indicadores, pero desagregados por grupos de edad además de por sexo.
+<br><br>
+En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de más del __`r inline_4`.__
+<br><br>
+Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años.
+<br><br>
+
+##### {.tabset .tabset-fade .tabset-pills}
+
+###### Total nacional
+<br>
+<p style="color:#E5616E">__Principales tasas del mercado de trabajo, por grupos de edad y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años a 64 años. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.7 %>% 
+  kable(align = "lcccc") %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "de 14 a 29 años" = 2, "de 30 a 64 años" = 2),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>%
+  column_spec(1, width = "4cm") %>% 
+  column_spec(2, bold = TRUE, width = "3cm") %>% 
+  column_spec(3, width = "3cm") %>% 
+  column_spec(4, width = "3cm") %>%
+  column_spec(5, width = "3cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### Por región
+<br>
+
+Las tasas del mercado de trabajo presentan diferentes valores para mujeres y varones, pero también hay diferencias según el grupo de edad. Los y las jóvenes presentan menores tasas de actividad y empleo y mayores tasas de desocupación y subocupación que las personas de entre 30 y 64 años en todas las regiones del país. 
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#chequeamos cantidades muestrales
+
+tabla1.8 <- base_individual %>% 
+  filter(CH06 >= 14 & CH06 <= 29) %>% 
+  mutate(n = 1) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(n_Poblacion         = sum(n),
+            n_Ocupados          = sum(n[ESTADO == 1]),
+            n_Desocupados       = sum(n[ESTADO == 1]),
+            n_PEA               = n_Ocupados + n_Desocupados)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#tabla de tasas básicas por región y grupo de edad menores 30
+
+tabla1.9 <- base_individual %>% 
+  group_by(Sexo, Region, GRUPO_EDAD) %>% 
+  summarise(Poblacion         = sum(PONDERA),
+            Ocupados          = sum(PONDERA[ESTADO == 1]),
+            Desocupados       = sum(PONDERA[ESTADO == 2]),
+            PEA               = Ocupados + Desocupados,
+            Ocupados_demand   = sum(PONDERA[ESTADO == 1 & PP03J ==1]),
+            Suboc_demandante  = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J==1]),
+            Suboc_no_demand   = sum(PONDERA[ESTADO == 1 & INTENSI ==1 & PP03J %in% c(2,9)]),
+            Subocupados       = Suboc_demandante + Suboc_no_demand,
+            'Actividad'                  = percent(round(PEA/Poblacion, 3),1),
+            'Empleo'                     = percent(round(Ocupados/Poblacion, 3),1),
+            'Desocupación'               = percent(round(Desocupados/PEA, 3),1),
+            'Subocupación'               = percent(round(Subocupados/PEA, 3),1)) %>% 
+  select(-c(4:11)) 
+```
+
+<br>
+<p style="color:#E5616E">__Tasa de actividad por grupo de edad__</p>
+<p style="color:#c9c9c9">__Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+tabla1.9_graf1 <- tabla1.9 %>% 
+  filter(GRUPO_EDAD  != "NA") %>% 
+  select(c(1:4))
+
+ggplot(tabla1.9_graf1, aes(x = GRUPO_EDAD, Actividad, fill = Sexo, 
+                          label = Actividad)) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+<br>
+<p style="color:#E5616E">__Tasa de empleo por grupo de edad__</p>
+<p style="color:#c9c9c9">__Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+tabla1.9_graf2 <- tabla1.9 %>% 
+  filter(GRUPO_EDAD  != "NA") %>% 
+  select(c(1:3, 5))
+
+ggplot(tabla1.9_graf2, aes(x = GRUPO_EDAD, Empleo, fill = Sexo, 
+                          label = Empleo)) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+<br>
+<p style="color:#E5616E">__Tasa de desocupación por grupo de edad__</p>
+<p style="color:#c9c9c9">__Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+tabla1.9_graf3 <- tabla1.9 %>% 
+  filter(GRUPO_EDAD  != "NA") %>% 
+  select(c(1:3, 6))
+
+ggplot(tabla1.9_graf3, aes(x = GRUPO_EDAD, Desocupación, fill = Sexo, 
+                          label = Desocupación)) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+<br>
+<p style="color:#E5616E">__Tasa de subocupación por grupo de edad__</p>
+<p style="color:#c9c9c9">__Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+tabla1.9_graf4 <- tabla1.9 %>% 
+  filter(GRUPO_EDAD  != "NA") %>% 
+  select(c(1:3,7))
+
+ggplot(tabla1.9_graf4, aes(x = GRUPO_EDAD, Subocupación, fill = Sexo, 
+                          label = Subocupación)) +
+  facet_wrap( ~ Region) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 3) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.6, tabla1.6v, tabla1.6m, tabla1.7, tabla1.8, tabla1.9, tabla1.9_graf1, tabla1.9_graf2, tabla1.9_graf3, tabla1.9_graf4)
+```
+
+#### Empleo no registrado
+<br>
+La falta de descuento jubilatorio suele ser un indicador que aproxima la falta de registro de la relación laboral asalariada. La incidencia de esta problemática es mayor entre las asalariadas mujeres. A su vez, este indicador varía de acuerdo a las características de cada economía regional. 
+<br><br>
+
+##### {.tabset .tabset-fade .tabset-pills}
+
+###### Total nacional
+<br>
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1.10 <- base_individual %>% 
+  filter(ESTADO==1,
+         CAT_OCUP==3) %>% 
+  group_by(Sexo) %>% 
+  summarise("Sin descuento jubilatorio" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1))
+
+inline_5 <- tabla1.10 %>% 
+  filter(Sexo == "Mujeres") %>% 
+  pull(`Sin descuento jubilatorio`)
+
+inline_6 <- tabla1.10 %>% 
+  filter(Sexo == "Varones") %>% 
+  pull(`Sin descuento jubilatorio`)
+```
+
+En concreto, en el país hay un __`r inline_5`__ de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios, mientras que para los asalariados varones dicha tasa es del __`r inline_6`.__
+<br><br>
+
+<p style="color:#E5616E">__Empleo sin descuento jubilatorio por sexo__</p>
+<p style="color:#c9c9c9">__Ocupadas/os asalariadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.10 %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n") %>%
+  column_spec(1, width = "5cm") %>% 
+  column_spec(2, width = "7cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.10)
+```
+
+###### Por región
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1.11 <- base_individual %>% 
+  filter(ESTADO==1,
+         CAT_OCUP==3) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise("No" = percent(sum(PONDERA[PP07H==2])/sum(PONDERA), 1)) %>% 
+  rename(Región = Region) %>% 
+  pivot_wider(., names_from = Sexo, values_from = No)
+
+```
+
+<p style="color:#E5616E">__Porcentaje de asalariadas/os sin descuento jubilatorio por sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.11_graf1 <- tabla1.11 %>% 
+  pivot_longer(., cols=2:3, names_to = "Sexo", values_to = "proporcion") 
+
+ggplot(tabla1.11_graf1, aes(x = " ", proporcion, fill = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  facet_wrap(~ Región) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 4) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.11, tabla1.11_graf1)
+```
+
+#### Cargos jerárquicos
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla1.12 <- base_individual %>% 
+  filter(JERARQUIA != "0",
+         ESTADO == 1) %>%
+  group_by(Sexo) %>% 
+  mutate(Frecuencia = sum(PONDERA)) %>% 
+  group_by(Sexo, JERARQUIA) %>% 
+  summarise(proporcion = round(sum(PONDERA)/unique(Frecuencia), 3),
+            cantidad = sum(PONDERA))
+
+inline_7 <- tabla1.12 %>% 
+  filter(JERARQUIA %in% c("Dirección o Jefes") &
+           Sexo == "Varones") %>% 
+  pull(proporcion) %>% 
+  percent(., 1)
+
+inline_8 <- tabla1.12 %>% 
+  filter(JERARQUIA %in% c("Dirección o Jefes") & 
+           Sexo == "Mujeres") %>% 
+  pull(proporcion) %>% 
+  percent(., 1)
+```
+
+Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un __`r inline_7`__ de los ocupados varones tienen cargos de dirección o son jefes, solo un __`r inline_8`__ de las ocupadas ejercen puestos de esas características.
+<br><br>
+Esta problemática es conocida como __techo de Cristal__ o __segregación vertical__ del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
+<br><br>
+
+<p style="color:#E5616E">__Mujeres y Varones en cargos de dirección y jefatura__</p>
+<p style="color:#c9c9c9">__Porcentaje de cargos jerárquicos entre ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla1.12 %>% filter(JERARQUIA == "Dirección o Jefes"), 
+       aes(x = '', proporcion, fill = Sexo, group = Sexo, 
+                          label = percent(proporcion, digits = 1))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =2, size = 6) +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+```
+       
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.12)
+```
+
+#### Ramas de la ocupación
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.13 <- organize_caes(base_individual) %>% 
+  mutate(Rama = caes_eph_label) %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999,
+         P21 > 0,
+         PONDIIO > 0) %>%  # Ingresos positivos
+  group_by(Rama) %>% 
+  mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(tasa_feminizacion = percent(sum(PONDERA[Sexo == "Mujeres"])/sum(PONDERA), 1),
+            ingreso_promedio = weighted.mean(P21, PONDIIO/sum(PONDIIO)),
+            ingreso_hor = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2)) %>% 
+  arrange(-tasa_feminizacion) %>% 
+  filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud", 
+  "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+  "Construccion")) %>% 
+  transmute("Rama de la ocupación" = Rama,
+            "Tasa de feminización" = tasa_feminizacion,
+            "Ingreso mensual promedio" = formato_pesos(round(ingreso_promedio, -2), 0),
+            "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
+```
+
+La siguiente tabla representa a ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
+<br><br>
+Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
+<br><br>
+
+<p style="color:#E5616E">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
+<p style="color:#c9c9c9">__Ocupadas/os. Tasa de feminización, ingreso mensual promedio, ingreso horario. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.13 %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla1.13)
+```
+
+---
+
+<br>
+Si observamos la distribución de ingresos de las y los ocupados según rama de ocupación, vemos que Servicio Doméstico no sólo es la rama más feminizada sino que además concentra los menores ingresos.
+<br><br>
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla1.14 <- organize_caes(base_individual) %>% 
+  mutate(Rama = caes_eph_label) %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999,
+         P21 > 0,
+         PONDIIO > 0) %>%  # Ingresos positivos
+  filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud", 
+  "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+  "Construccion"))
+```
+
+<p style="color:#E5616E">__Distribución del ingreso según ramas de ocupación (seleccionadas)__</p>
+<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE,  results='hide'}
+# Tira warnings porque ajustamos el limite superior del eje x a mano y hay observaciones con P21 por encima de $150.000
+ggplot(tabla1.14, aes(x = P21, y = Rama, weights = PONDIIO, group = Rama, alpha = Rama != "Servicio domestico")) +
+  geom_density_ridges(scale = 2, fill = coloresb[2]) + 
+  theme_minimal() +
+  scale_x_continuous(limits = c(0, 150000)) +
+  scale_alpha_manual(values = c(1, 0.4), guide = FALSE) +
+  # scale_fill_manual(values = coloresb[2]) +
+  labs(caption = fuente,
+    x = "Ingreso de la Ocupacion Principal (IOP)") +
+  theme(axis.title.y = element_blank(),
+        plot.subtitle=element_text(size=10),
+        legend.position = "none")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla1.14)
+```
+
+## Ingresos
+
+---
+
+### Ingresos {.tabset .tabset-fade .tabset-pills}
+<br><br>
+En esta sección se coloca el foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. A su vez, pueden distinguirse los ingresos mensuales y los ingresos por hora trabajada.
+<br><br>
+Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como _"las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones"._
+
+---
+
+#### Ingresos mensuales
+
+En todas las regiones del país, los ingresos promedios de las mujeres son menores que los de los varones.
+<br><br>
+
+##### {.tabset .tabset-fade .tabset-pills}
+
+###### Total Nacional
+<br><br>
+
+####### __Brechas de ingresos mensuales__
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Ingreso Total Individual
+# as.numeric porque salia como NA por ser integer demasiado grande, mayor de lo que se puede representar en R
+tabla2.1 <- base_individual %>% 
+  filter(P47T > 0) %>% 
+  group_by(Sexo) %>% 
+  summarise( Media.ITI = round(weighted.mean(as.numeric(P47T) , as.numeric(PONDII)))) %>% 
+  spread(., Sexo, Media.ITI) %>% 
+  mutate(Población = "Perceptores de ingresos",
+         Ingreso = "Ingreso Total Individual")
+
+# Ingreso de la Ocupación Principal
+tabla2.2 <- base_individual %>% 
+  filter(ESTADO == 1) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate(Población = "Ocupadas/os",
+         Ingreso = "Ingreso de la Ocupación Principal")
+
+# Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
+tabla2.3 <- base_individual %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>%
+  group_by(Sexo) %>% 
+  summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.",
+         Ingreso = "Ingreso de la Ocupación Principal")
+
+# Jubilaciones
+tabla2.4 <- base_individual %>% 
+  filter(V2_M > 0) %>% 
+  group_by(Sexo) %>% 
+  summarise(Media.JUB = round(weighted.mean(as.numeric(V2_M), as.numeric(PONDII)))) %>% 
+  spread(., Sexo, Media.JUB) %>% 
+  mutate(Población = "Perceptores de jubilación",
+         Ingreso = "Jubilación")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla2.5 <- bind_rows(tabla2.1, tabla2.2, tabla2.3, tabla2.4) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = formato_pesos(round(Mujeres, -2), 0),
+         Varones = formato_pesos(round(Varones, -2), 0)) %>% 
+  select(Población, Ingreso, Mujeres, Varones, Brecha)
+
+inline_9 <- tabla2.5 %>% 
+  filter(Población == "Perceptores de ingresos") %>% 
+  pull(Brecha)
+
+inline_10 <- tabla2.5 %>% 
+  filter(Población == "Ocupadas/os") %>% 
+  pull(Brecha)
+
+inline_11 <- tabla2.5 %>% 
+  filter(Población == "Ocupadas/os") %>% 
+  pull(Mujeres)
+
+inline_12 <- tabla2.5 %>% 
+  filter(Población == "Ocupadas/os") %>% 
+  pull(Varones)
+
+inline_13 <- tabla2.5 %>% 
+  filter(Población == "Asalariadas/os sin desc. jubil.") %>% 
+  pull(Brecha)
+```
+
+Como se ve en el siguiente cuadro, para el caso de todas las personas perceptoras de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de __`r inline_9`__. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones.
+<br><br>
+Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un __`r inline_10`__ menos que los varones (_`r inline_11`_ vs. _`r inline_12`_). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal.
+<br><br>
+Si tomamos en cuenta únicamente a aquellas personas que no poseen descuentos jubilatorios, se observa cómo las mujeres ganan en promedio un __`r inline_13`__ menos que sus pares. Es decir que la brecha de ingresos entre las y los trabajadores se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.
+<br><br>
+Finalmente, puede observarse que también existe una brecha, aunque mucho menor, entre las jubilaciones que perciben las mujeres y los varones.
+<br><br>
+
+<p style="color:#E5616E">__Brechas de ingresos mensuales__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.5 %>% 
+  select(Población, Ingreso, Mujeres, Varones, Brecha) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+
+# En este cuadro la brecha mantiene comparabilidad con trimestres anteriores porque se calcula sobre los valores sin redondear
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.1, tabla2.2, tabla2.3, tabla2.4, tabla2.5)
+```
+
+---
+
+####### __Brecha de ingresos mensuales por calificación del puesto de trabajo__
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Ocupades
+tabla2.6 <- base_individual %>% 
+  filter(CALIFICACION != "0",
+         ESTADO == 1,
+         P21 >= 0,
+         PONDIIO >= 0) %>%  # Ingresos positivos) %>% 
+  group_by(Sexo, CALIFICACION) %>% 
+  summarise(IOP_mensual  = round(weighted.mean(P21, PONDIIO/sum(PONDIIO)), 2)) 
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+inline_14 <- tabla2.6 %>% 
+  filter(Sexo == "Varones", 
+         CALIFICACION == "Profesionales") %>% 
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(., 0)
+
+inline_15 <- tabla2.6 %>% 
+  filter(Sexo == "Mujeres",
+         CALIFICACION == "Profesionales") %>% 
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(., 0)
+
+inline_16 <- tabla2.6 %>% 
+  filter(CALIFICACION == "Profesionales") %>% 
+  pivot_wider(names_from = Sexo, values_from = IOP_mensual) %>% 
+  mutate(brecha = (Varones-Mujeres)/Varones) %>% 
+  pull(brecha) %>% 
+  percent(., 1)
+  
+inline_17 <- tabla2.6 %>% 
+  filter(Sexo == "Varones",
+         CALIFICACION == "No Calificados") %>% 
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(., 0)
+
+inline_18 <- tabla2.6 %>% 
+  filter(Sexo == "Mujeres",
+         CALIFICACION == "No Calificados") %>%
+  pull(IOP_mensual) %>% 
+  round(., -2) %>% 
+  formato_pesos(., 0)
+
+inline_19 <- tabla2.6 %>% 
+  filter(CALIFICACION == "No Calificados") %>% 
+  pivot_wider(names_from = Sexo, values_from = IOP_mensual) %>% 
+  mutate(brecha = (Varones-Mujeres)/Varones) %>% 
+  pull(brecha) %>% 
+  percent(., 1)
+```
+
+El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de _`r inline_14`_, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de _`r inline_15`_, es decir, un __`r inline_16`__ menos que los varones.    
+En los puestos no calificados, los varones ganan _`r inline_17`_ en promedio, al tiempo que las mujeres ganan alrededor de _`r inline_18`_. Esta brecha es del __`r inline_19`__.
+<br><br>
+
+<p style="color:#E5616E">__Brecha de ingresos de la ocupación principal
+       por sexo y calificación ocupacional__</p>
+<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.6_graf1 <- tabla2.6 %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_mensual) %>% 
+  mutate(brecha = percent((Varones-Mujeres)/Varones, 1),
+         x = (Varones+Mujeres)/2)
+
+ggplot(tabla2.6_graf1, 
+       aes(x = Mujeres, xend = Varones, y = CALIFICACION, 
+           group = CALIFICACION, label = brecha)) +
+  geom_dumbbell(color = "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla2.6_graf1, 
+            aes(x, CALIFICACION, label = brecha), nudge_y = .2) +
+  labs(x = "Ingreso Mensual",
+       y = NULL, 
+       caption = fuente) +
+  scale_color_manual(values = colores) +
+  theme_minimal()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura8.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.6, tabla2.6_graf1)
+```
+
+---
+
+####### __Brecha de ingresos mensuales por nivel educativo__ 
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla2.7 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         !is.na(NIVEL_EDUCATIVO)) %>% 
+  group_by(Sexo) %>%
+  mutate(Frecuencia = sum(PONDERA)) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+  summarise(Tasa = percent(sum(PONDERA)/unique(Frecuencia), 1)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Tasa) %>% 
+  rename("Nivel Educativo" = NIVEL_EDUCATIVO)
+
+tabla2.8 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         !is.na(NIVEL_EDUCATIVO),
+         P21>=0,
+         PONDIIO>=0) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+  summarise(IOP_mensual  = round(weighted.mean(P21, PONDIIO/sum(PONDIIO)), 2)) 
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+inline_20 <- tabla2.8 %>% 
+  filter(NIVEL_EDUCATIVO == "Superior") %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_mensual) %>% 
+  mutate(brecha = (Varones-Mujeres)/Varones) %>% 
+  pull(brecha) %>% 
+  percent(., 1)
+
+inline_21 <- tabla2.8 %>% 
+  filter(NIVEL_EDUCATIVO == "Primaria") %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_mensual) %>% 
+  mutate(brecha = (Varones-Mujeres)/Varones) %>% 
+  pull(brecha) %>% 
+  percent(., 1)
+```
+
+Como puede observarse en el cuadro siguiente, el porcentaje de personas que cuentan con un nivel educativo superior es notablemente mayor entre las ocupadas mujeres, en comparación a los ocupados varones.
+<br><br>
+Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos es del __`r inline_20`__ para las de nivel universitario/superior, y del __`r inline_21`__ para las que cuentan con nivel primario.
+<br><br>
+
+<p style="color:#E5616E">__Nivel educativo de mujeres y varones__</p>
+<p style="color:#c9c9c9">__Porcentaje por columnas. Ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.7 %>% 
+  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
+         Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
+  select('Nivel Educativo', Mujeres, Varones) %>% 
+  kable(escape = FALSE, digits = 1, align = 'lcc') %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "7cm") %>% 
+  column_spec(2, color = "black", width = "4cm") %>% 
+  column_spec(3, color = "black", width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla2.8_graf1 <- tabla2.8 %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_mensual) %>%
+  mutate(brecha = percent((Varones-Mujeres)/Varones, 1),
+         x = (Varones+Mujeres)/2)
+```
+
+<br><br>
+<p style="color:#E5616E">__Brecha de ingresos de la ocupación principal
+       por sexo y nivel educativo__</p>
+<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla2.8_graf1, 
+       aes(x = Mujeres, xend = Varones, y = NIVEL_EDUCATIVO, 
+           group = NIVEL_EDUCATIVO, label = brecha)) +
+  geom_dumbbell(color = "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla2.8_graf1, 
+            aes(x, NIVEL_EDUCATIVO, label = brecha), nudge_y = .2) +
+  labs(x = "Ingreso Mensual",
+       y = NULL, 
+       caption = fuente)+
+  scale_color_manual(values = colores)+
+  theme_minimal()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura10.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.7, tabla2.8, tabla2.8_graf1)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Tabla para ingresos mensuales por región  paso 1
+
+# Ingreso Total Individual
+tabla2.9 <- base_individual %>% 
+  filter(P47T > 0) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(Media.ITI = round(weighted.mean(as.numeric(P47T), as.numeric(PONDII)))) %>% 
+  spread(., Sexo, Media.ITI) %>% 
+  mutate(Población = "Perceptores de ingresos",
+         Ingreso = "Ingreso Total Individual")
+
+# Ingreso de la Ocupación Principal
+tabla2.10 <- base_individual %>% 
+  filter(ESTADO == 1) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate(Población = "Ocupadas/os",
+         Ingreso = "Ingreso de la Ocupación Principal")
+
+# Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
+tabla2.11 <- base_individual %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
+  spread(., Sexo, Media.IOP) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.",
+         Ingreso = "Ingreso de la Ocupación Principal")
+
+# Jubilaciones
+tabla2.12 <- base_individual %>% 
+  filter(V2_M > 0) %>% 
+  group_by(Sexo, Region) %>% 
+  summarise(Media.JUB = round(weighted.mean(as.numeric(V2_M), as.numeric(PONDII)))) %>% 
+  spread(., Sexo, Media.JUB) %>% 
+  mutate(Población = "Perceptores de jubilación",
+         Ingreso = "Jubilación")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+#Tabla para ingresos mensuales por región paso 2
+
+tabla2.13 <- bind_rows(tabla2.9, tabla2.10, tabla2.11, tabla2.12) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = formato_pesos(round(Mujeres, -2), 0),
+         Varones = formato_pesos(round(Varones, -2), 0)) %>% 
+  select(Region, Población, Ingreso, Mujeres, Varones, Brecha)
+
+tabla2.13m <- tabla2.13 %>% 
+  select(c(1:4)) %>% 
+  spread(., Region, Mujeres)
+
+tabla2.13v <- tabla2.13 %>% 
+  select(c(1:3, 5)) %>% 
+  spread(., Region, Varones)
+
+tabla2.13b <- tabla2.13 %>% 
+  select(c(1:3, 6)) %>% 
+  spread(., Region, Brecha)
+
+tabla2.14 <- left_join(tabla2.13m, tabla2.13v, by = c("Población", "Ingreso")) %>% 
+  select(Población, Ingreso, `Mujeres` = `Cuyo.x`, `Varones` = `Cuyo.y`,
+                     ` Mujeres` = `Gran Buenos Aires.x`, ` Varones` = `Gran Buenos Aires.y`,
+                    `  Mujeres` = `NEA.x`, `  Varones` = `NEA.y`,
+                   `   Mujeres` = `NOA.x`, `   Varones` = `NOA.y`,
+                  `    Mujeres` = `Pampeana.x`, `    Varones` = `Pampeana.y`,
+                 `     Mujeres` = `Patagonia.x`, `     Varones` = `Patagonia.y`) %>% 
+  left_join(., tabla2.13b, by = c("Población", "Ingreso")) %>% 
+  mutate(`Brecha` = `Cuyo`,
+         ` Brecha` = `Gran Buenos Aires`,
+         `  Brecha` = `NEA`,
+         `   Brecha` = `NOA`,
+         `    Brecha` = `Pampeana`,
+         `     Brecha` = `Patagonia`) %>% 
+  select(Población, Ingreso,
+         `Mujeres`, `Varones`, `Brecha`,
+         ` Mujeres`, ` Varones`, ` Brecha`,
+         `  Mujeres`, `  Varones`, `  Brecha`,
+         `   Mujeres`, `   Varones`, `   Brecha`,
+         `    Mujeres`, `    Varones`, `    Brecha`,
+         `     Mujeres`, `     Varones`, `     Brecha`)
+
+```
+
+###### Cuyo
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Cuyo. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>% 
+  select(1:5) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+
+###### GBA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. GBA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>% 
+  select(c(1,2,6,7,8)) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### NEA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. NEA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>% 
+  select(c(1,2,9,10,11)) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### NOA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. NOA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>% 
+  select(c(1,2,12,13,14)) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### Pampeana
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Pampeana. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>%
+  select(c(1,2,15,16,17)) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### Patagonia
+<br><br>
+
+<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
+<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Patagonia. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.14 %>% 
+  select(c(1,2,18,19,20)) %>% 
+  kable(align = 'llccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 2, "Media del ingreso" = 2, "\n" = 1), 
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(2, width = "6cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(5, bold = TRUE, width = "2cm") %>%
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.9, tabla2.10, tabla2.11, tabla2.12, tabla2.13, tabla2.13b, tabla2.13m, tabla2.13v, tabla2.14)
+```
+
+#### Ingresos horarios
+
+Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Que las brechas sean más amplias comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares.
+<br><br>
+
+##### {.tabset .tabset-fade .tabset-pills}
+
+###### Total Nacional
+<br><br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Ocupades. Ingreso de la Ocupación Principal
+tabla2.15 <- base_individual %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Ocupadas/os")
+
+# Asalariades. Ingreso de la Ocupación Principal
+tabla2.16 <- base_individual %>% 
+  filter(ESTADO == 1,
+         CAT_OCUP == 3,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Asalariadas/os")
+
+# Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
+tabla2.17 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         CAT_OCUP == 3,
+         PP07H == 2,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.")
+
+tabla2.18 <- bind_rows(tabla2.15, tabla2.16, tabla2.17) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = formato_pesos(Mujeres, 0),
+         Varones = formato_pesos(Varones, 0)) %>% 
+  select(Población, Mujeres, Varones, Brecha)
+```
+
+<p style="color:#E5616E">__Brechas de ingresos horarios__</p>
+<p style="color:#c9c9c9">__`r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(tabla2.18, digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.15, tabla2.16, tabla2.17, tabla2.18)
+```
+
+---
+
+####### __Brecha de ingresos horarios por nivel educativo__
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla2.19 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         PP3E_TOT > 0,
+         PP3E_TOT != 999,
+         !is.na(NIVEL_EDUCATIVO)) %>% 
+  group_by(Sexo, NIVEL_EDUCATIVO) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = round(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO), 2),
+            IOP_mensual  = round(weighted.mean(P21, PONDIIO), 2))
+
+tabla2.19_graf1 <- tabla2.19 %>% 
+  select(-IOP_mensual) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(brecha = percent((Varones-Mujeres)/Varones, 1),
+         x = (Varones+Mujeres)/2)
+```
+
+Tal como se analizó en el caso anterior, si se observa la brecha de ingresos horarios por nivel educativo alcanzado, la misma se reduce significativamente, aunque sigue presente en algunas categorías.
+<br><br>
+
+<p style="color:#E5616E">__Brecha de ingresos horarios de la ocupación principal
+       por sexo y nivel educativo__</p>
+<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(tabla2.19_graf1, 
+       aes(x = Mujeres, xend = Varones, y = NIVEL_EDUCATIVO, 
+           group = NIVEL_EDUCATIVO, label = brecha)) +
+  geom_dumbbell(color= "#808080",
+                size_x = 3, size_xend = 3,
+                colour_x = colores[1],
+                colour_xend = colores[2]) +
+  geom_text(data = tabla2.19_graf1,
+            aes(x, NIVEL_EDUCATIVO, label = brecha), nudge_y = .2) +
+  labs(x="Ingreso Horario",
+       y=NULL, 
+       caption = fuente)+
+  scale_color_manual(values = colores)+
+  theme_minimal()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura13.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.19, tabla2.19_graf1)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+#Tabla para ingresos horarios por región  paso 1
+
+# Ocupades. Ingreso de la Ocupación Principal
+tabla2.20 <- base_individual %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Ocupadas/os")
+
+# Asalariades. Ingreso de la Ocupación Principal
+tabla2.21 <- base_individual %>% 
+  filter(ESTADO == 1,
+         CAT_OCUP == 3,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Asalariadas/os")
+
+# Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
+tabla2.22 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         CAT_OCUP == 3,
+         PP07H == 2,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(IOP_hr = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = IOP_hr) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+#Tabla para ingresos mensuales por región paso 2
+
+tabla2.23 <- bind_rows(tabla2.20, tabla2.21, tabla2.22) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = formato_pesos(Mujeres, 0),
+         Varones = formato_pesos(Varones, 0)) %>% 
+  select(Region, Población, Mujeres, Varones, Brecha)
+
+tabla2.23m <- tabla2.23 %>% 
+  select(c(1:3)) %>% 
+  spread(., Region, Mujeres)
+
+tabla2.23v <- tabla2.23 %>% 
+  select(c(1, 2, 4)) %>% 
+  spread(., Region, Varones)
+
+tabla2.23b <- tabla2.23 %>% 
+  select(c(1, 2, 5)) %>% 
+  spread(., Region, Brecha)
+
+tabla2.24 <- left_join(tabla2.23m, tabla2.23v, by = c("Población")) %>% 
+  select(Población, `Mujeres` = `Cuyo.x`, `Varones` = `Cuyo.y`,
+                     ` Mujeres` = `Gran Buenos Aires.x`, ` Varones` = `Gran Buenos Aires.y`,
+                    `  Mujeres` = `NEA.x`, `  Varones` = `NEA.y`,
+                   `   Mujeres` = `NOA.x`, `   Varones` = `NOA.y`,
+                  `    Mujeres` = `Pampeana.x`, `    Varones` = `Pampeana.y`,
+                 `     Mujeres` = `Patagonia.x`, `     Varones` = `Patagonia.y`) %>% 
+  left_join(., tabla2.23b, by = c("Población")) %>% 
+  mutate(`Brecha` = `Cuyo`,
+         ` Brecha` = `Gran Buenos Aires`,
+         `  Brecha` = `NEA`,
+         `   Brecha` = `NOA`,
+         `    Brecha` = `Pampeana`,
+         `     Brecha` = `Patagonia`) %>% 
+  select(Población,
+         `Mujeres`, `Varones`, `Brecha`,
+         ` Mujeres`, ` Varones`, ` Brecha`,
+         `  Mujeres`, `  Varones`, `  Brecha`,
+         `   Mujeres`, `   Varones`, `   Brecha`,
+         `    Mujeres`, `    Varones`, `    Brecha`,
+         `     Mujeres`, `     Varones`, `     Brecha`)
+
+```
+
+###### Cuyo
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__Cuyo. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1:4) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+
+
+```
+
+###### GBA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__GBA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1, 5:7) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### NEA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__NEA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1, 8:10) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### NOA
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__NOA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1, 11:13) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### Pampeana
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__Pampeana. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1, 14:16) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+###### Patagonia
+<br><br>
+
+<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
+<p style="color:#c9c9c9">__Patagonia. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla2.24 %>% 
+  select(1, 17:19) %>% 
+  kable(align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla2.20, tabla2.21, tabla2.22, tabla2.23, tabla2.23b, tabla2.23m, tabla2.23v, tabla2.24)
+```
+
+
+## Horas trabajadas
+
+---
+
+### Horas trabajadas
+<br><br>
+
+La idea de la "brecha" también puede aplicarse para comparar las horas que trabajan en promedio mujeres y varones en su ocupación principal en el mercado de trabajo, de forma remunerada. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante (aunque no toda) de la brecha de ingresos mensuales.
+<br><br>
+Cabe cuestionarse entonces respecto al por qué de la diferencia de horas trabajadas por mujeres y por varones. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿Son más "vagas"? ¿O en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los varones están exentos? Como veremos más adelante, los datos sugieren una estrecha relación con la distribución de las tareas domésticas hacia el interior de los hogares.
+<br><br>
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+##### Total nacional
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Ocupades
+tabla3.1 <- base_individual %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Ocupadas/os")
+
+# Asalariades
+tabla3.2 <- base_individual %>% 
+  filter(ESTADO == 1,
+         CAT_OCUP == 3,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Asalariadas/os")
+
+# Asal. sin descuento jubilatorio
+tabla3.3 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         CAT_OCUP == 3,
+         PP07H == 2,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.")
+
+tabla3.4 <- bind_rows(tabla3.1, tabla3.2, tabla3.3) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = (Mujeres),
+         Varones = (Varones)) %>% 
+  select(Población, Mujeres, Varones, Brecha)
+```
+
+<br>
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__`r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(tabla3.4, digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla3.1, tabla3.2, tabla3.3, tabla3.4)
+```
+
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+#Tabla para horas trabajadas por región paso 1
+
+# Ocupades
+tabla3.5 <- base_individual %>% 
+  filter(ESTADO == 1,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Ocupadas/os")
+
+# Asalariades
+tabla3.6 <- base_individual %>% 
+  filter(ESTADO == 1,
+         CAT_OCUP == 3,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Asalariadas/os")
+
+# Asal. sin descuento jubilatorio
+tabla3.7 <- base_individual %>% 
+  filter(ESTADO == 1, 
+         CAT_OCUP == 3,
+         PP07H == 2,
+         PP3E_TOT > 0, # Horas trabajadas positivas
+         PP3E_TOT != 999) %>% 
+  group_by(Sexo, Region) %>% 
+    mutate(PP3E_TOT = as.numeric(gsub(",", #cambio "." por "comas"," en los decimales para poder operar
+                                    ".",
+                                    PP3E_TOT,
+                                    fixed = TRUE))) %>% 
+  summarise(Horas = weighted.mean(PP3E_TOT, PONDERA)) %>% 
+  pivot_wider(., names_from = Sexo, values_from = Horas) %>% 
+  mutate(Población = "Asalariadas/os sin desc. jubil.")
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+#Tabla para horas trabajadas por región paso 2
+
+tabla3.8 <- bind_rows(tabla3.5, tabla3.6, tabla3.7) %>% 
+  mutate(Brecha = percent(((Varones-Mujeres)/Varones), 1),
+         Mujeres = (Mujeres),
+         Varones = (Varones)) %>% 
+  select(Region, Población, Mujeres, Varones, Brecha)
+
+tabla3.8m <- tabla3.8 %>% 
+  select(c(1:3)) %>% 
+  spread(., Region, Mujeres)
+
+tabla3.8v <- tabla3.8 %>%  
+  select(c(1, 2, 4)) %>% 
+  spread(., Region, Varones)
+
+tabla3.8b <- tabla3.8 %>%  
+  select(c(1, 2, 5)) %>% 
+  spread(., Region, Brecha)
+
+tabla3.9 <- left_join(tabla3.8m, tabla3.8v, by = c("Población")) %>% 
+  select(Población, `Mujeres` = `Cuyo.x`, `Varones` = `Cuyo.y`,
+                     ` Mujeres` = `Gran Buenos Aires.x`, ` Varones` = `Gran Buenos Aires.y`,
+                    `  Mujeres` = `NEA.x`, `  Varones` = `NEA.y`,
+                   `   Mujeres` = `NOA.x`, `   Varones` = `NOA.y`,
+                  `    Mujeres` = `Pampeana.x`, `    Varones` = `Pampeana.y`,
+                 `     Mujeres` = `Patagonia.x`, `     Varones` = `Patagonia.y`) %>% 
+  left_join(., tabla3.8b, by = c("Población")) %>% 
+  mutate(`Brecha` = `Cuyo`,
+         ` Brecha` = `Gran Buenos Aires`,
+         `  Brecha` = `NEA`,
+         `   Brecha` = `NOA`,
+         `    Brecha` = `Pampeana`,
+         `     Brecha` = `Patagonia`) %>% 
+  select(Población,
+         `Mujeres`, `Varones`, `Brecha`,
+         ` Mujeres`, ` Varones`, ` Brecha`,
+         `  Mujeres`, `  Varones`, `  Brecha`,
+         `   Mujeres`, `   Varones`, `   Brecha`,
+         `    Mujeres`, `    Varones`, `    Brecha`,
+         `     Mujeres`, `     Varones`, `     Brecha`)
+
+```
+
+##### Cuyo
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__Cuyo. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1:4) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+##### GBA
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__GBA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1, 5:7) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+##### NEA
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__NEA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1, 8:10) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+##### NOA
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__NOA. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1, 11:13) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+##### Pampeana
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__Pampeana. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1, 14:16) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+##### Patagonia
+<br><br>
+
+<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
+<p style="color:#c9c9c9">__Patagonia. `r date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla3.9 %>% 
+  select(1, 17:19) %>% 
+  kable(digits = 1, align = 'lccc') %>%
+  kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                #full_width = F, position = "left",
+                fixed_thead = T, font_size = 20) %>%
+  add_header_above(c("\n" = 1, "Horas semanales (media)" = 2, "\n" = 1),
+                   color = "white", background = colores[1]) %>% 
+  footnote(general = fuente,
+           general_title = "\n") %>% 
+  column_spec(1, width = "8cm") %>% 
+  column_spec(4, bold = TRUE, width = "4cm") %>% 
+  row_spec(0, bold = T, color = "white", background = colores[1])
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla3.5, tabla3.6, tabla3.7, tabla3.8, tabla3.8b, tabla3.8m, tabla3.8v, tabla3.9)
+```
+
+## Tareas del hogar
+
+---
+
+### Distribución de las tareas domésticas
+<br><br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla4.1_graf <- base_individual %>% 
+  left_join(., base_hogar %>% 
+              select(CODUSU, NRO_HOGAR, VII1_1, VII1_2), 
+            by = c("CODUSU", "NRO_HOGAR")) %>% 
+  mutate(proporcion = case_when(VII1_1 == COMPONENTE | VII1_2 == COMPONENTE ~ 1,
+                                TRUE ~ 0)) %>% 
+  select(Sexo, proporcion, PONDERA) %>% 
+  group_by(Sexo) %>% 
+  summarise(proporcion = sum(proporcion*PONDERA)) %>% 
+  mutate(proporcion = round(proporcion/sum(proporcion)*100, 0))
+
+inline_22 <- tabla4.1_graf %>% 
+  filter(Sexo == "Mujeres") %>% 
+  pull(proporcion)
+  
+inline_23 <- tabla4.1_graf %>% 
+  filter(Sexo == "Varones") %>% 
+  pull(proporcion)
+```
+
+El trabajo doméstico suele recaer más en las mujeres que en los varones. Es decir, es más probable que sean ellas las encargadas de realizar tareas de cuidado y reproducción para otros miembros de su hogar. En estos casos, el trabajo no se comercia en el mercado, se realiza entre quienes tienen un vínculo personal, y por lo tanto, no se remunera.
+
+Este reparto desigual de las tareas domésticas entre varones y mujeres podría asociarse a las desigualdades vistas anteriormente en la composición del mercado de trabajo (obstáculos en el acceso a cargos jerárquicos, precarización laboral, etc ) y responde a un conjunto de normas sociales y estereotipos de género que asignan mandatos diferenciales a varones y mujeres.
+
+Dicha feminización de las tareas de cuidado penaliza a estas últimas, haciendo que enfrenten extensas cargas de trabajo en el hogar y, por ende, imponiendo una fuerte restricción temporal y afectando el acceso al mercado de trabajo y a la trayectoria laboral. 
+
+<br><br>
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+##### Total nacional
+<br>
+
+A modo ilustrativo, se señala que: __del total de personas que realizan tareas domésticas, un `r inline_22`% son mujeres y un `r inline_23`% son varones.__ Esto sucede si tenemos en cuenta el total de los hogares, y seguramente la diferencia se agravaría si quitáramos los hogares unipersonales del conteo y/o incluyéramos a las trabajadoras de servicio doméstico.
+<br><br>
+
+<p style="color:#E5616E">__Personas que realizan las tareas domésticas del hogar según sexo__</p>
+<p style="color:#c9c9c9">__No incluye trabajadoras de servicio doméstico. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+## Prep data (nothing to change here)
+nrows <- 10
+df <- expand.grid(x = 1:nrows, y = 1:nrows)
+df$Sexo <- factor(rep(tabla4.1_graf$Sexo, tabla4.1_graf$proporcion))  
+## Plot
+ggplot(df, aes(x = x, y = y, fill = Sexo)) + 
+  geom_tile(color = "black", size = 0.5) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0), trans = 'reverse') +
+  scale_fill_manual(values = colores) +
+  labs(caption = fuente,
+       x = NULL,
+       y = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank())
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggsave("Graficos/Figura14.png", scale = 3)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura14.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla4.1_graf, df)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tabla4.1 <- base_individual %>% 
+  filter(PP04B1 == 1) %>% 
+  mutate(Total = sum(PONDERA)) %>% 
+  group_by(Sexo) %>% 
+  summarise(Proporcion = percent(sum(PONDERA)/unique(Total), 1))
+
+tabla4.2 <- base_individual %>% 
+  filter(ESTADO == 1,
+         Sexo == "Mujeres") %>% 
+  mutate(servicio.domestico = case_when(PP04B1 == 1 ~ "Sí",
+                                        PP04B1 != 1 ~ "No")) %>% 
+  group_by(servicio.domestico) %>% 
+  summarise(frecuencia = sum(PONDERA)) %>% 
+  mutate(proporcion = percent(frecuencia/sum(frecuencia), 1))
+
+inline_24 <- tabla4.1 %>% 
+  filter(Sexo == "Mujeres") %>% 
+  pull(Proporcion)
+
+inline_25 <- tabla4.2 %>% 
+  filter(servicio.domestico == "Sí") %>% 
+  pull(proporcion)
+```
+
+A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres, un __`r inline_24`.__ Asimismo, del total de mujeres ocupadas, un __`r inline_25`__ se dedica a esta ocupación, conformando entonces una salida laboral popular. Para más información, podés consultar el informe [Las trabajadoras de servicio doméstico en Argentina](http://economiafeminita.com/informe-servicio-domestico/).
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla4.1, tabla4.2)
+```
+
+##### Por región
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE, results='hide'}
+tabla4.3 <- base_individual %>% 
+  left_join(., base_hogar %>% 
+              select(CODUSU, NRO_HOGAR, VII1_1, VII1_2), 
+              by = c("CODUSU", "NRO_HOGAR")) %>% 
+  mutate(proporcion = case_when(VII1_1 == COMPONENTE | VII1_2 == COMPONENTE ~ 1,
+                                TRUE ~ 0)) %>% 
+  select(Sexo, proporcion, PONDERA, Region) %>% 
+  group_by(Region, Sexo) %>% 
+  summarise(proporcion = sum(proporcion*PONDERA)) %>% 
+  mutate(proporcion = percent(round(proporcion/sum(proporcion),3),1))
+```
+
+<p style="color:#E5616E">__Personas que realizan las tareas domésticas del hogar según sexo__</p>
+<p style="color:#c9c9c9">__Por región. `r date` . No incluye trabajadoras de servicio doméstico__</p>
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(tabla4.3, aes(x=Region, y=proporcion, fill=Sexo)) +
+    geom_bar(position="fill", stat="identity", width = 0.5) +
+  geom_text(
+  stat = "identity",
+  position = "stack", vjust =2, size = 3,
+  aes(Region, proporcion, label = proporcion))+
+    scale_fill_manual(values = colores) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank())
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggsave("Graficos/Figura14.png", scale = 3)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura14.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla4.3)
+```
+<br>
+
+## Distribución del ingreso
+
+---
+
+### Distribución del Ingreso
+<br><br>
+
+También podemos analizar las brechas de género en la distribución de los ingresos. 
+<br><br>
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+##### Distribución del ingreso
+<br>
+En primer lugar, se ordena por deciles a las personas según su ingreso per cápita familiar (el ingreso total del hogar dividido por la cantidad de personas que lo componen). Es decir, se forman diez grupos de individuos, de igual tamaño, ordenados según el nivel de ingresos que le corresponden por el hogar al que pertenece. En el siguiente gráfico se puede observar la proporción de mujeres y de varones que finalmente componen cada decil. 
+
+En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general). A su vez, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
+<br><br>
+
+<p style="color:#E5616E">__Composición según sexo de los deciles del ingreso per cápita familiar__</p>
+<p style="color:#c9c9c9">__Total de la población. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+tabla5.1_graf <-base_individual %>% 
+  select(DECCFR, IPCF, PONDIH, Sexo) %>% 
+  mutate(DECCFR = as.numeric(DECCFR)) %>% 
+  filter(DECCFR %in% c(1:10)) %>% 
+  group_by(DECCFR) %>% 
+  mutate(Pob = sum(PONDIH)) %>% 
+  group_by(DECCFR, Sexo) %>%
+  summarise(Prop = sum(PONDIH)/unique(Pob))
+
+ggplot(tabla5.1_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group = Sexo, label = percent(Prop, 0))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5) +
+  labs(y = '') +
+  scale_fill_manual(values = colores) +
+  scale_x_continuous("Decil del ingreso per cápita familiar", breaks = c(1:10)) +
+  labs(caption = fuente) +
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+             
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggsave("Graficos/Figura15.png", scale = 1)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura15.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla5.1_graf)
+```
+
+En segundo lugar, se separa a la población en deciles según el ingreso total individual. Es decir, se ordena en base al nivel de ingresos que percibe cada individuo, no el hogar (caso anterior). En este caso puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres y, en paralelo, los deciles de mayores ingresos se componen mayoritariamente por varones. 
+Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. ¿Cuál es la diferencia respecto del gráfico anterior?
+En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
+<br><br>
+
+<p style="color:#E5616E">__Composición según sexo de los deciles de ingresos totales individuales__</p>
+<p style="color:#c9c9c9">__Población perceptora de ingresos. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+tabla5.2_graf <-base_individual %>% 
+  select(DECINDR, P47T, PONDII, Sexo) %>% 
+  mutate(DECINDR = as.numeric(DECINDR)) %>% 
+  filter(DECINDR %in% c(1:10)) %>% 
+  group_by(DECINDR) %>% 
+  mutate(Pob = sum(PONDII)) %>% 
+  group_by(DECINDR, Sexo) %>%
+  summarise(Prop = sum(PONDII)/unique(Pob))
+
+ggplot(tabla5.2_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sexo, label = percent(Prop, 0))) +
+  geom_col(position = "dodge")+
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5)+
+  theme_minimal()+
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = '') +
+  scale_fill_manual(values = colores) +
+  scale_x_continuous("Decil de ingreso total individual", breaks =c(1:10)) +
+  labs(caption = fuente)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggsave("Graficos/Figura16.png", scale = 1)
+
+# Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
+#ggsave("Figura16.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
+```
+
+En el primer gráfico, las unidades de análisis son los hogares, sólo que luego se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de la se mantiene la diferencia: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
+Entonces, _la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones._ 
+      
+<br>
+
+##### Hogares monomarentales
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+tabla5.3_graf <- base_individual %>% 
+  filter(H15 ==1) %>% 
+  mutate(DECCFR = as.numeric(DECCFR)) %>% 
+  filter(DECCFR %in% c(1:10)) %>% 
+  filter(!is.na(DECCFR)) %>% 
+  mutate(conyuge = case_when(CH03 == 2 ~ 1,
+                             TRUE ~ 0)) %>% 
+  mutate(menores= case_when (CH03 == 3 ~ 1,
+                              TRUE ~ 0)) %>%
+  mutate(hijes = case_when(CH03 == 3 ~ 1,
+                           TRUE ~ 0)) %>%
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(conyugeH = sum(conyuge),
+         menoresH = sum(menores),
+         hijesH = sum(hijes),
+         Jefe = case_when(CH03 == 1 & CH04 == 1 ~ "Varones",
+                          CH03 == 1 & CH04 == 2 ~ "Mujeres")) %>%
+  filter(!is.na(Jefe)) %>% 
+  summarise(monoparental = case_when(menoresH != 0 & conyugeH == 0 & hijesH != 0 ~ 1 ,
+            TRUE ~0),
+            DECCFR = unique(DECCFR),
+            Jefe = Jefe,
+            PONDIH = unique(PONDIH)) %>% 
+  group_by(DECCFR, monoparental, Jefe) %>% 
+  summarise(casos = sum(PONDIH)) %>% 
+  group_by(DECCFR) %>% 
+  mutate(total = sum(casos),
+         Prop = (casos/total)*100) %>% 
+  filter(monoparental == 1) %>% 
+  summarise(DECCFR, 
+            Jefe,
+            Prop = Prop/100)
+
+inline_28 <- tabla5.3_graf %>% 
+  group_by(DECCFR) %>% 
+  summarise(Prop = sum(Prop)) %>% 
+  filter(DECCFR == 1) %>%
+  mutate(Prop = formato_porc(Prop*100)) %>% 
+  pull(Prop)
+  
+inline_29 <- tabla5.3_graf %>% 
+  group_by(DECCFR) %>% 
+  summarise(Prop = sum(Prop)) %>% 
+  filter(DECCFR == 10) %>%
+  mutate(Prop = formato_porc(Prop*100)) %>% 
+  pull(Prop)
+```
+
+Los hogares monomaparentales son aquellos con un solo jefe/a de hogar, sin cónyuge y con menores a cargo. Los llamamos monomarentales cuando la jefa de hogar es mujer, y monoparental cuando el jefe es varón. 
+
+En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los __que tienen jefatura femenina__. 
+
+Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomaparentales. En cambio, en el decimo este tipo de hogares son solo el `r inline_29`% del total de hogares. 
+
+Cuando se habla de feminización de la pobreza se puede referir a la mayor incidencia cuantitativa de la pobreza en las mujeres respecto a los varones (que se puede observar en la sección "Pobreza"); a la diferente manera en que varones y mujeres viven las situaciones de pobreza y la enfrentan; como a la vulnerabilidad a la pobreza de las mujeres jefas de hogar, o de los hogares comandados por mujeres (que se observa en el gráfico).
+<br><br>
+
+<p style="color:#E5616E">__Hogares monomarentales y monoparentales sobre el total de hogares por decil de ingreso total familiar__</p>
+<p style="color:#c9c9c9">__Total de la población. `r aglo_date`__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+ggplot(tabla5.3_graf, aes(x = as.numeric(DECCFR), Prop, fill = Jefe, group= Jefe, label = percent(Prop, 0))) +
+  geom_col(position = "dodge")+
+  geom_text(position = position_dodge(width = .9), vjust =-.1, size = 2.5)+
+  theme_minimal()+
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = '') +
+  scale_fill_manual(values = colores) +
+  scale_x_continuous("Decil de ingreso total familiar", breaks =c(1:10)) +
+  labs(caption = fuente)
+  
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+rm(tabla5.2_graf, tabla5.3_graf)
+```
+
+## Pobreza {#pobreza}
+
+---
+
+### Pobreza{.tabset .tabset-fade .tabset-pills}
+<br><br>
+
+La definición más frecuente utilizada para hablar de pobreza es la monetaria, la cual se centra en la capacidad (o no) que tengan los hogares para cubrir ciertas necesidades materiales a partir de sus ingresos. En Argentina, la forma de medición de la pobreza utilizada oficialmente se conoce como método indirecto o “línea”, el cual procura definir si los hogares cuentan con ingresos suficientes para cubrir una canasta de alimentos llamada Canasta Básica Alimentaria y/o otros consumos básicos no alimentarios que conforman una Canasta Básica Total. Estas canastas son a su vez comparadas con los ingresos totales del hogar, permitiendo clasificarlos como _no pobres_, _pobres_ o _indigentes_, extendiéndose esa caracterización a cada una de las personas que los integran.
+<br>
+
+---
+
+#### Total nacional
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+# Cargamos las CBA y CBT
+canastas <- get_poverty_lines(regional = TRUE)
+
+# condicional para que se muestre la seccion si hay canastas disponibles
+date_trimestre <- paste(base_individual$ANO4[1], base_individual$TRIMESTRE[1], sep = ".")
+show.pobreza <- nrow(canastas %>% filter(periodo==date_trimestre))>0
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  # Calculamos pobreza e indigencia por metodo tradicional
+  tabla6.1 <- base_individual %>% 
+    calculate_poverty(., basket = canastas, print_summary = FALSE) %>%
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0)
+  
+  # Calculamos pobreza e indigencia por ingreso total individual
+  tabla6.2 <- base_individual %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           P47T != -9) %>% #ITI
+    mutate(periodo = paste(ANO4, TRIMESTRE, sep = ".")) %>% 
+    left_join(eph::adulto_equivalente, by = c("CH04", "CH06")) %>% 
+    left_join(canastas, by = c(REGION = "codigo", "periodo")) %>% 
+    mutate(CBA_individual = CBA * adequi, 
+           CBT_individual = CBT * adequi, 
+           situacion = case_when(P47T < CBA_individual ~ "indigente", 
+                                 P47T >= CBA_individual & P47T < CBT_individual ~ "pobre", 
+                                 P47T >= CBT_individual ~ "no_pobre"), 
+           situacion = case_when(PONDII == 0 ~ NA_character_, TRUE ~ situacion)) %>% 
+    select(-adequi, -periodo, -CBA, -CBT) 
+  
+  
+  tabla6.1_graf <- tabla6.1 %>% 
+    group_by(Sexo) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(values_from = c(Pobreza, Indigencia),
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Pobreza_Mujeres-Pobreza_Varones, 1),
+           Brecha_Indigencia = round(Indigencia_Mujeres-Indigencia_Varones, 1),
+           Metodología = "Hogar")
+  
+  tabla6.2_graf <- tabla6.2 %>% 
+    group_by(Sexo) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(values_from = c(Pobreza, Indigencia),
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Pobreza_Mujeres-Pobreza_Varones, 1),
+           Brecha_Indigencia = round(Indigencia_Mujeres-Indigencia_Varones, 1),
+           # xp = Pobreza_Mujeres-(Brecha_Pobreza/2),
+           # xi = Indigencia_Mujeres-(Brecha_Indigencia/2),
+           Metodología = "Individual")
+  
+  tabla6.1_graf <- bind_rows(select(tabla6.1_graf, Metodología, Brecha_Pobreza, Brecha_Indigencia), 
+                             select(tabla6.2_graf, Metodología, Brecha_Pobreza, Brecha_Indigencia))
+  
+  inline_26 <- tabla6.1_graf %>% 
+    filter(Metodología == "Hogar") %>% 
+    pull(Brecha_Pobreza) %>% 
+    abs()
+  
+  inline_27 <- tabla6.1_graf %>% 
+    filter(Metodología == "Individual") %>% 
+    pull(Brecha_Pobreza) %>% 
+    abs()
+}
+  
+```
+
+`r if(show.pobreza) {paste0("Si en vez de caracterizar a las personas de acuerdo al hogar al que pertenecen, observamos la capacidad que tienen varones y mujeres para cubrir sus necesidades recurriendo a los ingresos que obtienen individualmente, veríamos que la incidencia de la pobreza afecta en mayor medida a las ocupadas que a los ocupados. <br><br>Las brechas están calculadas como ___Tasa de pobreza mujeres - Tasa de pobreza varones___, por lo que las diferencias que vemos están expresadas en puntos porcentuales, en este sentido si se observan valores negativos es porque existe una mayor incidencia de la pobreza en varones, mientras que si el valor de la brecha de positivo implica que son las mujeres las que se ven afectadas mayormente. <br><br>En el siguiente gráfico vemos que tomando al hogar como unidad de medida, los varones tienen un ",inline_26,"p.p. mayor de incidencia en la pobreza que las mujeres ocupadas. En cambio, si contrastamos las canastas calculadas para cada persona con sus ingresos totales individuales, la incidencia pasa a ser de un ",inline_27,"p.p. más para las mujeres. Esto pone en evidencia que la pobreza medida por ingresos afecta mayoritariamente a las mujeres si tuvieran que cubrir sus necesidades de forma individual. <br><br>")} else {"_Todavía no estan disponibles los datos de pobreza para este trimestre. Podes ver la última actualización de esta sección en el informe del trimestre anterior._"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Diferencias de tasas de pobreza e indigencia por sexo__</p><p style='color:#c9c9c9'>__Ocupadas/os. Metodología hogar e individual. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.1_graf %>% 
+    mutate(Brecha_Pobreza = color_tile("#E3E2E7", coloresb[2])((Brecha_Pobreza)),
+           Brecha_Indigencia = color_tile("#E6F1E9", coloresb[1])((Brecha_Indigencia))) %>% 
+    select('Metodología', 'Brecha Pobreza'=Brecha_Pobreza, 'Brecha Indigencia'=Brecha_Indigencia) %>% 
+    kable(escape = FALSE, digits = 1, align = 'lcc') %>% 
+    kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                  #full_width = F, position = "left",
+                  fixed_thead = T, font_size = 20) %>% 
+    footnote(general = fuente,
+             general_title = "\n") %>% 
+    column_spec(1, width = "5cm") %>% 
+    column_spec(2, color = "black", width = "3cm") %>% 
+    column_spec(3, color = "black", width = "3cm") %>% 
+    row_spec(0, bold = T, color = "white", background = coloresb[2])
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.1_graf, tabla6.2_graf, canastas)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.3_graf <- organize_caes(tabla6.1) %>% 
+    mutate(Rama = caes_eph_label) %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           !is.na(Rama)) %>%  # Ingresos positivos
+    filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud",
+                       "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+                       "Construccion")) %>% 
+    mutate(Rama = as.character(Rama),
+           Rama = case_when(
+             Rama == "Servicios sociales y de salud" ~ "Serv. sociales y de salud",
+             Rama == "Transporte, almacenamiento y comunicaciones" ~ "Transporte, almacen. y comu.",
+             TRUE ~ Rama
+           )) %>% 
+    group_by(Rama) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1)) %>% 
+    ungroup() %>% 
+    pivot_longer(cols = c(Pobreza, Indigencia),
+                 names_to = "Situación",
+                 values_to = "Tasa") 
+}
+```
+
+`r if(show.pobreza) {"<br><br> A continuación vemos las tasas de pobreza e indigencia por rama de la ocupación en la que se encuentran las ocupadas y ocupados de acuerdo a la medición por hogar. Podemos afirmar que las trabajadoras del servicio doméstico están sobrerrepresentadas en los hogares en situación de mayor vulnerabilidad, superando incluso las tasas a nivel general calculadas por INDEC. <br><br>"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Tasas de pobreza e indigencia__</p><p style='color:#c9c9c9'>__Según ramas de la ocupación. Medición hogar. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  ggplot(tabla6.3_graf, aes(x = Tasa, y= Rama %>% reorder(Tasa), fill = Situación, 
+                            label = paste0(Tasa, "%"))) +
+    geom_col(position = "dodge") +
+    geom_text(position = position_dodge(width = .9), hjust =-.1, size = 2.5) +
+    scale_fill_manual(values = c(coloresb[2], coloresb[1]), breaks = c("Pobreza", "Indigencia")) +
+    scale_x_continuous(limits = c(0, 63)) +
+    labs(caption = fuente) +
+    theme_minimal() +
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          plot.title=element_text(size=10),
+          plot.subtitle=element_text(size=9),
+          legend.title = element_text(size=8),
+          legend.text = element_text(size=7),
+          legend.key.size = unit(0.5, 'cm'))
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.3_graf)
+```
+
+#### Por región
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  tabla6.4_graf <- tabla6.1 %>% 
+    group_by(Sexo, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(id_cols = Region,
+                values_from = Pobreza,
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Mujeres-Varones, 1),
+           # xp = Mujeres-(Brecha_Pobreza/2),
+           Metodología = "Hogar")
+  # arrange(desc(Brecha_Pobreza))
+  
+  tabla6.5_graf <- tabla6.2 %>% 
+    group_by(Sexo, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(id_cols = Region,
+                values_from = Pobreza,
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Mujeres-Varones, 1),
+           # xp = Mujeres-(Brecha_Pobreza/2),
+           Metodología = "Individual") 
+  # arrange(desc(Brecha_Pobreza))
+  
+  tabla6.4_graf <- bind_rows(select(tabla6.4_graf, Metodología, Region, Brecha_Pobreza), 
+                             select(tabla6.5_graf, Metodología, Region, Brecha_Pobreza)) %>% 
+    pivot_wider(id_cols = Metodología,
+                names_from = Region,
+                values_from = Brecha_Pobreza)
+}
+```
+
+`r if(show.pobreza) {"Si en vez de caracterizar a las personas de acuerdo al hogar al que pertenecen, observamos la capacidad que tienen varones y mujeres para cubrir sus necesidades recurriendo a los ingresos que obtienen individualmente, veríamos que la incidencia de la pobreza afecta en mayor medida a las ocupadas que a los ocupados. <br><br>Las brechas están calculadas como ___Tasa de pobreza mujeres - Tasa de pobreza varones___, por lo que las diferencias que vemos están expresadas en puntos porcentuales, en este sentido si se observan valores negativos es porque existe una mayor incidencia de la pobreza en varones, mientras que si el valor de la brecha de positivo implica que son las mujeres las que se ven afectadas mayormente.<br><br>"} else {"_Todavía no estan disponibles los datos de pobreza para este trimestre. Podes ver la última actualización de esta sección en el informe del trimestre anterior._"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Diferencias de tasas de pobreza por sexo y región__</p><p style='color:#c9c9c9'>__Ocupadas/os. Metodología hogar e individual. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.4_graf %>% 
+    rename(GBA='Gran Buenos Aires') %>% 
+    mutate(Cuyo = color_tile("#E3E2E7", coloresb[2])((Cuyo)),
+           GBA = color_tile("#E3E2E7", coloresb[2])((GBA)),
+           NEA = color_tile("#E3E2E7", coloresb[2])((NEA)),
+           NOA = color_tile("#E3E2E7", coloresb[2])((NOA)),
+           Pampeana = color_tile("#E3E2E7", coloresb[2])((Pampeana)),
+           Patagonia = color_tile("#E3E2E7", coloresb[2])((Patagonia))) %>% 
+    kable(escape = FALSE, digits = 1, align = 'lcccccc') %>% 
+    kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                  #full_width = F, position = "left",
+                  fixed_thead = T, font_size = 20) %>% 
+    footnote(general = fuente,
+             general_title = "\n") %>% 
+    column_spec(1, width = "5cm") %>% 
+    column_spec(2, color = "black", width = "3cm") %>% 
+    column_spec(3, color = "black", width = "3cm") %>% 
+    column_spec(4, color = "black", width = "3cm") %>% 
+    column_spec(5, color = "black", width = "3cm") %>% 
+    column_spec(6, color = "black", width = "3cm") %>% 
+    column_spec(7, color = "black", width = "3cm") %>% 
+    row_spec(0, bold = T, color = "white", background = coloresb[2])
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.4_graf, tabla6.5_graf)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  tabla6.6_graf <- organize_caes(tabla6.1) %>% 
+    mutate(Rama = caes_eph_label) %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           !is.na(Rama)) %>%  # Ingresos positivos
+    filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud",
+                       "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+                       "Construccion")) %>% 
+    mutate(Rama = as.character(Rama),
+           Rama = case_when(
+             Rama == "Servicios sociales y de salud" ~ "Serv. sociales y de salud",
+             Rama == "Transporte, almacenamiento y comunicaciones" ~ "Transporte, almacen. y comu.",
+             TRUE ~ Rama
+           )) %>% 
+    group_by(Rama, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1)) %>% 
+    ungroup() %>% 
+    pivot_longer(cols = c(Pobreza, Indigencia),
+                 names_to = "Situación",
+                 values_to = "Tasa") %>% 
+    filter(Situación=="Pobreza")
+}
+```
+
+`r if(show.pobreza) {"<br><br> A continuación vemos las tasas de pobreza e indigencia por región y rama de la ocupación en la que se encuentran las ocupadas y ocupados de acuerdo a la medición por hogar. Podemos afirmar que las trabajadoras del servicio doméstico están sobrerrepresentadas en los hogares en situación de mayor vulnerabilidad indistintamente de la región en la que se encuentren, superando incluso las tasas a nivel general calculadas por INDEC. <br><br>"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Proporción de personas que integran hogares en situación de pobreza__</p><p style='color:#c9c9c9'>__Según región y ramas de la ocupación. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  ggplot(tabla6.6_graf, aes(Region, Rama, fill= Tasa)) + 
+    geom_tile() +
+    geom_text(aes(label = Tasa), size=4) + 
+    scale_fill_gradient(low = "#F8F5EE",
+                        # low = coloresb[1],
+                        high = coloresb[2]) +
+    scale_x_discrete(labels = c("Cuyo", "GBA", "NEA", "NOA", "Pampeana", "Patagonia"),
+                     limits = c("Cuyo", "Gran Buenos Aires", "NEA", "NOA", "Pampeana", "Patagonia")) +
+    theme_minimal() +
+    labs(caption = fuente) +
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          plot.subtitle=element_text(size=9),
+          legend.title=element_text(size=10))
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.6_graf, tabla6.1, tabla6.2)
+```
+
+## Glosario
+
+---
+
+### Glosario {.tabset .tabset-fade .tabset-pills}
+<br><br>
+En esta sección definimos conceptos que facilitan la lectura del informe.  
+<br>
+
+__Brecha de ingresos:__ El ingreso total contempla ingresos laborales y no laborales, como rentas o subsidios. Este indicador calcula la diferencia entre los ingresos individuales promedios de los varones y las mujeres, expresada en términos del ingreso de los varones (generalmente el más alto). Es decir, que puede leerse como “las mujeres perciben ingresos que, en promedio, son un …% menores que los de los varones”. En Argentina esta brecha es estructural, aunque sensible a los ciclos económicos.
+<br>
+
+__Brecha de la ocupación principal:__ Este indicador es la brecha de ingresos derivada de la ocupación principal, que calcula la diferencia entre los ingresos promedios percibidos por el empleo principal de los varones y las mujeres, expresada en términos del promedio percibido por los varones (generalmente el más alto). Excluye los ingresos no laborales, como rentas o subsidios.  Puede leerse como “las mujeres perciben ingresos derivados de su ocupación principal que, en promedio, son aún …% menores que los de los varones”. El fenómeno de que sea menor para las mujeres es algo que se repite en todo el mundo y se debe al tipo de inserción laboral que tienen las personas cuyo género condiciona la jerarquía del puesto donde trabajan, la rama de la ocupación, la cantidad de tiempo que destinan al mercado remunerado, cuánta responsabilidad tienen sobre las tareas domésticas, entre otras. Si bien existe la discriminación lisa y llana, la presencia de una brecha salarial mensual no implica necesariamente una diferencia salarial por hora.
+<br>
+
+__Calificación:__ Refiere a las competencias que requiere el puesto de trabajo. 
+<br>
+
+__Categoría de jefes/jefas:__ La categoría de jefes/jefas refiere a ocupaciones cuyo fin es transmitir y aplicar decisiones generales directivas , así como organizar, supervisar y controlar procesos y personas comprometidas en su ejecución. Junto con la de Dirección constituyen las categorías jerárquicas más altas en la estructura organizativa de los establecimientos, que nos permiten ver el acceso de varones y mujeres a cargos jerárquicos. 
+<br>
+
+__Desocupado:__ es el estado de una persona que está inserta en el mercado laboral, buscando un empleo aunque no lo consiga. 
+<br>
+
+__Estadísticas binarias:__ Hace referencia a que la variable “sexo” sólo adopta el valor de “masculino” o “femenino” en la base de datos utilizada, reforzando el paradigma heteronormativo y el binarismo de género. Sin disponer de una variable que aluda a la identidad de género, muchas identidades quedan invisibilizadas y con ellas, sus situaciones y necesidades específicas.
+<br>
+
+__Falta de descuento jubilatorio:__ Muestra el estado de una relación laboral asalariada que no cumple con la obligación de aportes. La falta de descuento jubilatorio suele ser un indicador de la falta de registro de la relación. Si bien es un fenómeno estructural en Argentina, la incidencia de esta problemática es mayor entre las mujeres asalariadas.
+<br>
+
+__Feminización de la pobreza:__ Refiere al conjunto de procesos de empobrecimiento que afectan en mayor medida a las mujeres y que se manifiestan en una mayor proporción de mujeres entre las personas cuyos ingresos no llegan a cubrir la canasta básica.
+<br>
+
+__Nivel educativo:__ El nivel educativo alcanzado es una forma de ver cuánto dedicaron al estudio quienes trabajan.
+<br>
+
+__Ocupado/a/e:__ Es el estado de una persona que está inserta en el mercado laboral con un empleo, sea formal, informal, de jornada reducida, asalariado, por cuenta propia, de jefatura, entre otros. 
+<br>
+
+__Ocupados/as demandantes:__  las personas que ya tienen un empleo pero buscan activamente otro o trabajar más horas.
+<br>
+
+__Paredes de cristal / segregación horizontal:__ Es una forma de visibilizar la distribución asimétrica de las mujeres en ramas de la ocupación, que además de reproducir estereotipos de género representa un problema de ingresos, ya que las ramas feminizadas tienen sueldos promedios más bajos y mayores niveles de informalidad que los masculinizados.
+<br>
+
+__Población de 14 años y más:__ Es la población total de este informe, que incluye todas las personas que hayan alcanzado el umbral de los 14 años, el límite inferior de lo que se considera la “edad activa”.
+<br>
+
+__Población Económicamente Activa (PEA):__  La Población Económicamente Activa (PEA) incluye a las personas que ofrecen su trabajo en el mercado, sea que lo consiguen (ocupadas/os) o no (desocupadas/os). Al considerar únicamente el mercado laboral no contempla la condición de actividad expandida a tareas domésticas y de cuidados no remunerados. 
+<br>
+
+__Ramas de la ocupación:__ Es una clasificación de las actividades económicas que realiza el establecimiento dónde trabajan las personas. La rama de actividad económica de una persona no depende de las tareas específicas de su trabajo, sino de las características de la unidad económica en la que trabaja. 
+<br>
+
+__Regiones:__ En este informe se identifican 6 regiones: Gran Buenos Aires, Noroeste Argentino (NOA), Noreste Argentino (NEA), Cuyo, Pampeana y Patagonia. Debido a la disponibilidad de la muestra, algunas desagregaciones pierden validez y por esa razón se omite su publicación. En otros casos, las aperturas por región devuelven resultados muy similares a los del total nacional, y por esa razón no resulta significativa su publicación. Obtener datos específicos sobre cada una de las regiones no solo posibilita evidenciar las particularidades regionales de las asimetrías recorridas a lo largo del informe, sino que también permiten realizar comparaciones. 
+<br>
+
+__Subocupados/as:__ Todas las personas que trabajan menos de 35 horas semanales, están disponibles para trabajar más horas y desean aumentar la cantidad de horas que trabajan.
+<br>
+
+__Subocupados/as demandantes:__ Proporción de personas de la población económicamente activa que tienen un empleo de menos de 35 horas semanales, están disponibles para trabajar más horas y se encuentran buscando empleo
+<br>
+
+__Subocupados/as no demandantes:__  Las personas que trabajan menos de 35 horas semanales, no están buscando activamente otro trabajo aunque desearían trabajar más horas pero por causas involuntarias no lo hacen. 
+<br>
+
+__Tasa de actividad:__ Se calcula como la proporción que representa la Población Económicamente Activa entre la población total, ya sea de mujeres o de varones. Cabe destacar que esta definición de "Actividad" no contempla actividades como cocinar, limpiar, cuidar, etc. que son realizadas principalmente por mujeres fuera del mercado. 
+<br>
+
+__Tasa de empleo:__ La tasa muestra la proporción de quienes están en el mercado laboral como ocupades en relación a la población de mujeres y de varones, es decir, se recorta de la tasa de actividad la proporción de quienes están desocupadas.
+<br>
+
+__Tasa de desocupación:__ a tasa muestra la proporción de personas que están buscando empleo pero no lo consiguen, entre la población económicamente activa . Esta situación es más recurrente entre mujeres.
+<br>
+
+__Tasa de subocupación:__ La tasa relaciona la cantidad de personas en situación de subocupación horaria respecto al total de la PEA. Estos empleos dan mayor flexibilidad para el manejo de las responsabilidades y son las mujeres las que presentan tasas de subocupación más altas, muchas veces debido a la carga de trabajo de cuidados que demanda muchas horas que no se llevan al mercado de trabajo. Las trabajadoras tienen mayores complicaciones al momento de conseguir un trabajo de tiempo completo. 
+<br>
+
+__Techo de cristal / segregación vertical:__ Alude a los obstáculos que enfrentan las mujeres para ascender a cargos jerárquicos y puestos de decisión. La metáfora del cristal muestra que los impedimentos no son visibles ya que no hay normas explícitas que busquen segregar a las trabajadoras, pero que las barreras existen incluso cuando están igual o mejor calificadas que sus compañeros varones.
+<br>
+
+__Trabajo doméstico y de cuidados:__ También conocido como “trabajo reproductivo” es aquel que es imprescindible para mantener la vida de las personas. Se manifiesta en tareas como cocinar, lavar, ordenar, atender las necesidades de lxs miembrxs de un hogar y de la familia en general. Todas las personas necesitamos cuidados a lo largo de nuestras vidas y la concreción de los mismos suele depender en mayor medida de las identidades feminizadas.
+<br>
+
+## Metodología
+
+---
+
+### Aclaraciones metodológicas
+<br><br>
+Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
+<br><br>
+Respecto del impacto de la pandemia por COVID-19, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados.
+<br><br>
+En cuanto a la medición de pobreza por hogar, se utiliza la metodología de INDEC para el cálculo oficial, disponible [aquí](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf). Además proponemos una metodología diferente que define la situación de pobreza de las personas a nivel individual. Para esto construimos Canastas Básicas Totales Individuales que resultan de multiplicar la Canasta Básica Total con las unidades de referencia que le corresponden a cada ocupade, según la tabla de equivalencias de INDEC, para luego compararla con el Ingreso Total Individual.
+<br><br>
+El documento se realizó utilizando el lenguaje de programación R. Para les curioses, todo el código se encuentra disponible para su descarga^1^. 
+
+---
+
+^1^ Presionando en_  Code > Download Rmd _se accede a la descarga de la sintaxis completa de este informe.
+<br><br>
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#FIN DEL INFORME
+```
