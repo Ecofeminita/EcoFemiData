@@ -51,6 +51,17 @@ datos <- read.csv("Fuentes/precios-gestion-menstrual-2022-09-07.csv",
 regiones <- openxlsx::read.xlsx("Fuentes/provincias_regiones.xlsx")
 ```
 
+Agrego categoría de "copa" (yay!) y la filtro por el momento. 
+
+```{r}
+datos <- datos %>% mutate(Categoría = case_when(
+  str_detect(Nombre, "Copa") == TRUE ~ "copa",
+  TRUE ~ Categoría
+))
+
+datos <- datos %>% filter(Categoría != "copa")
+```
+
 Vista previa del dataset:
 
 ```{r message=FALSE, warning=FALSE}
@@ -67,7 +78,7 @@ Definimos una pequeña función: `cant` nos va a devolver un número en formato 
 
 ```{r message=FALSE, warning=FALSE}
 cant <- function(x){
-  format(x, digits = 0, big.mark = ".", decimal.mark = ",")}
+  format(x, digits = NULL, big.mark = ".", decimal.mark = ",")}
 ```
 
 Guardamos el valor de la fecha a la que corresponde el ejercicio.
@@ -102,9 +113,16 @@ categ <- datos %>%
   count(Categoría) %>% 
   arrange(-n) %>% 
   mutate(porcentaje = percent(n/sum(n))) 
+
+categ
 ```
 
-Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. O sea, no podemos decir que se consumen en un 74% toallitas y en 26% tampones. Lo que sí sabemos es que tenemos una muestra muy grande de precios para ambas categorías, aunque debemos tener en cuenta que la página de Precios Claros puede tener un sesgo por no incluir los comercios tradicionales sino únicamente grandes cadenas.
+```{r include=FALSE}
+perc_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(porcentaje)
+perc_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(porcentaje)
+```
+
+Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. O sea, no podemos decir que se consumen en un `r perc_toallitas` toallitas y en `r perc_tampones` tampones. Lo que sí sabemos es que tenemos una muestra muy grande de precios para ambas categorías, aunque debemos tener en cuenta que la página de Precios Claros puede tener un sesgo por no incluir los comercios tradicionales sino únicamente grandes cadenas.
 
 ### Marcas
 
@@ -158,6 +176,8 @@ r <- datos %>%
          acumulado = cumsum(porcentaje),
          porcentaje = percent(porcentaje),
          acumulado = percent(acumulado))
+
+r
 ```
 
 En términos regionales seguimos viendo esa asimetría en la disponibilidad de datos, pero hay que tener en cuenta que efectivamente hay diferencias de escala de mercados en términos regionales.
