@@ -1,11 +1,15 @@
 ---
-title: "Cálculo: ¿Cuánto cuesta menstruar?"
-subtitle: "Datos de Marzo 2022"
-author: "Ecofeminita / #MenstruAcción / Ecofemidata"
+title: 'Cálculo: ¿Cuánto cuesta menstruar?'
+author: 'Ecofeminita / #MenstruAcción / Ecofemidata'
+subtitle: Datos de Septiembre 2022
 output:
+  html_document:
+    toc: no
+    toc_depth: '5'
+    df_print: paged
   html_notebook:
-    toc: false
-    toc_float: true
+    toc: no
+    toc_float: yes
     toc_depth: 5
 ---
 
@@ -20,10 +24,10 @@ output:
 
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 13 de Marzo de 2022 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, y Marzo y Septiembre de 2021. En esta instancia, se obtuvieron 32.510 observaciones en total.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 7 de Septiembre de 2022 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, Marzo y Septiembre de 2021, y Marzo de 2022. En esta instancia, se obtuvieron 38.939 observaciones de tampones y toallitas en total.
 
-+ Respecto de los tampones: Se obtuvieron 8.368 precios.
-+ Respecto de las toallitas: Se obtuvieron 24.142 precios.
++ Respecto de los tampones: Se obtuvieron 6.257 precios.
++ Respecto de las toallitas: Se obtuvieron 32.682 precios.
 
 En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
@@ -38,12 +42,12 @@ library(DT)
 ```
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-datos <- readRDS("Fuentes/precios-gestion-menstrual-2022-03-13-limpio.RDS")
+datos <- readRDS("Fuentes/precios-gestion-menstrual-2022-09-16-limpio.RDS")
 
 head(datos)
 ```
 
-A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2021, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`. Obtenemos también una vista previa de la estructura de estos datos.
+A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2022, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`. Obtenemos también una vista previa de la estructura de estos datos.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 menstruan <- read_excel("Fuentes/poblaciones.xls") %>% 
@@ -187,7 +191,7 @@ tampones %>%
 
 ## Aumentos
 
-Como esta es la séptima vez que realizamos este ejercicio de estimación semestral, podemos ver cómo evolucionaron los precios de toallitas y tampones en el último año. También, con los datos del Índice de Precios al Consumidor (IPC - INDEC), se puede realizar una comparación entre la evolución de estos productos de gestión menstrual y el nivel general de precios, el rubro alimentos y bebidas no alcohólicas, y el de Salud. Ambas series se levantan desde archivos de extensión .xlsx en las tablas `serie_inflacion` y `precios_pgm`.
+Como esta es la octava vez que realizamos este ejercicio de estimación semestral, podemos ver cómo evolucionaron los precios de toallitas y tampones en el último año. También, con los datos del Índice de Precios al Consumidor (IPC - INDEC), se puede realizar una comparación entre la evolución de estos productos de gestión menstrual y el nivel general de precios, el rubro alimentos y bebidas no alcohólicas, y el de Salud. Ambas series se levantan desde archivos de extensión .xlsx en las tablas `serie_inflacion` y `precios_pgm`.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 serie_inflacion <- read_excel("Fuentes/serie_inflacion.xlsx")
@@ -263,13 +267,13 @@ ggplot(base100bis, aes(x = Mes, y = Indice, group = Categoria, color = Categoria
   theme(legend.position = "top",
         text = element_text(size = 12)) +
   scale_color_manual(values = colorcitos) +
-  expand_limits(x = as.POSIXct(c("2019-03-01", "2020-11-01"))) + 
+  expand_limits(x = as.POSIXct(c("2019-03-01", "2022-09-01"))) + 
   labs(title = "Inflación de Toallitas y Tampones vs. Salud y Nivel General del IPC-INDEC",
-       subtitle = "Marzo 2019 - Marzo 2022", #<------------------------------------------------- CAMBIAR
+       subtitle = "Marzo 2019 - Septiembre 2022", #<------------------------------------------------- CAMBIAR
        x = "",
        y = "Indice de precios",
        caption = "Fuente: #MenstruAcción y #EcoFemiData (EcoFeminita)") +
-  scale_x_datetime(breaks = seq(as.POSIXct('2019-03-01'), by='6 months', length = 7), #<------------------------ CAMBIAR
-                   labels = c("03-2019", "09-2019", "03-2020", "09-2020", "03-2021", "09-2021", "03-2022")) #<------------- CAMBIAR
+  scale_x_datetime(breaks = seq(as.POSIXct('2019-03-01'), by='6 months', length = 8), #<------------------------ CAMBIAR
+                   labels = c("03-2019", "09-2019", "03-2020", "09-2020", "03-2021", "09-2021", "03-2022", "09-2022")) #<------------- CAMBIAR
 ```
 

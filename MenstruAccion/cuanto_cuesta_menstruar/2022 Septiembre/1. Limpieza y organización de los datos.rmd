@@ -1,6 +1,6 @@
 ---
 title: 'Limpieza y organización de los datos del #MenstruScrapper'
-author: "Datos de Marzo 2022"
+author: "Datos de Septiembre 2022"
 output:
   html_document:
     toc: no
@@ -22,10 +22,10 @@ output:
 
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 7 de Septiembre de 2022 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, y Marzo y Septiembre de 2021. En esta instancia, se obtuvieron 40.826 observaciones en total.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 7 de Septiembre de 2022 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, Marzo y Septiembre de 2021 y Marzo de 2022. En esta instancia, se obtuvieron 38.939 observaciones de tampones y toallitas en total.
 
-+ Respecto de los tampones: Se obtuvieron 8.368 precios.
-+ Respecto de las toallitas: Se obtuvieron 24.142 precios.
++ Respecto de los tampones: Se obtuvieron 6.257 precios.
++ Respecto de las toallitas: Se obtuvieron 32.682 precios.
 
 En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
@@ -51,7 +51,7 @@ datos <- read.csv("Fuentes/precios-gestion-menstrual-2022-09-07.csv",
 regiones <- openxlsx::read.xlsx("Fuentes/provincias_regiones.xlsx")
 ```
 
-Agrego categoría de "copa" (yay!) y la filtro por el momento. 
+En esta ocasión, por primera vez se encontró entre los registros obtenidos algunos con la palabra "copa" dentro de la descripción, que se encontraban camuflados dentro del categoría tampón. Para poder continuar correctamente con el preprocesamiento, creamos la categoría "copa", para poder distinguir realmente estos productos de las toallitas y los tampones, luego la filtramos por el momento. En total hay 40.826 observaciones en total, de las cuales filtramos 1.887 correspondientes a la nueva categoría "copa", arribando así a 38.939 observaciones. Sobre esta muestra trabajaremos a lo largo del resto del documento.
 
 ```{r}
 datos <- datos %>% mutate(Categoría = case_when(
@@ -103,7 +103,6 @@ names(datos)
 
 cant(nrow(datos))
 ```
-
 A continuación, exploraremos el comportamiento de las diferentes variables. Con `count()` pedimos un conteo de observaciones para cada valor que toma la variable aclarada, con `arrange()` ordenamos los datos de forma decreciente según el conteo anterior, y en `mutate()` se definen nuevas variables para nuestro cuadro. Por ejemplo, el porcentaje es la cantidad de cada categoría sobre la suma de las mismas, expresada en formato de porcentaje.
 
 ### Categorías
@@ -136,7 +135,7 @@ datos %>%
          acumulado = percent(acumulado))
 ```
 
-Contamos con 27 marcas de productos, aunque con 12 de ellas se completa el 90% del total de productos. Las primeras 3 marcas concentran más de la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de una "concentración de mercado".
+Contamos con 25 marcas de productos, aunque con 11 de ellas se completa el 90% del total de productos. Las primeras 3 marcas concentran más de la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de una "concentración de mercado".
 
 ### Presentación
 
@@ -150,12 +149,12 @@ datos %>%
          acumulado = percent(acumulado))
 ```
 
-Casi el 90% de los productos vienen en paquetes de 8 o 16 unidades. Luego seguiremos analizando esta variable en particular, porque nos interesa para calcular los precios unitarios de los productos, y hay valores (como "1.0 un") que son raros y, en caso de tratarse de errores, podrían arrastrar problemas hacia el cálculo de esos precios.
+El 80% de los productos vienen en paquetes de 8 o 16 unidades. Luego seguiremos analizando esta variable en particular, porque nos interesa para calcular los precios unitarios de los productos, y hay valores (como "1.0 un") que son raros y, en caso de tratarse de errores, podrían arrastrar problemas hacia el cálculo de esos precios.
 
 ### Provincias
 
 ```{r message=FALSE, warning=FALSE}
-datos %>% 
+prov <- datos %>% 
   count(Provincia) %>% 
   arrange(-n) %>% 
   mutate(porcentaje = n/sum(n),
@@ -164,7 +163,7 @@ datos %>%
          acumulado = percent(acumulado))
 ```
 
-Si bien más de la mitad de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, 50 observaciones en Catamarca) se trata de una cantidad pasible de proveernos estimaciones útiles.
+Si bien dos tercios de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, 64 observaciones en Formosa o Catamarca) se trata de una cantidad pasible de proveernos estimaciones útiles.
 
 ### Regiones
 
@@ -298,7 +297,7 @@ comparo_unidades <- datos %>%
 
 comparo_unidades
 ```
-En particular, hay casos que fueron informados como de 1 o 16 unidades y en realidad eran de 8 (tiene sentido que este último sea el verdadero valor), casos que fueron informados como de 1 o 27 unidades y en realidad eran de 16, o casos que fueron informados como de 1 unidad y en realidad eran de 30, etc. Como puede verse a continuación, hay en total 743 casos en que la información no coincide, lo que representa el 2.3% de la información (empeoró considerablemente respecto del último relevamiento), y sólo 12 casos en que no había información sobre la cantidad de unidades en la descripción del artículo.
+En particular, hay casos que fueron informados como de 1 o 16 unidades y en realidad eran de 8 (tiene sentido que este último sea el verdadero valor), casos que fueron informados como de 15 o 27 unidades y en realidad eran de 16, o casos que fueron informados como de 54 unidade y en realidad eran de 8, etc. Como puede verse a continuación, hay en total 743 casos en que la información no coincide, lo que representa el 0.34% de la información (mejoró considerablemente respecto del último relevamiento), y sólo 3 casos en que no había información sobre la cantidad de unidades en la descripción del artículo.
 
 ```{r message=FALSE, warning=FALSE}
 datos %>% 
@@ -307,7 +306,7 @@ datos %>%
   mutate(porc = percent(n/sum(n)))
 ```
 
-Vale la pena destacar que estos errores corresponden a todas las regiones, mayormente concentrados en GBA, y en 5 marcas diferentes.
+Vale la pena destacar que estos errores corresponden a las regiones Gran Buenos Aires, Noroeste, Pampeana y Patagonia, mayormente concentrados en GBA, y en 4 marcas diferentes.
 
 ```{r message=FALSE, warning=FALSE}
 # Distribucion de los datos que queremos sacar entre las regiones
@@ -351,19 +350,20 @@ kable(verif) %>%
                 full_width = F)
 ```
 
-Esta vez, dado que el porcentaje de aquellos casos en que no coinciden `unidades` y `unidades_regex`, junto a los casos en que `unidades_regex` figura como `NA`, alcanzan solamente un 2.3%, se prescindirá de ellos. 
+Esta vez, dado que el porcentaje de aquellos casos en que no coinciden `unidades` y `unidades_regex`, junto a los casos en que `unidades_regex` figura como `NA`, alcanzan solamente un 0.34%, se prescindirá de ellos. 
 
 ```{r message=FALSE, warning=FALSE}
 datos <- datos %>% 
   filter(igual == TRUE)
 ```
 
-__Se descartan 743 casos__ y ahora contamos con `r cant(nrow(datos))` observaciones. También podemos deshacernos de variables que no vamos a utilizar en el ejercicio de estimación.
+__Se descartan 1169 casos__ y ahora contamos con `r cant(nrow(datos))` observaciones. También podemos deshacernos de variables que no vamos a utilizar en el ejercicio de estimación.
 
 ```{r message=FALSE, warning=FALSE}
 # Descarto las variables que no voy a usar
 datos <- datos %>% 
   select(-Presentación, -unidades_regex, -igual)
+
 ```
         
 ## Cálculo del precio por unidad
@@ -484,5 +484,5 @@ En esta ocasión, no hay precios iguales a cero, con lo que se prescinde de dich
 Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
 
 ```{r echo=TRUE}
-saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2022-03-13-limpio.RDS")
+saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2022-09-16-limpio.RDS")
 ```
