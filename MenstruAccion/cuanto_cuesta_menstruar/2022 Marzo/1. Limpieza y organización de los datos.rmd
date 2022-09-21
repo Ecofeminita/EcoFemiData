@@ -93,6 +93,11 @@ names(datos)
 
 A continuación, exploraremos el comportamiento de las diferentes variables. Con `count()` pedimos un conteo de observaciones para cada valor que toma la variable aclarada, con `arrange()` ordenamos los datos de forma decreciente según el conteo anterior, y en `mutate()` se definen nuevas variables para nuestro cuadro. Por ejemplo, el porcentaje es la cantidad de cada categoría sobre la suma de las mismas, expresada en formato de porcentaje.
 
+```{r}
+datos %>% filter(Provincia == "Jujuy") %>% select(Nombre, Precio.de.lista)
+```
+
+
 ### Categorías
 
 ```{r message=FALSE, warning=FALSE}
@@ -179,6 +184,7 @@ datos %>%
        y = "",
        caption = "Fuente: #MenstruAcción")
 ```
+
 Por esta vez, filtramos de los datos los precios mayores a 1.000 pesos, basicamente porque hay casos (outliers que de hecho vamos a tener que corregir) que superan ese monto y "rompen" la escala del gráfico. Para una comprensión más acabada de este efecto, veamos qué sucede si quitamos estos valores que hasta superan los 15.000 pesos:
 
 ```{r message=FALSE, warning=FALSE}

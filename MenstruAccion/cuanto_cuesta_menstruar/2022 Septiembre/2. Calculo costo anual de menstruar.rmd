@@ -20,41 +20,32 @@ output:
 </style>
 
 ![](img/Logos EcoFeminita-03.png){width=130px} ![](img/MENSTRUACCION.png){width=110px} ![](img/Ecofemidata.png){width=100px}
-
-
-## Presentación
-
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 7 de Septiembre de 2022 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Septiembre y Marzo de 2019, Marzo y Septiembre de 2020, Marzo y Septiembre de 2021, y Marzo de 2022. En esta instancia, se obtuvieron 38.939 observaciones de tampones y toallitas en total.
-
-+ Respecto de los tampones: Se obtuvieron 6.257 precios.
-+ Respecto de las toallitas: Se obtuvieron 32.682 precios.
-
-En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
-
+```{r include=FALSE}
 ## Preparando el entorno de trabajo
 
-Comenzamos levantando las librerías necesarias, y cargando los datos que se encuentran en formato .RDS. Aprovechamos para tener una vista previa de los datos.
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readxl)
 library(DT)
-```
+library(lubridate)
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
 datos <- readRDS("Fuentes/precios-gestion-menstrual-2022-09-16-limpio.RDS")
 
-head(datos)
-```
-
-A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para 2022, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. Como se encuentran en un archivo `.xls`, usamos la función `read_excel()`. Obtenemos también una vista previa de la estructura de estos datos.
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
 menstruan <- read_excel("Fuentes/poblaciones.xls") %>% 
   select(Provincia, Menstruan) # Para sacar las columnas con comentarios
 
-head(menstruan)
+cants_categorias <- datos %>% group_by(Categoría) %>% summarise(n=n())
 ```
+
+## Presentación
+
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 7 de Septiembre de 2022 sobre la página Precios Claros, sumándose esta información a la que obtenemos todos los Marzos y Septiembres desde 2019. En esta instancia, se obtuvieron, luego de realizar una limpieza y preprocesamiento, `r nrow(datos)` observaciones de tampones y toallitas.
+
++ Respecto de los tampones: Se obtuvieron `r cants_categorias %>% filter(Categoría == "tampones") %>% pull(n)` precios.
++ Respecto de las toallitas: Se obtuvieron `r cants_categorias %>% filter(Categoría == "toallitas") %>% pull(n)` precios.
+
+A su vez, se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de fuentes, esto sale de las proyecciones poblacionales del INDEC para `r year(now())`, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. Estos datos se van a utilizar para ponderar el precio promedio de cada provincia a la hora de agregar en un indicador nacional. 
+
+En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
 
 A continuación, calculamos el total a nivel nacional de personas que menstrúan, sumando los datos de todas las provincias. Y, dividiendo los datos de cada provincia por dicho total, obtenemos las proporciones que nos van a servir para ponderar los promedios de precio según el peso de cada una de las provincias. Como guardo estas modificaciones bajo el mismo nombre, la información será pisada en la misma tabla `menstruan`, de la que se vuelve a presentar una vista previa.
 
@@ -195,8 +186,21 @@ Como esta es la octava vez que realizamos este ejercicio de estimación semestra
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 serie_inflacion <- read_excel("Fuentes/serie_inflacion.xlsx")
-precios_pgm <- read_excel("Fuentes/serie_precios_pgm.xlsx")
+precios_pgm <- read_excel("Fuentes/serie_precios_pgm_viejo.xlsx")
 ```
+
+A continuación, agrego los precios actuales de toallitas y tampones a la serie histórica y la guardo. 
+
+```{r}
+precios_pgm <- rbind(precios_pgm, c("2022-09-01", round(valor_toallitas,2), round(valor_tampones,2)))
+
+precios_pgm <- precios_pgm %>% mutate(Mes = as.Date(Mes),
+                       Toallitas = as.numeric(Toallitas),
+                       Tampones = as.numeric(Tampones))
+
+write_csv(precios_pgm, 'Fuentes/serie_precios_pgm_nuevo.xlsx')
+```
+
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 head(serie_inflacion)
