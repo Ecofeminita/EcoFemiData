@@ -94,7 +94,7 @@ ui <- fluidPage( tags$head(
                          img(src="menstru_logo.png",width="30%"),
                          br(),
                          br(),
-                         (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Marzo 2022."),
+                         (" Los gastos están calculados a partir de el precio medio por unidad de los productos de cada marca. Los datos sobre los precios fueron obtenidos de la página web de Precios Claros, actualizados a Septiembre 2022."),
                          br()
                      ))
                    )
