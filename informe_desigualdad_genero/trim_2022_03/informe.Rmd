@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
-date: "Febrero de 2022"
+date: "Febrero de 2023"
 output:
   html_notebook:
     theme: flatly
