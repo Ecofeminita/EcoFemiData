@@ -1,6 +1,6 @@
 ---
 title: 'Limpieza y organización de los datos del #MenstruScrapper'
-author: "Datos de Septiembre 2022"
+author: "Datos de Marzo 2023"
 output:
   html_document:
     toc: no
@@ -10,6 +10,9 @@ output:
     toc: no
     toc_float: yes
     toc_depth: 5
+  pdf_document:
+    toc: no
+    toc_depth: '5'
 ---
 <style type="text/css">
   body{
@@ -56,7 +59,7 @@ En septiembre de 2022, por primera vez se encontró entre los registros obtenido
 
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 1 de Marzo de 2023 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente en Marzo y Septiembre de 2019, Marzo y Septiembre de 2020, Marzo y Septiembre de 2021 y Marzo y Septiembre de 2022. En esta instancia, se obtuvieron `r total_sin_copas` observaciones de tampones y toallitas en total.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/nportas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 1 de Marzo de 2023 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente desde Marzo de 2019 semestralmente, todos los marzos y septiembres. En esta instancia, se obtuvieron `r total_sin_copas` observaciones de tampones y toallitas en total.
 
 ```{r include=FALSE}
 #Saco cantidades de cada categoría para automatizar
@@ -228,6 +231,7 @@ datos %>%
        y = "",
        caption = "Fuente: #MenstruAcción")
 ```
+
 Por esta vez, filtramos de los datos los precios mayores a 1.000 pesos, basicamente porque hay casos (outliers que de hecho vamos a tener que corregir) que superan ese monto y "rompen" la escala del gráfico. Para una comprensión más acabada de este efecto, veamos qué sucede si quitamos estos valores que hasta superan los 1.000 pesos:
 
 ```{r message=FALSE, warning=FALSE}

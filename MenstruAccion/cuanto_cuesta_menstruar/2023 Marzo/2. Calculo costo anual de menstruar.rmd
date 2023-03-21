@@ -1,7 +1,7 @@
 ---
 title: 'Cálculo: ¿Cuánto cuesta menstruar?'
 author: 'Ecofeminita / #MenstruAcción / Ecofemidata'
-subtitle: Datos de Septiembre 2022
+subtitle: Datos de Marzo 2023
 output:
   html_document:
     toc: no
@@ -107,9 +107,12 @@ productos_por_ciclo <- 22
 productos_por_anio <- ciclos_por_anio * productos_por_ciclo
 
 gasto_por_anio_toallitas <- valor_toallitas * productos_por_anio
+
+options(scipen=100, digits=4)
 ```
 
-<font size="6"> Toallitas: El gasto promedio por año por persona es de $`r round(gasto_por_anio_toallitas, 2)` </font> 
+
+<font size="6"> Toallitas: El gasto promedio por año por persona es de $`r round(gasto_por_anio_toallitas, 2)` </font>
 
 ### Tampones
 
@@ -138,6 +141,8 @@ El gasto anual por persona se calcula teniendo en cuenta:
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 gasto_por_anio_tampones <- valor_tampones * productos_por_anio
+
+options(scipen=100, digits=4)
 ```
 
 <font size="6"> Tampones: El gasto promedio por año por persona es de $`r round(gasto_por_anio_tampones, 2)` </font> 
