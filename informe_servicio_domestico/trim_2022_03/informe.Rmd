@@ -1,6 +1,6 @@
 ---
 title: "Las trabajadoras de servicio doméstico en Argentina"
-date: "Febrero de 2022"
+date: "Febrero de 2023"
 subtitle: Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2022.
 output:
   html_document:
@@ -223,7 +223,7 @@ inline_6 <- round(100/as.numeric(inline_5_aux),0)
 
 ### Trabajadoras de servicio doméstico 
 <br><br>
-El interés por analizar distintas características de las trabajadoras de servicio doméstico radica principalmente en la magnitud que dicha ocupación presenta, en su estrecho vínculo con la división sexual del trabajo y la feminización de este sector y, como veremos luego, por las particularmente diferenciadas condiciones, acceso a derechos y bajos ingresos que perciben a cambio de su trabajo. Entre las grandes ciudades del país, pueden contarse __más de `r inline_1` mil personas que componen al sector__, lo cual sigue representando una drástica disminución respecto de las cifras previas a la pandemia. A su vez, la tasa de feminidad del sector es del `r inline_2`%. Es decir que __casi en su totalidad se trata de trabajadoras mujeres__. Es por esto que, a lo largo de todo el informe, utilizaremos pronombres femeninos a la hora de generalizar, aunque muchas veces estemos hablando del conjunto de les trabajadores que se dedican a esta actividad. A su vez, cabe destacar que el ejercicio debe ser realizado en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.
+El interés por analizar distintas características de las trabajadoras de servicio doméstico radica principalmente en la magnitud que dicha ocupación presenta, en su estrecho vínculo con la división sexual del trabajo y la feminización de este sector y, como veremos luego, por las particularmente diferenciadas condiciones, acceso a derechos y bajos ingresos que perciben a cambio de su trabajo. Entre las grandes ciudades del país, pueden contarse __más de `r inline_1` mil personas que componen al sector__. A su vez, la tasa de feminidad del sector es del `r inline_2`%. Es decir que __casi en su totalidad se trata de trabajadoras mujeres__. Es por esto que, a lo largo de todo el informe, utilizaremos pronombres femeninos a la hora de generalizar, aunque muchas veces estemos hablando del conjunto de les trabajadores que se dedican a esta actividad. A su vez, cabe destacar que el ejercicio debe ser realizado en términos cis-binarios por falta de información respecto de las identidades trans-travesti en las estadísticas oficiales.
 <br><br>
 Las trabajadoras que realizan tareas domésticas y de cuidado en hogares particulares representan casi un `r inline_3`% dentro del total de ocupadas mujeres. Esto significa que __una de cada `r inline_4` ocupadas en Argentina trabaja en este sector de la economía__. Al mismo tiempo, estas trabajadoras representan un `r inline_5`% dentro del total de ocupadas-asalariadas. O sea que dentro de las mujeres que trabajan en relación de dependencia, alrededor de 1 de cada `r inline_6` tiene como ocupación principal el trabajo en hogares particulares. Como veremos más adelante, se trata de __la ocupación asalariada más popular entre las mujeres__. Hay que tener en cuenta que estos indicadores también responden al contexto pandémico del trimestre estudiado.
 
