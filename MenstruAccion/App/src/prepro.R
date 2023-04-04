@@ -1,6 +1,6 @@
 library(tidyverse)
 
-df <- readRDS("data/precios-gestion-menstrual-2022-09-16-limpio.RDS")
+df <- readRDS("data/precios-gestion-menstrual-2023-03-19-limpio.RDS")
 
 df <- df %>% group_by(Categoría, Marca) %>%
   summarise(Mean_precio = mean(precio_unidad)) %>%
