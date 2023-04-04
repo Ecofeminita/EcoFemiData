@@ -22,7 +22,7 @@
 
 
 #Datos de shinyapp
-/home/laia/Escritorio/EcoFemiData/MenstruAccion/App/menstruaccion_app/deploy.R
+MenstruAccion/App/menstruaccion_app/deploy.R
 
 # produced vignettes
 vignettes/*.html
