@@ -40,7 +40,7 @@ Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hace
 
 ---
 
-^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2022). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2023). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
@@ -67,9 +67,14 @@ source("../../R/funciones formato.R")
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
+#levanto manualmente porque me falla get_microdata. próximo trimestre usar el código grisado (CS)
+library(readxl)
+base_individual <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_individual_T422.xlsx.xlsx")
+base_hogar <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_hogar_T422.xlsx.xlsx")
+
 # (funciones del paquete 'eph')
-base_individual <- get_microdata(year = 2022, trimester = 4, type = "individual")
-base_hogar <- get_microdata(year = 2022, trimester = 4, type = "hogar")
+#base_individual <- get_microdata(year = 2022, trimester = 3, type = "individual")
+#base_hogar <- get_microdata(year = 2022, trimester = 3, type = "hogar")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -247,7 +252,7 @@ ggplot(tabla1.3, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ###### Por región
 <br>
-A continuación se presentan las tasas de actividad, empleo, desocupación y desocupación para varones y mujeres según la región. 
+A continuación se presentan las tasas de actividad, empleo, desocupación y subocupación para varones y mujeres según la región. 
 <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -293,7 +298,7 @@ tabla1.5 <- base_individual %>%
 ```
 
 <p style="color:#E5616E">__Tasas de actividad y empleo por región y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #cuadro de tasas básicas por región opción 2 de visualización
 tabla1.5_graf1 <- tabla1.5 %>% 
@@ -318,8 +323,8 @@ ggplot(tabla1.5_graf1, aes(x = Indicadores, proporcion, fill = Sexo,
 #ggsave("Tasasbasicas1region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-<p style="color:#E5616E">__Tasas de desocupación y subocupación__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasas de desocupación y subocupación por región y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.5_graf2 <- tabla1.5 %>% 
   pivot_longer(., cols=3:4, names_to = "Sexo", values_to = "proporcion") %>% 
@@ -377,7 +382,7 @@ tabla1.13 <- organize_caes(base_individual) %>%
             "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
 ```
 
-La siguiente tabla representa a ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
+La siguiente tabla presenta los porcentajes de ocupadas mujeres sobre el total de ocupados y ocupadas para cada rama de ocupación. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
 <br><br>
 Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. <br><br>
 
@@ -486,7 +491,7 @@ tabla2.2 <- base_individual %>%
 
 # Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
 tabla2.3 <- base_individual %>% 
-  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2 & P21>0) %>% 
   group_by(Sexo) %>% 
   summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
   spread(., Sexo, Media.IOP) %>% 
@@ -787,7 +792,7 @@ tabla2.10 <- base_individual %>%
 
 # Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
 tabla2.11 <- base_individual %>% 
-  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2 & P21>0) %>% 
   group_by(Sexo, Region) %>% 
   summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
   spread(., Sexo, Media.IOP) %>% 
@@ -866,8 +871,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>%
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -889,8 +896,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -911,8 +920,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -933,8 +944,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -955,8 +968,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -977,8 +992,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1507,8 +1524,7 @@ rm(tabla5.1_graf)
 ```
 
 En segundo lugar, se separa a la población en deciles según el ingreso total individual. Es decir, se ordena en base al nivel de ingresos que percibe cada individuo, no el hogar (caso anterior). En este caso puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres y, en paralelo, los deciles de mayores ingresos se componen mayoritariamente por varones. 
-Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. ¿Cuál es la diferencia respecto del gráfico anterior?
-En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
+Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
 <br><br>
 
 <p style="color:#E5616E">__Composición según sexo de los deciles de ingresos totales individuales__</p>
@@ -1546,7 +1562,7 @@ rm(tabla5.2_graf)
 #ggsave("Figura16.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-En el primer gráfico, las unidades de análisis son los hogares, sólo que luego se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de la se mantiene la diferencia: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
+¿Cuál es la diferencia entre los gráficos presentados? En el primer gráfico, las unidades de análisis son los hogares, sólo que se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de la se mantiene la diferencia: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
 Entonces, _la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones._ 
       
 <br>

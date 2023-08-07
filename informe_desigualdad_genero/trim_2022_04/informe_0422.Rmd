@@ -40,7 +40,7 @@ Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hace
 
 ---
 
-^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2022). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2023). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
@@ -68,9 +68,14 @@ source("../../R/funciones formato.R")
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Se levantan las bases usuarias de la EPH del trimestre correspondiente
+#levanto manualmente porque me falla get_microdata. próximo trimestre usar el código grisado (CS)
+library(readxl)
+base_individual <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_individual_T422.xlsx.xlsx")
+base_hogar <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_hogar_T422.xlsx.xlsx")
+
 # (funciones del paquete 'eph')
-base_individual <- get_microdata(year = 2022, trimester = 4, type = "individual")
-base_hogar <- get_microdata(year = 2022, trimester = 4, type = "hogar")
+#base_individual <- get_microdata(year = 2022, trimester = 3, type = "individual")
+#base_hogar <- get_microdata(year = 2022, trimester = 3, type = "hogar")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -247,7 +252,7 @@ ggplot(tabla1.3, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 
 ###### Por región
 <br>
-A continuación se presentan las tasas de actividad, empleo, desocupación y desocupación para varones y mujeres según la región. 
+A continuación se presentan las tasas de actividad, empleo, desocupación y subocupación para varones y mujeres según la región. 
 <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -293,7 +298,7 @@ tabla1.5 <- base_individual %>%
 ```
 
 <p style="color:#E5616E">__Tasas de actividad y empleo por región y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #cuadro de tasas básicas por región opción 2 de visualización
 tabla1.5_graf1 <- tabla1.5 %>% 
@@ -318,8 +323,8 @@ ggplot(tabla1.5_graf1, aes(x = Indicadores, proporcion, fill = Sexo,
 #ggsave("Tasasbasicas1region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-<p style="color:#E5616E">__Tasas de desocupación y subocupación__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasas de desocupación y subocupación por región y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.5_graf2 <- tabla1.5 %>% 
   pivot_longer(., cols=3:4, names_to = "Sexo", values_to = "proporcion") %>% 
@@ -400,7 +405,7 @@ A continuación se exponen los mismos indicadores, pero desagregados por grupos 
 <br><br>
 En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de más del __`r inline_4`.__
 <br><br>
-Asimismo, se observa una sustancial diferencia en la tasa de actividad y empleo entre las mujeres y hombres de entre 30 y 64 años.
+Asimismo, se verifica una diferencia en las tasas de actividad y empleo entre las mujeres y varones de entre 30 y 64 años.
 <br><br>
 
 ##### {.tabset .tabset-fade .tabset-pills}
@@ -467,8 +472,8 @@ tabla1.9 <- base_individual %>%
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de actividad por grupo de edad__</p>
-<p style="color:#c9c9c9">__Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasa de actividad por grupo de edad y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r aglo_date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf1 <- tabla1.9 %>% 
@@ -494,8 +499,8 @@ ggplot(tabla1.9_graf1, aes(x = GRUPO_EDAD, Actividad, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de empleo por grupo de edad__</p>
-<p style="color:#c9c9c9">__Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasa de empleo por grupo de edad y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf2 <- tabla1.9 %>% 
@@ -521,8 +526,8 @@ ggplot(tabla1.9_graf2, aes(x = GRUPO_EDAD, Empleo, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de desocupación por grupo de edad__</p>
-<p style="color:#c9c9c9">__Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasa de desocupación por grupo de edad y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf3 <- tabla1.9 %>% 
@@ -548,8 +553,8 @@ ggplot(tabla1.9_graf3, aes(x = GRUPO_EDAD, Desocupación, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de subocupación por grupo de edad__</p>
-<p style="color:#c9c9c9">__Según región. `r date`__</p>
+<p style="color:#E5616E">__Tasa de subocupación por grupo de edad y sexo__</p>
+<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf4 <- tabla1.9 %>% 
@@ -691,7 +696,7 @@ inline_8 <- tabla1.12 %>%
 
 Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un __`r inline_7`__ de los ocupados varones tienen cargos de dirección o son jefes, solo un __`r inline_8`__ de las ocupadas ejercen puestos de esas características.
 <br><br>
-Esta problemática es conocida como __techo de Cristal__ o __segregación vertical__ del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
+Esta problemática es conocida como __techo de cristal__ o __segregación vertical__ del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
 <br><br>
 
 <p style="color:#E5616E">__Mujeres y Varones en cargos de dirección y jefatura__</p>
@@ -748,9 +753,9 @@ tabla1.13 <- organize_caes(base_individual) %>%
             "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
 ```
 
-La siguiente tabla representa a ocupadas y ocupados, según la rama de ocupación en la que se desempeñan. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
+La siguiente tabla presenta los porcentajes de ocupadas mujeres sobre el total de ocupados y ocupadas para cada rama de ocupación. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
 <br><br>
-Este fenómeno se conoce como __Paredes de Cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
+Este fenómeno se conoce como __paredes de cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
 <br><br>
 
 <p style="color:#E5616E">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
@@ -858,8 +863,9 @@ tabla2.2 <- base_individual %>%
          Ingreso = "Ingreso de la Ocupación Principal")
 
 # Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
+#filtro ingresos mayores a cero
 tabla2.3 <- base_individual %>% 
-  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>%
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2 & P21>0) %>%
   group_by(Sexo) %>% 
   summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
   spread(., Sexo, Media.IOP) %>% 
@@ -997,7 +1003,7 @@ inline_19 <- tabla2.6 %>%
   percent(., 1)
 ```
 
-El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de _`r inline_14`_, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de _`r inline_15`_, es decir, un __`r inline_16`__ menos que los varones.    
+El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de _`r inline_14`_, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de _`r inline_15`_, es decir, un __`r inline_16`__ menos.    
 En los puestos no calificados, los varones ganan _`r inline_17`_ en promedio, al tiempo que las mujeres ganan alrededor de _`r inline_18`_. Esta brecha es del __`r inline_19`__.
 <br><br>
 
@@ -1160,7 +1166,7 @@ tabla2.10 <- base_individual %>%
 
 # Asal. sin descuento jubilatorio. Ingreso de la Ocupación Principal
 tabla2.11 <- base_individual %>% 
-  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2) %>% 
+  filter(ESTADO == 1 & CAT_OCUP == 3 & PP07H == 2 & P21>0) %>% 
   group_by(Sexo, Region) %>% 
   summarise(Media.IOP = round(weighted.mean(as.numeric(P21), as.numeric(PONDIIO)))) %>% 
   spread(., Sexo, Media.IOP) %>% 
@@ -1239,8 +1245,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1262,8 +1270,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1284,8 +1294,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1306,8 +1318,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1328,8 +1342,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1350,8 +1366,10 @@ tabla2.14 %>%
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
            general_title = "\n") %>% 
-  column_spec(2, width = "6cm") %>% 
-  column_spec(3, width = "2cm") %>% 
+  column_spec(1, width = "7cm") %>%
+  column_spec(2, width = "7cm") %>% 
+  column_spec(3, width = "3cm") %>%
+  column_spec(4, width = "3cm") %>% 
   column_spec(5, bold = TRUE, width = "2cm") %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
@@ -1433,6 +1451,7 @@ kable(tabla2.18, digits = 1, align = 'lccc') %>%
   add_header_above(c("\n" = 1, "Media del ingreso horario" = 2, "\n" = 1),
                    color = "white", background = colores[1]) %>% 
   footnote(general = fuente,
+           fixed_small_size = TRUE,
            general_title = "\n") %>% 
   column_spec(1, width = "8cm") %>% 
   column_spec(4, bold = TRUE, width = "4cm") %>% 
@@ -2218,7 +2237,7 @@ También podemos analizar las brechas de género en la distribución de los ingr
 <br>
 En primer lugar, se ordena por deciles a las personas según su ingreso per cápita familiar (el ingreso total del hogar dividido por la cantidad de personas que lo componen). Es decir, se forman diez grupos de individuos, de igual tamaño, ordenados según el nivel de ingresos que le corresponden por el hogar al que pertenece. En el siguiente gráfico se puede observar la proporción de mujeres y de varones que finalmente componen cada decil. 
 
-En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general). A su vez, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
+En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general). A su vez, los resultados para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
 <br><br>
 
 <p style="color:#E5616E">__Composición según sexo de los deciles del ingreso per cápita familiar__</p>
@@ -2257,7 +2276,7 @@ rm(tabla5.1_graf)
 ```
 
 En segundo lugar, se separa a la población en deciles según el ingreso total individual. Es decir, se ordena en base al nivel de ingresos que percibe cada individuo, no el hogar (caso anterior). En este caso puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres y, en paralelo, los deciles de mayores ingresos se componen mayoritariamente por varones. 
-Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. ¿Cuál es la diferencia respecto del gráfico anterior?
+Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. 
 En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
 <br><br>
 
@@ -2292,7 +2311,7 @@ ggplot(tabla5.2_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sex
 #ggsave("Figura16.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-En el primer gráfico, las unidades de análisis son los hogares, sólo que luego se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de la se mantiene la diferencia: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
+¿Cuál es la diferencia entre los gráficos presentados? En el primer gráfico, las unidades de análisis son los hogares, sólo que se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de los hogares la diferencia se mantiene: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
 Entonces, _la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones._ 
       
 <br>
@@ -2351,7 +2370,7 @@ inline_29 <- tabla5.3_graf %>%
 
 Los hogares monomaparentales son aquellos con un solo jefe/a de hogar, sin cónyuge y con menores a cargo. Los llamamos monomarentales cuando la jefa de hogar es mujer, y monoparental cuando el jefe es varón. 
 
-En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los __que tienen jefatura femenina__. 
+En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los que __tienen jefatura femenina__. 
 
 Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomaparentales. En cambio, en el decimo este tipo de hogares son solo el `r inline_29`% del total de hogares. 
 

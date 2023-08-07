@@ -1,7 +1,7 @@
 ---
 title: "Las trabajadoras de servicio doméstico en Argentina"
-date: "Mayo de 2023"
-subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2022.
+date: "Agosto de 2023"
+subtitle: Datos de la Encuesta Permanente de Hogares. 1er trimestre de 2023.
 output:
   html_document:
     df_print: paged
@@ -27,8 +27,8 @@ urlcolor: null
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-date <- as.character("4to trimestre de 2022")                        # <-----------------
-caption <- "#Ecofemidata y EcoFeminita en base a EPH-INDEC"
+date <- as.character("1er trimestre de 2023")                        # <-----------------
+fuente <- "#Ecofemidata y EcoFeminita en base a EPH-INDEC"
 ```
 
 # {.tabset .tabset-fade .tabset-pills}
@@ -79,13 +79,8 @@ source("../../R/funciones formato.R")
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Cargo base de EPH con el paquete eph
-#levanto manualmente porque me falla get_microdata. próximo trimestre usar el código grisado (CS)
-library(readxl)
-base_individual <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_individual_T422.xlsx.xlsx")
-base_hogar <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_hogar_T422.xlsx.xlsx")
-
-#base_individual <- eph::get_microdata(year = 2022, trimester = 4, type =  "individual") # <-----------------
-#base_hogar <- eph::get_microdata(year = 2022, trimester = 4, type =  "hogar")           # <-----------------
+base_individual <- eph::get_microdata(year = 2023, trimester = 1, type =  "individual") # <-----------------
+base_hogar <- eph::get_microdata(year = 2023, trimester = 1, type =  "hogar")           # <-----------------
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
