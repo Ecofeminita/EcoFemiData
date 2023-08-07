@@ -33,6 +33,8 @@ datos <- readRDS("Fuentes/precios-gestion-menstrual-2023-03-19-limpio.RDS")
 menstruan <- read_excel("Fuentes/poblaciones.xls") %>% 
   select(Provincia, Menstruan) # Para sacar las columnas con comentarios
 
+menstruan %>% mutate(total = sum(Menstruan))
+
 cants_categorias <- datos %>% group_by(Categoría) %>% summarise(n=n())
 ```
 

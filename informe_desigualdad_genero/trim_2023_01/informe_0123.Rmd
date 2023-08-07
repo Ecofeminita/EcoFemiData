@@ -2,11 +2,15 @@
 title: "La desigualdad de género se puede medir"
 date: "Agosto de 2023"
 output:
-  html_notebook:
-    theme: flatly
   html_document:
     df_print: paged
+<<<<<<< HEAD:informe_desigualdad_genero/trim_2023_01/informe_0123.Rmd
 subtitle: Datos de la Encuesta Permanente de Hogares. 1er trimestre de 2023.
+=======
+  html_notebook:
+    theme: flatly
+subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2022.
+>>>>>>> c1db20d72b667abe8e2f4fa0a8b598204d55c482:informe_desigualdad_genero/trim_2022_04/informe.Rmd
 urlcolor: null
 ---
 
@@ -22,6 +26,11 @@ urlcolor: null
     color: #ffffff;
     background-color: #E5616E;
 }
+
+body{
+  font-family: Montserrat;
+}
+
 </style>
 
 ---
@@ -397,7 +406,7 @@ inline_4 <- tabla1.6v %>%
 <br>
 A continuación se exponen los mismos indicadores, pero desagregados por grupos de edad además de por sexo.
 <br><br>
-En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de más del __`r inline_4`.__
+En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. 
 <br><br>
 Asimismo, se verifica una diferencia en las tasas de actividad y empleo entre las mujeres y varones de entre 30 y 64 años.
 <br><br>
@@ -1023,6 +1032,7 @@ ggplot(tabla2.6_graf1,
        y = NULL, 
        caption = fuente) +
   scale_color_manual(values = colores) +
+  scale_x_log10()+
   theme_minimal()
 ```
 
@@ -1125,6 +1135,7 @@ ggplot(tabla2.8_graf1,
        y = NULL, 
        caption = fuente)+
   scale_color_manual(values = colores)+
+  scale_x_log10()+
   theme_minimal()
 ```
 
@@ -1374,7 +1385,7 @@ rm(tabla2.9, tabla2.10, tabla2.11, tabla2.12, tabla2.13, tabla2.13b, tabla2.13m,
 
 #### Ingresos horarios
 
-Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Que las brechas sean más amplias comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares.
+Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha prácticamente no existe. Que las brechas aparezcan comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares.
 <br><br>
 
 ##### {.tabset .tabset-fade .tabset-pills}
