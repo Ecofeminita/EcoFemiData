@@ -1,12 +1,12 @@
 ---
 title: "La desigualdad de género se puede medir"
-date: "Febrero de 2024"
+date: "Abril de 2024"
 output:
   html_notebook:
     theme: flatly
   html_document:
     df_print: paged
-subtitle: Datos de la Encuesta Permanente de Hogares. 3er trimestre de 2023.
+subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2023.
 urlcolor: null
 ---
 
@@ -74,8 +74,8 @@ library(readxl)
 #base_hogar <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_hogar_T422.xlsx.xlsx")
 
 # (funciones del paquete 'eph')
-base_individual <- get_microdata(year = 2023, trimester = 3, type = "individual")
-base_hogar <- get_microdata(year = 2023, trimester = 3, type = "hogar")
+base_individual <- get_microdata(year = 2023, trimester = 4, type = "individual")
+base_hogar <- get_microdata(year = 2023, trimester = 4, type = "hogar")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -803,7 +803,7 @@ tabla1.14 <- organize_caes(base_individual) %>%
 ggplot(tabla1.14, aes(x = P21, y = Rama, weights = PONDIIO, group = Rama, alpha = Rama != "Servicio domestico")) +
   geom_density_ridges(scale = 2, fill = coloresb[2]) + 
   theme_minimal() +
-  scale_x_continuous(limits = c(0, 350000)) +
+  scale_x_continuous(limits = c(0, 400000)) +
   scale_alpha_manual(values = c(1, 0.4), guide = FALSE) +
   # scale_fill_manual(values = coloresb[2]) +
   labs(caption = fuente,
@@ -852,6 +852,15 @@ tabla2.1 <- base_individual %>%
   spread(., Sexo, Media.ITI) %>% 
   mutate(Población = "Perceptores de ingresos",
          Ingreso = "Ingreso Total Individual")
+
+#VEAMOS COMO SUMAMOS ESTO AL TEXTO DEL INFORME!!!
+tabla2.1.a <- base_individual %>% 
+  filter(P47T > 0) %>% 
+  group_by(Sexo) %>%
+  summarise(Mediana.ITI = formato_pesos(round(spatstat.geom::weighted.median(as.numeric(P47T), as.numeric(PONDII))))) %>%
+  spread(., Sexo, Mediana.ITI) %>%
+  mutate(Población = "Perceptores de ingresos",
+         Ingreso = "50% cobra menos de")
 
 # Ingreso de la Ocupación Principal
 tabla2.2 <- base_individual %>% 
@@ -2354,13 +2363,23 @@ tabla5.3_graf <- base_individual %>%
             Prop = Prop/100)
 
 inline_28 <- tabla5.3_graf %>% 
+  filter(DECCFR == 1, Jefe == "Mujeres") %>%
+  mutate(Prop = formato_porc(Prop*100)) %>% 
+  pull(Prop)
+
+inline_29 <- tabla5.3_graf %>% 
+  filter(DECCFR == 1, Jefe == "Varones") %>%
+  mutate(Prop = formato_porc(Prop*100)) %>% 
+  pull(Prop)
+
+inline_30 <- tabla5.3_graf %>% 
   group_by(DECCFR) %>% 
   summarise(Prop = sum(Prop)) %>% 
   filter(DECCFR == 1) %>%
   mutate(Prop = formato_porc(Prop*100)) %>% 
   pull(Prop)
   
-inline_29 <- tabla5.3_graf %>% 
+inline_31 <- tabla5.3_graf %>% 
   group_by(DECCFR) %>% 
   summarise(Prop = sum(Prop)) %>% 
   filter(DECCFR == 10) %>%
@@ -2372,7 +2391,7 @@ Los hogares monomaparentales son aquellos con un solo jefe/a de hogar, sin cóny
 
 En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los que __tienen jefatura femenina__. 
 
-Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomaparentales. En cambio, en el decimo este tipo de hogares son solo el `r inline_29`% del total de hogares. 
+Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomarentales, y un `r inline_29`% son hogares monoparentales, con lo cual la suma de hogares con un solo jefe/a de hogar, sin cónyuge y con menores a cargo totaliza el `r inline_30`% de los hogares. En cambio, en el décimo decil, la suma de este tipo de hogares representa solo el `r inline_31`% del total. 
 
 Cuando se habla de feminización de la pobreza se puede referir a la mayor incidencia cuantitativa de la pobreza en las mujeres respecto a los varones (que se puede observar en la sección "Pobreza"); a la diferente manera en que varones y mujeres viven las situaciones de pobreza y la enfrentan; como a la vulnerabilidad a la pobreza de las mujeres jefas de hogar, o de los hogares comandados por mujeres (que se observa en el gráfico).
 <br><br>
