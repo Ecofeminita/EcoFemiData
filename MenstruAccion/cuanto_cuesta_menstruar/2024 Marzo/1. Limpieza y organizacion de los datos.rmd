@@ -1,0 +1,523 @@
+---
+title: 'Limpieza y organización de los datos del #MenstruScrapper'
+author: "Datos de Marzo 2024"
+output:
+  html_document:
+    toc: no
+    toc_depth: '5'
+    df_print: paged
+  html_notebook:
+    toc: no
+    toc_float: yes
+    toc_depth: 5
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+---
+<style type="text/css">
+  body{
+  font-size: 14pt;
+}
+</style>
+
+![](img/Logos EcoFeminita-03.png){width=130px} ![](img/MENSTRUACCION.png){width=110px} ![](img/Ecofemidata.png){width=100px}
+
+## Preparando el entorno de trabajo
+
+Comenzamos levantando las librerías necesarias, cargando los datos srappeados desde el archivo .csv, y un diccionario que indica a qué región pertenece cada provincia del país.
+
+```{r message=FALSE, warning=FALSE}
+library(EnvStats)
+library(tidyverse)
+library(ggridges)
+library(openxlsx)
+library(viridis)
+library(readxl)
+library(magrittr)
+library(scales)
+library(kableExtra)
+
+datos <- read.csv("Fuentes/precios-gestion-menstrual-2024-03-05.csv", 
+                  header = TRUE, sep = ",", dec = ".", 
+                  fill = TRUE, encoding = "UTF-8")
+
+regiones <- openxlsx::read.xlsx("Fuentes/provincias_regiones.xlsx")
+
+total_observaciones <- nrow(datos)
+
+datos <- datos %>% mutate(Categoría = case_when(
+  str_detect(Nombre, "Copa") == TRUE ~ "copa",
+  TRUE ~ Categoría
+))
+
+datos <- datos %>% filter(Categoría != "copa")
+
+total_sin_copas <- nrow(datos)
+```
+
+En septiembre de 2022, por primera vez se encontró entre los registros obtenidos algunos con la palabra "copa" dentro de la descripción, que se encontraban camuflados dentro del categoría tampón. Para poder continuar correctamente con el preprocesamiento, creamos la categoría "copa", para poder distinguir realmente estos productos de las toallitas y los tampones, luego la filtramos por el momento. En total hay `r total_observaciones` observaciones, de las cuales filtramos `r total_observaciones-total_sin_copas` correspondientes a la nueva categoría "copa", arribando así a `r total_sin_copas` observaciones. Sobre esta muestra trabajaremos a lo largo del resto del documento.
+
+## Presentación
+
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/lasdesistemas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 5 de Marzo de 2024 sobre la página Precios Claros, sumándose esta información a la obtenida anteriormente desde Marzo de 2019 semestralmente, todos los marzos y septiembres. En esta instancia, se obtuvieron `r total_sin_copas` observaciones de tampones y toallitas en total.
+
+```{r include=FALSE}
+#Saco cantidades de cada categoría para automatizar
+
+categ <- datos %>% 
+  count(Categoría) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = percent(n/sum(n))) 
+
+cant_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(n)
+cant_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(n)
+```
+
++ Respecto de los tampones: Se obtuvieron `r cant_tampones` precios.
++ Respecto de las toallitas: Se obtuvieron `r cant_toallitas` precios.
+
+En [nuestro repositorio](https://github.com/Ecofeminita/EcoFemiData/tree/master/MenstruAccion/cuanto_cuesta_menstruar) se encuentran aclaradas todas las fuentes adicionales a las que se recurrió para realizar el cálculo y los archivos correspondientes. En otro paso se encuentra el cálculo propiamente dicho del costo anual de menstruar. 
+
+Vista previa del dataset:
+
+```{r message=FALSE, warning=FALSE}
+head(datos)
+```
+
+Vista previa del diccionario de regiones:
+
+```{r message=FALSE, warning=FALSE}
+head(regiones)
+```
+
+Definimos una pequeña función: `cant` nos va a devolver un número en formato character (texto), con cero dígitos, con un punto para separar los miles, y una coma para separar los decimales.
+
+```{r message=FALSE, warning=FALSE}
+cant <- function(x){
+  format(x, digits = NULL, big.mark = ".", decimal.mark = ",")}
+```
+
+Guardamos el valor de la fecha a la que corresponde el ejercicio.
+
+```{r message=FALSE, warning=FALSE}
+date <- "Marzo 2024"
+```
+
+## Exploración de los datos
+
+Al dataframe `datos` le pegamos los valores de las regiones, usando como variable de identificación a la `Provincia`. A continuación podemos borrar de nuestro entorno de trabajo el elemento `regiones`. 
+
+```{r message=FALSE, warning=FALSE}
+datos <- left_join(datos, regiones, by = "Provincia")
+rm(regiones)
+```
+
+`datos` cuenta con `r cant(nrow(datos))` observaciones. A su vez, podemos ver con qué variables contamos en el dataset:
+
+```{r message=FALSE, warning=FALSE}
+names(datos)
+
+cant(nrow(datos))
+```
+A continuación, exploraremos el comportamiento de las diferentes variables. Con `count()` pedimos un conteo de observaciones para cada valor que toma la variable aclarada, con `arrange()` ordenamos los datos de forma decreciente según el conteo anterior, y en `mutate()` se definen nuevas variables para nuestro cuadro. Por ejemplo, el porcentaje es la cantidad de cada categoría sobre la suma de las mismas, expresada en formato de porcentaje.
+
+### Categorías
+
+En este caso, el objeto categ lo generamos anteriormente para poder automatizar la cantidad de toallitas y tampones. 
+
+```{r message=FALSE, warning=FALSE}
+categ
+```
+
+```{r include=FALSE}
+perc_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(porcentaje)
+perc_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(porcentaje)
+```
+
+Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. O sea, no podemos decir que se consumen en un `r perc_toallitas` toallitas y en `r perc_tampones` tampones. Lo que sí sabemos es que la página de Precios Claros puede tener un sesgo por no incluir los comercios tradicionales sino únicamente grandes cadenas.
+
+### Marcas
+
+```{r message=FALSE, warning=FALSE}
+marcas <- datos %>% 
+  count(Marca) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado)
+         )
+
+marcas
+```
+
+Contamos con `r length(unique(marcas$Marca))` marcas de productos, aunque con 8 de ellas se completa casi el 90% del total de productos. Las primeras 3 marcas concentran más de la mitad de las observaciones. Nuevamente aquí hay que tener en cuenta que no se trata exactamente de una "concentración de mercado".
+
+### Presentación
+
+```{r message=FALSE, warning=FALSE}
+datos %>% 
+  count(Presentación) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+```
+
+Más del 80% de los productos vienen en paquetes de 8 o 16 unidades. Luego seguiremos analizando esta variable en particular, porque nos interesa para calcular los precios unitarios de los productos, y hay valores (como "1.0 un") que son raros y, en caso de tratarse de errores, podrían arrastrar problemas hacia el cálculo de esos precios.
+
+### Provincias
+
+```{r message=FALSE, warning=FALSE}
+prov <- datos %>% 
+  count(Provincia) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+
+prov
+```
+
+```{r include=FALSE}
+#Obtengo valores para automatizar
+
+concentracion_amba <- prov %>% filter(Provincia == "CABA" | Provincia == "Buenos Aires") %>% 
+  filter(n == min(n)) %>% pull(acumulado)
+
+provincias_min_casos <- prov %>% filter(n == min(n)) %>% pull(Provincia)
+```
+
+
+Si bien el `r concentracion_amba` de las observaciones se concentran en Buenos Aires y CABA, es importante saber que se cuenta con información de todas las provincias del país, y que incluso en el peor de los casos (por ejemplo, `r min(prov$n)` observaciones en `r ifelse(provincias_min_casos > 1, paste(provincias_min_casos, collapse=" o "), provincias_min_casos)`) se trata de una cantidad pasible de proveernos estimaciones útiles.
+
+### Regiones
+
+```{r message=FALSE, warning=FALSE}
+r <- datos %>% 
+  count(Region) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+
+r
+```
+
+En términos regionales seguimos viendo esa asimetría en la disponibilidad de datos, pero hay que tener en cuenta que efectivamente hay diferencias de escala de mercados en términos regionales.
+
+### Precio de lista
+
+Ahora graficamos la distribución de los precios de lista (o sea, sin tener en cuenta las unidades por paquete) según cada categoría. Para ello utilizamos `ggplot2`. 
+
+En la primer línea de código referida a `ggplot`, tomamos como fuente el dataset que venimos utilizando (a eso refiere el punto), en el `eje x` queremos los precios, en el `eje y` queremos cada categoría, y el relleno de cada parte del gráfico también según las categorías de productos. En la segunda línea aclaramos que queremos un gráfico de densidad (que es como un histograma pero en versión continua), la escala hace a la superposición de los graficos y el `bandwidth` o "ancho de banda" indica la extensión del intervalo de valores con los que se va a realizar la estimación del gráfico (o sea, si el gráfico va a ser más detallista y por ende más "ruidoso", o más suave y "redondeado"). Se puede jugar con ambos valores para ver sus efectos. En la tercer línea aclaramos que queremos un tema minimalista, en la cuarta que la paleta de colores la vamos a asignar de manera manual, en la quinta que no queremos una leyenda aclarando los colores de cada categoría porque ya están aclaradas en el eje y. Y por último aclaramos las etiquetas necesarias.
+
+
+```{r message=FALSE, warning=FALSE}
+
+
+datos %>% 
+  ggplot(., aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
+  geom_density_ridges(scale = 3, bandwidth = 20) +
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred")) +
+  theme(legend.position = "none") +
+  labs(title = "Precio de lista de productos de gestión menstrual según categoría",
+       subtitle = date,
+       x = "Precio de lista",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Por esta vez, filtramos de los datos los precios mayores a 3.000 pesos, basicamente porque hay casos (outliers que de hecho vamos a tener que corregir) que superan ese monto y "rompen" la escala del gráfico. Para una comprensión más acabada de este efecto, veamos qué sucede si quitamos estos valores que hasta superan los 3.000 pesos:
+
+```{r message=FALSE, warning=FALSE}
+# Solo en esta ocasión por los outliers presentes:
+
+datos <- datos %>% 
+  filter(Precio.de.lista < 3000) #saco los outliers mayores a 1000 porque son demasiado altos. 
+# El resto va a ser controlado a la hora de calcular la media de precios de forma "podada"
+
+datos %>% 
+  ggplot(., aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
+  geom_density_ridges(scale = 3, bandwidth = 20) +
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred")) +
+  theme(legend.position = "none") +
+  labs(title = "Precio de lista de productos de gestión menstrual según categoría",
+       subtitle = date,
+       x = "Precio de lista",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+A primera vista, los niveles de precios de toallitas y tampones se distribuyen en una misma escala. En el caso de los tampones hay una distribución bimodal, que puede deberse a la amplia cantidad de presentaciones de 8 y 16 unidades.
+
+<br><br>
+
+También podemos graficar los precios de cada categoría por regiones:
+
+```{r message=FALSE, warning=FALSE}
+datos %>% 
+  ggplot(., aes(x = Precio.de.lista, y = Region, fill = Categoría, alpha = Region)) +
+  geom_density_ridges(scale = 2, bandwidth = 20) + # el bandwidth anterior estaba en 10
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred"))+
+  facet_wrap(. ~ Categoría) +
+  theme(legend.position = "none") +
+  labs(title = "Precio de lista de productos de gestión menstrual según categoría y región",
+       subtitle = date,
+       x = "Precio de lista",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+En este caso se encuentran diferencias más que nada entre los tampones, no así en el caso de las toallitas. Dado el peso de GBA entre las observaciones, tiene sentido que la distribución general se asemeje a la de dicha región. En este caso, Cuyo presenta la distribución más anómala, pero podemos pensar que esto se debe a la baja cantidad de casos que tenemos registrados. 
+
+## Limpieza de la cantidad de unidades (Presentación)
+
+Como mencionábamos anteriormente, es necesario prestarle particular atención a la variable de `Presentación`, que indica la cantidad de unidades por cada paquete. En primer lugar, teniendo en cuenta que está expresada como "X un.", modificamos la variable para quedarnos únicamente con las unidades en formato numérico. Esto lo hacemos convirtiendo la variable al tipo character, y luego quedándonos con aquellos caracteres entre la primer posición y aquella que se encuentra 4 posiciones por detrás de la última (omitiendo así ".0 un"). En la tabla `presentacion_nros` resumimos el comportamiento de esta nueva variable `unidades`.
+
+```{r message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(Presentación = as.character(Presentación),
+         unidades = as.numeric(substr(Presentación, 1, nchar(Presentación)-4)))
+
+presentacion_nros <- datos %>% 
+  count(unidades) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+
+presentacion_nros
+```
+
+Sin embargo, en la base puede verse que hay casos que, de acuerdo a la descripción en `Nombre`, tienen mal la cantidad de unidades en `Presentacion` (y por ende en unidades), afectando el calculo de precios unitarios.
+<br><br>
+Utilizando expresiones regulares podemos quedarnos con los dígitos, sean uno o más, que están seguidos de "Un" o "un" en la variable `Nombre`. Nos quedamos con esta información en la variable `unidades_regex` y resumimos su comportamiento.
+
+```{r message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(unidades_regex = as.numeric(str_extract(Nombre, '\\d+(?=\\s*[Uu]n?)')))
+
+presentacion_regex <- datos %>% 
+  count(unidades_regex) %>% 
+  arrange(-n) %>% 
+  mutate(porcentaje = n/sum(n),
+         acumulado = cumsum(porcentaje),
+         porcentaje = percent(porcentaje),
+         acumulado = percent(acumulado))
+presentacion_regex
+```
+
+Nótese que hay pequeñas diferencias respecto del cuadro anterior. En este caso, las unidades se encuentran más concentradas en valores populares. Podemos identificar cuándo ambas informaciones (la contenida en `unidades` y en `unidades_regex`) coinciden y cuándo no. Creamos la variable `igual` que toma valor TRUE cuando son iguales, y FALSE cuando no. A continuación, en la tabla `comparo_unidades` se realiza un conteo de observaciones para ambas variables, se identifican las situaciones de coincidencia y diferencia y se ordenan los datos para ver primero las diferencias, según la magnitud.
+
+```{r message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(igual = case_when(unidades == unidades_regex ~ T,
+                           unidades != unidades_regex ~ F))
+
+comparo_unidades <- datos %>% 
+  count(unidades, unidades_regex) %>% 
+  mutate(igual = case_when(unidades == unidades_regex ~ T,
+                           unidades != unidades_regex ~ F)) %>% 
+  arrange(igual, -n)
+
+comparo_unidades
+```
+```{r}
+comparo_unidades %>% filter(igual == FALSE) %>% summarise(n=sum(n))
+```
+
+
+En particular, hay casos que fueron informados como de 54 unidades y en realidad eran de 8 (tiene sentido que este último sea el verdadero valor), un caso que fue informado como de 27 unidades y en realidad era de 16, y un caso que fue informado como de 12 unidades y en realidad era de 20. 
+
+```{r}
+cants_iguales <- datos %>% 
+  group_by(igual) %>% 
+  summarise(n = n()) %>% 
+  mutate(porc = percent(n/sum(n)))
+
+cants_iguales
+```
+
+
+Como puede verse arriba, hay en total `r cants_iguales %>% filter(igual == FALSE) %>% pull(n)` casos en que la información no coincide, lo que representa el `r cants_iguales %>% filter(igual == FALSE) %>% pull(porc)` de la información, y sólo `r cants_iguales %>% filter(is.na(igual)) %>% pull(n)` casos en que no había información sobre la cantidad de unidades en la descripción del artículo.
+
+Vale la pena destacar que estos errores corresponden a las regiones Gran Buenos Aires y Pampeana, mayormente concentrados en GBA, y en 2 marcas diferentes.
+
+```{r message=FALSE, warning=FALSE}
+# Distribucion de los datos que queremos sacar entre las regiones
+datos %>% 
+  filter(igual == FALSE) %>% 
+  count(Region)
+
+# Distribucion de los datos que queremos sacar entre las marcas
+datos %>% 
+  filter(igual == FALSE) %>% 
+  count(Marca)
+```
+
+### Aclaración
+
+En un ejercicio anterior (septiembre 2019), prescindimos de los valores faltantes en `unidades_regex` (por más que tengan valor en `unidades`, aquella que surge de la variable `Presentación`). Verificamos aquellos casos en que `unidades_regex` (que surge del texto en `Nombre`) no coincide con la variable `unidades`, y establecimos que las cantidades referidas a las unidades por paquete parecen ser mejor captadas con el método de regex sobre el texto del `Nombre` del producto, respecto de lo surgido de la información de la página como `Presentación`. Nos quedamos con `unidades_regex` para calcular el precio por unidad de los productos.
+
+```{r eval=FALSE, include=FALSE}
+# Este codigo esta anulado. Es lo que estaba en el ejercicio anterior
+unidades.faltantes <- datos %>% 
+  filter(is.na(unidades.regex)) %>% 
+  select(Nombre, unidades.regex, Presentación, unidades) %>% 
+  group_by(Nombre, unidades.regex, Presentación, unidades) %>% 
+  summarise(n())
+
+datos <- datos %>% 
+  filter(!is.na(unidades.regex))
+
+kable(unidades.faltantes) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+verif <- datos %>% 
+  filter(unidades.regex != unidades) %>% 
+  group_by(Nombre, unidades, unidades.regex) %>% 
+  summarise(n=n()) %>% 
+  arrange(-n)
+
+kable(verif) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+Esta vez, dado que el porcentaje de aquellos casos en que no coinciden `unidades` y `unidades_regex`, junto a los casos en que `unidades_regex` figura como `NA`, alcanzan solamente un `r cants_iguales %>% filter(igual == FALSE) %>% pull(porc)`, se prescindirá de ellos. 
+
+```{r message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  filter(igual == TRUE)
+```
+
+Luego de esta limpieza, ahora contamos con `r cant(nrow(datos))` observaciones. También podemos deshacernos de variables que no vamos a utilizar en el ejercicio de estimación.
+
+
+```{r message=FALSE, warning=FALSE}
+# Descarto las variables que no voy a usar
+datos <- datos %>% 
+  select(-Presentación, -unidades_regex, -igual)
+
+```
+        
+## Cálculo del precio por unidad
+
+Creo la variable `precio_unidad`, dividiendo el `Precio.de.lista` por las `unidades`.
+
+```{r message=FALSE, warning=FALSE}
+datos <- datos %>% 
+  mutate(precio_unidad = round(Precio.de.lista/unidades, 2))
+```
+
+## Gráficos del precio por unidad
+
+Ahora podemos observar la distribución de esta nueva variable con los mismos gráficos que utilizamos antes.
+
+```{r echo=TRUE, fig.height=7, fig.width=7, message=FALSE, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = Categoría)) +
+  geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 10
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred")) +
+  theme(legend.position = "none") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
+       subtitle = date,
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Esta vez, para realizar el gráfico por categorías y regiones, podemos ordenar a estas últimas según su precio promedio en el gráfico. Para ello construimos un vector que las aloje en orden, llamado `reg_ordenadas`. Luego, pisamos la variable `Region` en los datos para que sea de tipo factor, y el orden de la misma esté determinado según el vector previamente definido.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+reg_ordenadas <- datos %>% 
+  group_by(Region) %>% 
+  summarise(promedio = mean(precio_unidad)) %>% 
+  arrange(promedio) %$% Region
+
+datos <- datos %>% 
+  mutate(Region = factor(Region, levels = reg_ordenadas))
+```
+
+```{r echo=TRUE, fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Region, fill = Categoría, alpha = Region)) +
+  geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 1
+  theme_minimal() +
+  scale_fill_manual(values = c("red", "violetred"))+
+  facet_wrap(. ~ Categoría, scales = 'free') +
+  theme(legend.position = "none") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría y región",
+       subtitle = date,
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+## 2,5 % de los extremos de la distribución
+
+Adicionalmente, como el cálculo lo realizaremos agregando los precios de acuerdo a una media alpha podada con alpha = 2,5% (o sea, ignorando los valores superiores e inferiores para evitar la intrusión de outliers a pesar de la limpieza), presentamos gráficos que justamente muestran las "colas" de la distribución que se estarían obviando.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = factor(..quantile..))) +
+  stat_density_ridges(geom = "density_ridges_gradient", 
+                      calc_ecdf = TRUE, quantiles = c(0.025, 0.975),
+                      bandwidth = 1.25, scale = 1.5) + # El bandwidth anterior estaba en 0.75
+  scale_fill_manual(name = "Probabilidad", 
+                    values = c("violetred1", "red2", "violetred1"),
+                    labels = c("2,5 %", "95,0 %", "2,5 %")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
+       subtitle = paste(date),
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Realizamos el mismo gráfico por cada provincia, ya que esa será la primer unidad de agregación para el cálculo total a nivel nacional.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+prov_ordenadas <- datos %>% 
+  group_by(Provincia) %>% 
+  summarise(promedio = mean(precio_unidad)) %>% 
+  arrange(promedio) %$% 
+  Provincia
+
+datos <- datos %>% 
+  mutate(Provincia = factor(Provincia, levels = prov_ordenadas))
+```
+
+```{r echo=TRUE, fig.height=10, fig.width=9, message=FALSE, warning=FALSE}
+ggplot(datos, aes(x = precio_unidad, y = Provincia, 
+                  fill = factor(..quantile..))) +
+  stat_density_ridges(geom = "density_ridges_gradient", 
+                      calc_ecdf = TRUE, quantiles = c(0.025, 0.975),
+                      bandwidth = 1.25, scale = 2) +
+  scale_fill_manual(name = "Probabilidad", 
+                    values = c("violetred1", "red2", "violetred1"),
+                    labels = c("2,5 %", "95,0 %", "2,5 %")) +
+  #scale_x_continuous(limits = c(0, 30)) + # El limite anterior estaba en 20
+  facet_wrap(. ~ Categoría) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Precio por unidad de productos de gestión menstrual según categoría y provincia",
+       subtitle = paste(date, ". "),
+       x = "Precio por unidad",
+       y = "",
+       caption = "Fuente: #MenstruAcción")
+```
+
+Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
+
+```{r echo=TRUE}
+saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2024-03-05-limpio.RDS")
+```
