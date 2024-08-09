@@ -801,7 +801,7 @@ tabla2 <- tabla2a %>%
 
 # Ingresos mensuales, total de fuente laboral
 tabla3a <- serv.dom %>% 
-  summarise("Ingreso promedio" = weighted.mean(P47T - T_VI, PONDII),
+  summarise("Ingreso promedio" = weighted.mean(P47T - T_VI, PONDII/sum(PONDII)),
             "50% cobra menos de" = spatstat.geom::weighted.median(P47T - T_VI, PONDII)) %>% 
   mutate(Ingresos =  "Mensuales, total de fuente laboral")
 
