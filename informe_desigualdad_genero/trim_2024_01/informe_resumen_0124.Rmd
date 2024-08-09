@@ -1,12 +1,12 @@
 ---
 title: "La desigualdad de género se puede medir"
-date: "Mayo de 2024"
+date: " Agosto de 2024"
 output:
   html_notebook:
     theme: flatly
   html_document:
     df_print: paged
-subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2023.
+subtitle: Datos de la Encuesta Permanente de Hogares. 1er trimestre de 2024.
 urlcolor: null
 ---
 
@@ -73,8 +73,8 @@ library(readxl)
 #base_hogar <- read_excel("/Users/Ministerio.DESKTOP-46BS2MF/Documents/EF/usu_hogar_T422.xlsx.xlsx")
 
 # (funciones del paquete 'eph')
-base_individual <- get_microdata(year = 2023, trimester = 4, type = "individual")
-base_hogar <- get_microdata(year = 2023, trimester = 4, type = "hogar")
+base_individual <- get_microdata(year = 2024, trimester = 1, type = "individual")
+base_hogar <- get_microdata(year = 2024, trimester = 1, type = "hogar")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}

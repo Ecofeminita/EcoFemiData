@@ -6,10 +6,11 @@ output:
     theme: flatly
   html_document:
     df_print: paged
-subtitle: Datos de la Encuesta Permanente de Hogares. 4to trimestre de 2023.
+subtitle: Datos de la Encuesta Permanente de Hogares. 1er trimestre de 2024.
 urlcolor: null
 ---
 
+```{=html}
 <style>
 .nav>li>a {
     position: relative;
@@ -23,25 +24,25 @@ urlcolor: null
     background-color: #E5616E;
 }
 </style>
+```
 
----
+------------------------------------------------------------------------
 
-# {.tabset .tabset-fade .tabset-pills}
+#  {.tabset .tabset-fade .tabset-pills}
 
 ## Home
 
----
+------------------------------------------------------------------------
 
 ### 
-En este informe se pueden explorar las diferencias en la inserción en el mercado de trabajo, en los ingresos que perciben, en la cantidad de horas que trabajan semanalmente, y la distribución de las tareas domésticas entre varones y mujeres. Presentamos esta información para el país en general y desagregada por región. 
-<br><br>
+
+En este informe se pueden explorar las diferencias en la inserción en el mercado de trabajo, en los ingresos que perciben, en la cantidad de horas que trabajan semanalmente, y la distribución de las tareas domésticas entre varones y mujeres. Presentamos esta información para el país en general y desagregada por región. <br><br>
 
 Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hacemos podés apoyarnos haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
 
----
+------------------------------------------------------------------------
 
-^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2023). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. http://doi.org/10.5281/zenodo.4540185"
-
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2023). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. <http://doi.org/10.5281/zenodo.4540185>"
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 # Se limpia la memoria y se cargan librerías útiles
@@ -134,20 +135,22 @@ coloresb = c("#8CDDD3", "#8594C6", "#F8F5EE")
 
 ## Mercado de Trabajo
 
----
+------------------------------------------------------------------------
 
 ### Sobre la composición del Mercado de Trabajo {.tabset .tabset-fade .tabset-pills}
-<br><br>
-En esta sección se intenta mostrar las asimetrías que existen en el mercado de trabajo en cuanto a su composición. Para esto se utilizan las tasas de actividad, empleo, desempleo y subocupación según el sexo de las personas. El objetivo es ver qué tan masculinizado se encuentra el mercado laboral y ver si las mujeres encuentran más problemas a la hora de conseguir un empleo. También se analizan estos indicadores teniendo en cuenta la edad de las personas y se examina la incidencia de la informalidad en las relaciones de dependencia de asalariados y asalariadas. A su vez, se grafica la diferencia en acceso a cargos jerárquicos y la estructura de las diferentes ramas de ocupación, vinculando estos datos a las ideas de segregación vertical y horizontal en el mercado de trabajo.
 
----
+<br><br> En esta sección se intenta mostrar las asimetrías que existen en el mercado de trabajo en cuanto a su composición. Para esto se utilizan las tasas de actividad, empleo, desempleo y subocupación según el sexo de las personas. El objetivo es ver qué tan masculinizado se encuentra el mercado laboral y ver si las mujeres encuentran más problemas a la hora de conseguir un empleo. También se analizan estos indicadores teniendo en cuenta la edad de las personas y se examina la incidencia de la informalidad en las relaciones de dependencia de asalariados y asalariadas. A su vez, se grafica la diferencia en acceso a cargos jerárquicos y la estructura de las diferentes ramas de ocupación, vinculando estos datos a las ideas de segregación vertical y horizontal en el mercado de trabajo.
+
+------------------------------------------------------------------------
 
 #### Tasas básicas
+
 <br>
 
-##### {.tabset .tabset-fade .tabset-pills}
+#####  {.tabset .tabset-fade .tabset-pills}
 
 ###### Total nacional
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -184,17 +187,24 @@ inline_2 <- tabla1.1 %>%
   pull(diferencia)
 ```
 
-En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo. Para ahondar en los conceptos utilizados se puede explorar el glosario de este informe.
-<br><br>
+En primer lugar se presentan algunos indicadores clásicos (utilizados a nivel internacional) que caracterizan la composición del mercado de trabajo, desagregados según el sexo. Para ahondar en los conceptos utilizados se puede explorar el glosario de este informe. <br><br>
 
-La __tasa de actividad__ es ampliamente mayor entre los varones (la diferencia ronda los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La __tasa de empleo__, por su parte, exhibe una diferencia entre varones y mujeres que ronda los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado.
-<br><br>
+La **tasa de actividad** es ampliamente mayor entre los varones (la diferencia ronda los `r inline_1` puntos porcentuales). Esta discrepancia podría ser explicada por múltiples causas. Una de ellas es que una importante porción de las mujeres en edad laboral dediquen su tiempo a realizar tareas domésticas no remuneradas, en lugar de tener una actividad en el mercado de trabajo. Otra razón posible podría ser el hecho de que las mujeres tiendan, en promedio, a educarse más que sus pares varones. La **tasa de empleo**, por su parte, exhibe una diferencia entre varones y mujeres que ronda los `r inline_2` puntos, denotando el mismo fenómeno anteriormente mencionado. <br><br>
 
-Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos.
-<br><br>
+Es importante aclarar que estas tasas expresan el comportamiento agregado de la población, y que las diferencias entre varones y mujeres sufren variaciones si se tienen en cuenta otras variables, como pueden ser los grupos de edad, el nivel educativo, la presencia de niñes en el hogar o el nivel de ingresos. <br><br>
 
-<p style="color:#E5616E">__Tasas de actividad y empleo por sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Tasas de actividad y empleo por sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años y más. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.2 <- tabla1.1 %>% 
   filter(Indicadores %in% c("Tasa Actividad", "Tasa Empleo")) %>% 
@@ -218,15 +228,22 @@ ggplot(tabla1.2, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 #ggsave("Figura1.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
----
+------------------------------------------------------------------------
 
-A diferencia de las tasas anteriores, las __tasas de desocupación y subocupación__ expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. 
-<br><br>
-En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino.
-<br><br>
+A diferencia de las tasas anteriores, las **tasas de desocupación y subocupación** expresan la proporción que estos grupos representan en la Población Económicamente Activa. Usualmente, ambas tasas son mayores para las mujeres que para los varones, señalando que, incluso siendo minoría en el mercado de trabajo, las mujeres tendrían más dificultades para conseguir trabajo y/o para trabajar una jornada completa. <br><br> En su conjunto, los cuatro indicadores presentados en esta sección muestran una primera imagen de la problemática que enfrentan las mujeres en el mercado de trabajo argentino. <br><br>
 
-<p style="color:#E5616E">__Tasas de desocupación y subocupación por sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Tasas de desocupación y subocupación por sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años y más. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.3 <- tabla1.1 %>% 
   filter(Indicadores %in% c("Tasa Desocupación", "Tasa Subocupación")) %>% 
@@ -251,9 +268,8 @@ ggplot(tabla1.3, aes(x = '', proporcion, fill = Sexo, group = Sexo,
 ```
 
 ###### Por región
-<br>
-A continuación se presentan las tasas de actividad, empleo, desocupación y subocupación para varones y mujeres según la región. 
-<br><br>
+
+<br> A continuación se presentan las tasas de actividad, empleo, desocupación y subocupación para varones y mujeres según la región. <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 #chequeamos cantidades muestrales
@@ -297,8 +313,18 @@ tabla1.5 <- base_individual %>%
   arrange(Indicadores)
 ```
 
-<p style="color:#E5616E">__Tasas de actividad y empleo por región y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
+<p style="color:#E5616E">
+
+**Tasas de actividad y empleo por región y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años y más. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #cuadro de tasas básicas por región opción 2 de visualización
 tabla1.5_graf1 <- tabla1.5 %>% 
@@ -323,8 +349,18 @@ ggplot(tabla1.5_graf1, aes(x = Indicadores, proporcion, fill = Sexo,
 #ggsave("Tasasbasicas1region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-<p style="color:#E5616E">__Tasas de desocupación y subocupación por región y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. `r date`__</p>
+<p style="color:#E5616E">
+
+**Tasas de desocupación y subocupación por región y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años y más. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.5_graf2 <- tabla1.5 %>% 
   pivot_longer(., cols=3:4, names_to = "Sexo", values_to = "proporcion") %>% 
@@ -347,7 +383,6 @@ ggplot(tabla1.5_graf2, aes(x = Indicadores, proporcion, fill = Sexo,
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
 #ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
-
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla1.1, tabla1.2, tabla1.3, tabla1.4, tabla1.5, tabla1.5_graf1, tabla1.5_graf2)
@@ -400,20 +435,27 @@ inline_4 <- tabla1.6v %>%
 ```
 
 #### Por grupos de edad
-<br>
-A continuación se exponen los mismos indicadores, pero desagregados por grupos de edad además de por sexo.
-<br><br>
-En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación y subocupación. Para dar un ejemplo, __un `r inline_3` de las mujeres de 14 a 29 años está desocupada__, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de más del __`r inline_4`.__
-<br><br>
-Asimismo, se verifica una diferencia en las tasas de actividad y empleo entre las mujeres y varones de entre 30 y 64 años.
-<br><br>
 
-##### {.tabset .tabset-fade .tabset-pills}
+<br> A continuación se exponen los mismos indicadores, pero desagregados por grupos de edad además de por sexo. <br><br> En este caso, llama la atención que son las mujeres más jóvenes las que presentan las mayores tasas de desocupación. Para dar un ejemplo, **un `r inline_3` de las mujeres de 14 a 29 años está desocupada**, es decir que, no teniendo ocupación, están buscando activamente un trabajo y no lo consiguen. En cambio, en el caso de los varones jóvenes, el porcentaje de desocupados es de más del **`r inline_4`.** <br><br> Asimismo, se verifica una diferencia en las tasas de actividad y empleo entre las mujeres y varones de entre 30 y 64 años. <br><br>
+
+#####  {.tabset .tabset-fade .tabset-pills}
 
 ###### Total nacional
+
 <br>
-<p style="color:#E5616E">__Principales tasas del mercado de trabajo, por grupos de edad y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años a 64 años. `r aglo_date`__</p>
+
+<p style="color:#E5616E">
+
+**Principales tasas del mercado de trabajo, por grupos de edad y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años a 64 años. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.7 %>% 
   kable(align = "lcccc") %>%
@@ -433,10 +475,10 @@ tabla1.7 %>%
 ```
 
 ###### Por región
+
 <br>
 
-Las tasas del mercado de trabajo presentan diferentes valores para mujeres y varones, pero también hay diferencias según el grupo de edad. Los y las jóvenes presentan menores tasas de actividad y empleo y mayores tasas de desocupación y subocupación que las personas de entre 30 y 64 años en todas las regiones del país. 
-<br>
+Las tasas del mercado de trabajo presentan diferentes valores para mujeres y varones, pero también hay diferencias según el grupo de edad. Los y las jóvenes presentan menores tasas de actividad y empleo y mayores tasas de desocupación y subocupación que las personas de entre 30 y 64 años en todas las regiones del país. <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 #chequeamos cantidades muestrales
@@ -472,8 +514,19 @@ tabla1.9 <- base_individual %>%
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de actividad por grupo de edad y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r aglo_date`__</p>
+
+<p style="color:#E5616E">
+
+**Tasa de actividad por grupo de edad y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años a 64 años, según región. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf1 <- tabla1.9 %>% 
@@ -499,8 +552,19 @@ ggplot(tabla1.9_graf1, aes(x = GRUPO_EDAD, Actividad, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de empleo por grupo de edad y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
+
+<p style="color:#E5616E">
+
+**Tasa de empleo por grupo de edad y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años a 64 años, según región. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf2 <- tabla1.9 %>% 
@@ -526,8 +590,19 @@ ggplot(tabla1.9_graf2, aes(x = GRUPO_EDAD, Empleo, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de desocupación por grupo de edad y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
+
+<p style="color:#E5616E">
+
+**Tasa de desocupación por grupo de edad y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años a 64 años, según región. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf3 <- tabla1.9 %>% 
@@ -553,8 +628,19 @@ ggplot(tabla1.9_graf3, aes(x = GRUPO_EDAD, Desocupación, fill = Sexo,
 ```
 
 <br>
-<p style="color:#E5616E">__Tasa de subocupación por grupo de edad y sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años a 64 años, según región. `r date`__</p>
+
+<p style="color:#E5616E">
+
+**Tasa de subocupación por grupo de edad y sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años a 64 años, según región. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 tabla1.9_graf4 <- tabla1.9 %>% 
@@ -579,20 +665,20 @@ ggplot(tabla1.9_graf4, aes(x = GRUPO_EDAD, Subocupación, fill = Sexo,
 #ggsave("Tasasbasicas2region.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla1.6, tabla1.6v, tabla1.6m, tabla1.7, tabla1.8, tabla1.9, tabla1.9_graf1, tabla1.9_graf2, tabla1.9_graf3, tabla1.9_graf4)
 ```
 
 #### Empleo no registrado
-<br>
-La falta de descuento jubilatorio suele ser un indicador que aproxima la falta de registro de la relación laboral asalariada. La incidencia de esta problemática es mayor entre las asalariadas mujeres. A su vez, este indicador varía de acuerdo a las características de cada economía regional. 
-<br><br>
 
-##### {.tabset .tabset-fade .tabset-pills}
+<br> La falta de descuento jubilatorio suele ser un indicador que aproxima la falta de registro de la relación laboral asalariada. La incidencia de esta problemática es mayor entre las asalariadas mujeres. A su vez, este indicador varía de acuerdo a las características de cada economía regional. <br><br>
+
+#####  {.tabset .tabset-fade .tabset-pills}
 
 ###### Total nacional
+
 <br>
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 tabla1.10 <- base_individual %>% 
   filter(ESTADO==1,
@@ -609,11 +695,20 @@ inline_6 <- tabla1.10 %>%
   pull(`Sin descuento jubilatorio`)
 ```
 
-En concreto, en el país hay un __`r inline_5`__ de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios, mientras que para los asalariados varones dicha tasa es del __`r inline_6`.__
-<br><br>
+En concreto, en el país hay un **`r inline_5`** de las asalariadas que por su trabajo realizado no posee descuentos jubilatorios, mientras que para los asalariados varones dicha tasa es del **`r inline_6`.** <br><br>
 
-<p style="color:#E5616E">__Empleo sin descuento jubilatorio por sexo__</p>
-<p style="color:#c9c9c9">__Ocupadas/os asalariadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Empleo sin descuento jubilatorio por sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os asalariadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.10 %>% 
   kable(align = "c") %>% 
@@ -632,6 +727,7 @@ rm(tabla1.10)
 ```
 
 ###### Por región
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -645,8 +741,18 @@ tabla1.11 <- base_individual %>%
 
 ```
 
-<p style="color:#E5616E">__Porcentaje de asalariadas/os sin descuento jubilatorio por sexo__</p>
-<p style="color:#c9c9c9">__Población de 14 años y más. Según región. `r date`__</p>
+<p style="color:#E5616E">
+
+**Porcentaje de asalariadas/os sin descuento jubilatorio por sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población de 14 años y más. Según región. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.11_graf1 <- tabla1.11 %>% 
   pivot_longer(., cols=2:3, names_to = "Sexo", values_to = "proporcion") 
@@ -669,6 +775,7 @@ rm(tabla1.11, tabla1.11_graf1)
 ```
 
 #### Cargos jerárquicos
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -694,13 +801,20 @@ inline_8 <- tabla1.12 %>%
   percent(., 1)
 ```
 
-Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos:  mientras que un __`r inline_7`__ de los ocupados varones tienen cargos de dirección o son jefes, solo un __`r inline_8`__ de las ocupadas ejercen puestos de esas características.
-<br><br>
-Esta problemática es conocida como __techo de cristal__ o __segregación vertical__ del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
-<br><br>
+Además de tener una participación más restringida en el mercado de trabajo, las ocupadas encuentran más obstáculos para acceder a cargos jerárquicos: mientras que un **`r inline_7`** de los ocupados varones tienen cargos de dirección o son jefes, solo un **`r inline_8`** de las ocupadas ejercen puestos de esas características. <br><br> Esta problemática es conocida como **techo de cristal** o **segregación vertical** del mercado de trabajo, y hace referencia a la dificultad que poseen las mujeres para ascender profesionalmente en el mercado laboral. Si se tiene en cuenta que el mercado de trabajo en general se encuentra masculinizado, estos porcentajes indican que hay muchas más probabilidades de tener un jefe o director varón en los espacios de trabajo. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. <br><br>
 
-<p style="color:#E5616E">__Mujeres y Varones en cargos de dirección y jefatura__</p>
-<p style="color:#c9c9c9">__Porcentaje de cargos jerárquicos entre ocupadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Mujeres y Varones en cargos de dirección y jefatura**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Porcentaje de cargos jerárquicos entre ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(tabla1.12 %>% filter(JERARQUIA == "Dirección o Jefes"), 
        aes(x = '', proporcion, fill = Sexo, group = Sexo, 
@@ -714,7 +828,7 @@ ggplot(tabla1.12 %>% filter(JERARQUIA == "Dirección o Jefes"),
         axis.title.x = element_blank(),
         axis.text.y = element_blank())
 ```
-       
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Aquí hay que cambiar el directorio en que se va a guardar el gráfico.
 #ggsave("Figura5.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
@@ -725,6 +839,7 @@ rm(tabla1.12)
 ```
 
 #### Ramas de la ocupación
+
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -753,13 +868,20 @@ tabla1.13 <- organize_caes(base_individual) %>%
             "Ingreso horario" = formato_pesos(round(ingreso_hor), 0))
 ```
 
-La siguiente tabla presenta los porcentajes de ocupadas mujeres sobre el total de ocupados y ocupadas para cada rama de ocupación. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas.
-<br><br>
-Este fenómeno se conoce como __paredes de cristal__ o __segregación horizontal__, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. 
-<br><br>
+La siguiente tabla presenta los porcentajes de ocupadas mujeres sobre el total de ocupados y ocupadas para cada rama de ocupación. La tasa de feminización indica el porcentaje de mujeres que hay en cada una de ellas y, como puede observarse, las mujeres se encuentran sobrerrepresentadas en aquellos sectores vinculados al cuidado y las tareas de reproducción, como son el servicio doméstico, la enseñanza y los servicios sociales y de salud. Por su parte, sectores como la construcción, transporte y comunicaciones, las actividades primarias e incluso la industria manufacturera se encuentran masculinizadas. <br><br> Este fenómeno se conoce como **paredes de cristal** o **segregación horizontal**, y hace referencia a los muros invisibles que segmentan el mercado de trabajo de acuerdo a los estereotipos de género aún vigentes. Para una descripción más extensa de estos términos se puede consultar el Glosario de este informe. <br><br>
 
-<p style="color:#E5616E">__Indicadores por ramas de la ocupación (seleccionadas)__</p>
-<p style="color:#c9c9c9">__Ocupadas/os. Tasa de feminización, ingreso mensual promedio, ingreso horario. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Indicadores por ramas de la ocupación (seleccionadas)**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os. Tasa de feminización, ingreso mensual promedio, ingreso horario. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.13 %>% 
   kable(align = 'lccc') %>%
@@ -776,12 +898,9 @@ tabla1.13 %>%
 rm(tabla1.13)
 ```
 
----
+------------------------------------------------------------------------
 
-<br>
-Si observamos la distribución de ingresos de las y los ocupados según rama de ocupación, vemos que Servicio Doméstico no sólo es la rama más feminizada sino que además concentra los menores ingresos.
-<br><br>
-
+<br> Si observamos la distribución de ingresos de las y los ocupados según rama de ocupación, vemos que Servicio Doméstico no sólo es la rama más feminizada sino que además concentra los menores ingresos. <br><br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla1.14 <- organize_caes(base_individual) %>% 
@@ -796,8 +915,18 @@ tabla1.14 <- organize_caes(base_individual) %>%
   "Construccion"))
 ```
 
-<p style="color:#E5616E">__Distribución del ingreso según ramas de ocupación (seleccionadas)__</p>
-<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Distribución del ingreso según ramas de ocupación (seleccionadas)**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE,  results='hide'}
 # Tira warnings porque ajustamos el limite superior del eje x a mano y hay observaciones con P21 por encima de $150.000
 ggplot(tabla1.14, aes(x = P21, y = Rama, weights = PONDIIO, group = Rama, alpha = Rama != "Servicio domestico")) +
@@ -819,27 +948,26 @@ rm(tabla1.14)
 
 ## Ingresos
 
----
+------------------------------------------------------------------------
 
 ### Ingresos {.tabset .tabset-fade .tabset-pills}
-<br><br>
-En esta sección se coloca el foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. A su vez, pueden distinguirse los ingresos mensuales y los ingresos por hora trabajada.
-<br><br>
-Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como _"las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones"._
 
----
+<br><br> En esta sección se coloca el foco en las diferencias de montos de ingresos que perciben los varones y las mujeres. Estos ingresos pueden provenir de diversas fuentes y al mismo tiempo pueden desagregarse según características adicionales de las personas o los puestos que desempeñan. A su vez, pueden distinguirse los ingresos mensuales y los ingresos por hora trabajada. <br><br> Para dimensionar estas diferencias hacemos uso del concepto de "brecha", que en este caso se calcula como la diferencia entre los ingresos promedios de los varones y las mujeres, expresada en términos del ingreso más alto. Es decir, que puede leerse como *"las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones".*
+
+------------------------------------------------------------------------
 
 #### Ingresos mensuales
 
-En todas las regiones del país, los ingresos promedios de las mujeres son menores que los de los varones.
-<br><br>
+En todas las regiones del país, los ingresos promedios de las mujeres son menores que los de los varones. <br><br>
 
-##### {.tabset .tabset-fade .tabset-pills}
+#####  {.tabset .tabset-fade .tabset-pills}
 
 ###### Total Nacional
+
 <br><br>
 
-####### __Brechas de ingresos mensuales__
+####### **Brechas de ingresos mensuales**
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -853,14 +981,14 @@ tabla2.1 <- base_individual %>%
   mutate(Población = "Perceptores de ingresos",
          Ingreso = "Ingreso Total Individual")
 
-#VEAMOS COMO SUMAMOS ESTO AL TEXTO DEL INFORME!!!
-tabla2.1.a <- base_individual %>% 
-  filter(P47T > 0) %>% 
-  group_by(Sexo) %>%
-  summarise(Mediana.ITI = formato_pesos(round(spatstat.geom::weighted.median(as.numeric(P47T), as.numeric(PONDII))))) %>%
-  spread(., Sexo, Mediana.ITI) %>%
-  mutate(Población = "Perceptores de ingresos",
-         Ingreso = "50% cobra menos de")
+#VEAMOS COMO SUMAMOS ESTO AL TEXTO DEL INFORME!!! ##ver da error el cógido
+#tabla2.1.a <- base_individual %>% 
+ # filter(P47T > 0) %>% 
+  #group_by(Sexo) %>%
+  #summarise(Mediana.ITI = formato_pesos(round(spatstat.geom::weighted.median(as.numeric(P47T), as.numeric(PONDII))))) %>%
+  #spread(., Sexo, Mediana.ITI) %>%
+  #mutate(Población = "Perceptores de ingresos",
+   #      Ingreso = "50% cobra menos de")
 
 # Ingreso de la Ocupación Principal
 tabla2.2 <- base_individual %>% 
@@ -919,17 +1047,20 @@ inline_13 <- tabla2.5 %>%
   pull(Brecha)
 ```
 
-Como se ve en el siguiente cuadro, para el caso de todas las personas perceptoras de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de __`r inline_9`__. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones.
-<br><br>
-Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un __`r inline_10`__ menos que los varones (_`r inline_11`_ vs. _`r inline_12`_). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal.
-<br><br>
-Si tomamos en cuenta únicamente a aquellas personas que no poseen descuentos jubilatorios, se observa cómo las mujeres ganan en promedio un __`r inline_13`__ menos que sus pares. Es decir que la brecha de ingresos entre las y los trabajadores se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo.
-<br><br>
-Finalmente, puede observarse que también existe una brecha, aunque mucho menor, entre las jubilaciones que perciben las mujeres y los varones.
-<br><br>
+Como se ve en el siguiente cuadro, para el caso de todas las personas perceptoras de ingresos, la brecha entre mujeres y varones respecto al ingreso total individual es de **`r inline_9`**. Es decir, contemplando todos los ingresos que se perciben, sean de origen laboral o no laboral (como jubilaciones y pensiones, cuotas alimentarias, subsidios, etc.), las mujeres perciben ingresos que, en promedio, son un `r inline_9` menores que los de los varones. <br><br> Simultáneamente, en el mercado de trabajo, las mujeres ganan en promedio un **`r inline_10`** menos que los varones (*`r inline_11`* vs. *`r inline_12`*). Estos datos corresponden a la totalidad de ocupadas/os, cualquiera sea su categoría ocupacional, calificación o jerarquía, y observando en este caso los ingresos provenientes de su ocupación principal. <br><br> Si tomamos en cuenta únicamente a aquellas personas que no poseen descuentos jubilatorios, se observa cómo las mujeres ganan en promedio un **`r inline_13`** menos que sus pares. Es decir que la brecha de ingresos entre las y los trabajadores se amplía cuando vemos a aquellas/os asalariadas/os que tienen peores condiciones de trabajo. <br><br> Finalmente, puede observarse que también existe una brecha, aunque mucho menor, entre las jubilaciones que perciben las mujeres y los varones. <br><br>
 
-<p style="color:#E5616E">__Brechas de ingresos mensuales__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de ingresos mensuales**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.5 %>% 
   select(Población, Ingreso, Mujeres, Varones, Brecha) %>% 
@@ -952,9 +1083,10 @@ tabla2.5 %>%
 rm(tabla2.1, tabla2.2, tabla2.3, tabla2.4, tabla2.5)
 ```
 
----
+------------------------------------------------------------------------
 
-####### __Brecha de ingresos mensuales por calificación del puesto de trabajo__
+####### **Brecha de ingresos mensuales por calificación del puesto de trabajo**
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1012,13 +1144,21 @@ inline_19 <- tabla2.6 %>%
   percent(., 1)
 ```
 
-El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de _`r inline_14`_, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de _`r inline_15`_, es decir, un __`r inline_16`__ menos.    
-En los puestos no calificados, los varones ganan _`r inline_17`_ en promedio, al tiempo que las mujeres ganan alrededor de _`r inline_18`_. Esta brecha es del __`r inline_19`__.
-<br><br>
+El siguiente gráfico señala cómo la brecha de ingresos mensuales de las/os ocupadas/os se mantiene incluso a iguales niveles de calificación del puesto de trabajo. Por ejemplo, mientras que los varones que trabajan en ocupaciones profesionales tienen un ingreso medio de *`r inline_14`*, las mujeres ocupadas en ese mismo segmento perciben un ingreso medio de *`r inline_15`*, es decir, un **`r inline_16`** menos.\
+En los puestos no calificados, los varones ganan *`r inline_17`* en promedio, al tiempo que las mujeres ganan alrededor de *`r inline_18`*. Esta brecha es del **`r inline_19`**. <br><br>
 
-<p style="color:#E5616E">__Brecha de ingresos de la ocupación principal
-       por sexo y calificación ocupacional__</p>
-<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Brecha de ingresos de la ocupación principal por sexo y calificación ocupacional**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.6_graf1 <- tabla2.6 %>% 
   pivot_wider(., names_from = Sexo, values_from = IOP_mensual) %>% 
@@ -1050,9 +1190,10 @@ ggplot(tabla2.6_graf1,
 rm(tabla2.6, tabla2.6_graf1)
 ```
 
----
+------------------------------------------------------------------------
 
-####### __Brecha de ingresos mensuales por nivel educativo__ 
+####### **Brecha de ingresos mensuales por nivel educativo**
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1091,13 +1232,20 @@ inline_21 <- tabla2.8 %>%
   percent(., 1)
 ```
 
-Como puede observarse en el cuadro siguiente, el porcentaje de personas que cuentan con un nivel educativo superior es notablemente mayor entre las ocupadas mujeres, en comparación a los ocupados varones.
-<br><br>
-Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos es del __`r inline_20`__ para las de nivel universitario/superior, y del __`r inline_21`__ para las que cuentan con nivel primario.
-<br><br>
+Como puede observarse en el cuadro siguiente, el porcentaje de personas que cuentan con un nivel educativo superior es notablemente mayor entre las ocupadas mujeres, en comparación a los ocupados varones. <br><br> Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trabajadoras son inferiores a los de los varones. Esta diferencia de ingresos es del **`r inline_20`** para las de nivel universitario/superior, y del **`r inline_21`** para las que cuentan con nivel primario. <br><br>
 
-<p style="color:#E5616E">__Nivel educativo de mujeres y varones__</p>
-<p style="color:#c9c9c9">__Porcentaje por columnas. Ocupadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Nivel educativo de mujeres y varones**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Porcentaje por columnas. Ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.7 %>% 
   mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
@@ -1123,9 +1271,19 @@ tabla2.8_graf1 <- tabla2.8 %>%
 ```
 
 <br><br>
-<p style="color:#E5616E">__Brecha de ingresos de la ocupación principal
-       por sexo y nivel educativo__</p>
-<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+
+<p style="color:#E5616E">
+
+**Brecha de ingresos de la ocupación principal por sexo y nivel educativo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(tabla2.8_graf1, 
        aes(x = Mujeres, xend = Varones, y = NIVEL_EDUCATIVO, 
@@ -1239,10 +1397,21 @@ tabla2.14 <- left_join(tabla2.13m, tabla2.13v, by = c("Población", "Ingreso")) 
 ```
 
 ###### Cuyo
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Cuyo. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. Cuyo. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>% 
   select(1:5) %>% 
@@ -1262,12 +1431,22 @@ tabla2.14 %>%
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
 
-
 ###### GBA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. GBA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. GBA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>% 
   select(c(1,2,6,7,8)) %>% 
@@ -1288,10 +1467,21 @@ tabla2.14 %>%
 ```
 
 ###### NEA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. NEA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. NEA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>% 
   select(c(1,2,9,10,11)) %>% 
@@ -1312,10 +1502,21 @@ tabla2.14 %>%
 ```
 
 ###### NOA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. NOA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. NOA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>% 
   select(c(1,2,12,13,14)) %>% 
@@ -1336,10 +1537,21 @@ tabla2.14 %>%
 ```
 
 ###### Pampeana
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Pampeana. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. Pampeana. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>%
   select(c(1,2,15,16,17)) %>% 
@@ -1360,10 +1572,21 @@ tabla2.14 %>%
 ```
 
 ###### Patagonia
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos mensuales promedio y brecha__</p>
-<p style="color:#c9c9c9">__Por poblaciones y tipos de ingresos. Patagonia. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos mensuales promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por poblaciones y tipos de ingresos. Patagonia. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.14 %>% 
   select(c(1,2,18,19,20)) %>% 
@@ -1389,12 +1612,12 @@ rm(tabla2.9, tabla2.10, tabla2.11, tabla2.12, tabla2.13, tabla2.13b, tabla2.13m,
 
 #### Ingresos horarios
 
-Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Que las brechas sean más amplias comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares.
-<br><br>
+Si en lugar de comparar ingresos mensuales tomamos el ingreso por hora trabajada que perciben las personas, la historia es un poco diferente. En este caso, la brecha disminuye considerablemente. Que las brechas sean más amplias comparando ingresos mensuales de bolsillo, y que sean más estrechas cuando se toman los ingresos por hora, sugiere que las mujeres venden en el mercado de trabajo, por lo general, menos horas que los varones. Como se verá más adelante, esto está ligado al trabajo que las mismas suelen realizar al interior de los hogares. <br><br>
 
-##### {.tabset .tabset-fade .tabset-pills}
+#####  {.tabset .tabset-fade .tabset-pills}
 
 ###### Total Nacional
+
 <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1450,8 +1673,18 @@ tabla2.18 <- bind_rows(tabla2.15, tabla2.16, tabla2.17) %>%
   select(Población, Mujeres, Varones, Brecha)
 ```
 
-<p style="color:#E5616E">__Brechas de ingresos horarios__</p>
-<p style="color:#c9c9c9">__`r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de ingresos horarios**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**`r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla2.18, digits = 1, align = 'lccc') %>%
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
@@ -1471,9 +1704,10 @@ kable(tabla2.18, digits = 1, align = 'lccc') %>%
 rm(tabla2.15, tabla2.16, tabla2.17, tabla2.18)
 ```
 
----
+------------------------------------------------------------------------
 
-####### __Brecha de ingresos horarios por nivel educativo__
+####### **Brecha de ingresos horarios por nivel educativo**
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1497,12 +1731,20 @@ tabla2.19_graf1 <- tabla2.19 %>%
          x = (Varones+Mujeres)/2)
 ```
 
-Tal como se analizó en el caso anterior, si se observa la brecha de ingresos horarios por nivel educativo alcanzado, la misma se reduce significativamente, aunque sigue presente en algunas categorías.
-<br><br>
+Tal como se analizó en el caso anterior, si se observa la brecha de ingresos horarios por nivel educativo alcanzado, la misma se reduce significativamente, aunque sigue presente en algunas categorías. <br><br>
 
-<p style="color:#E5616E">__Brecha de ingresos horarios de la ocupación principal
-       por sexo y nivel educativo__</p>
-<p style="color:#c9c9c9">__Ocupadas/os. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Brecha de ingresos horarios de la ocupación principal por sexo y nivel educativo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Ocupadas/os. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(tabla2.19_graf1, 
        aes(x = Mujeres, xend = Varones, y = NIVEL_EDUCATIVO, 
@@ -1626,10 +1868,21 @@ tabla2.24 <- left_join(tabla2.23m, tabla2.23v, by = c("Población")) %>%
 ```
 
 ###### Cuyo
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__Cuyo. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Cuyo. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1:4) %>% 
@@ -1649,10 +1902,21 @@ tabla2.24 %>%
 ```
 
 ###### GBA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__GBA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**GBA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1, 5:7) %>% 
@@ -1670,10 +1934,21 @@ tabla2.24 %>%
 ```
 
 ###### NEA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__NEA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**NEA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1, 8:10) %>% 
@@ -1691,10 +1966,21 @@ tabla2.24 %>%
 ```
 
 ###### NOA
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__NOA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**NOA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1, 11:13) %>% 
@@ -1712,10 +1998,21 @@ tabla2.24 %>%
 ```
 
 ###### Pampeana
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__Pampeana. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Pampeana. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1, 14:16) %>% 
@@ -1733,10 +2030,21 @@ tabla2.24 %>%
 ```
 
 ###### Patagonia
+
 <br><br>
 
-<p style="color:#E5616E">__Ingresos horarios promedio y brecha__</p>
-<p style="color:#c9c9c9">__Patagonia. `r date`__</p>
+<p style="color:#E5616E">
+
+**Ingresos horarios promedio y brecha**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Patagonia. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.24 %>% 
   select(1, 17:19) %>% 
@@ -1757,22 +2065,20 @@ tabla2.24 %>%
 rm(tabla2.20, tabla2.21, tabla2.22, tabla2.23, tabla2.23b, tabla2.23m, tabla2.23v, tabla2.24)
 ```
 
-
 ## Horas trabajadas
 
----
+------------------------------------------------------------------------
 
 ### Horas trabajadas
+
 <br><br>
 
-La idea de la "brecha" también puede aplicarse para comparar las horas que trabajan en promedio mujeres y varones en su ocupación principal en el mercado de trabajo, de forma remunerada. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante (aunque no toda) de la brecha de ingresos mensuales.
-<br><br>
-Cabe cuestionarse entonces respecto al por qué de la diferencia de horas trabajadas por mujeres y por varones. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿Son más "vagas"? ¿O en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los varones están exentos? Como veremos más adelante, los datos sugieren una estrecha relación con la distribución de las tareas domésticas hacia el interior de los hogares.
-<br><br>
+La idea de la "brecha" también puede aplicarse para comparar las horas que trabajan en promedio mujeres y varones en su ocupación principal en el mercado de trabajo, de forma remunerada. De aquí se desprende que, en promedio, las mujeres trabajan menos horas que los varones, y esto explica una parte importante (aunque no toda) de la brecha de ingresos mensuales. <br><br> Cabe cuestionarse entonces respecto al por qué de la diferencia de horas trabajadas por mujeres y por varones. ¿Existe una falta de voluntad de las mujeres para trabajar? ¿Son más "vagas"? ¿O en realidad existe otro motivo por el cual las mujeres deben relegar sus trabajos, del cual los varones están exentos? Como veremos más adelante, los datos sugieren una estrecha relación con la distribución de las tareas domésticas hacia el interior de los hogares. <br><br>
 
-#### {.tabset .tabset-fade .tabset-pills}
+####  {.tabset .tabset-fade .tabset-pills}
 
 ##### Total nacional
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -1829,8 +2135,19 @@ tabla3.4 <- bind_rows(tabla3.1, tabla3.2, tabla3.3) %>%
 ```
 
 <br>
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__`r aglo_date`__</p>
+
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**`r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(tabla3.4, digits = 1, align = 'lccc') %>%
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
@@ -1949,10 +2266,21 @@ tabla3.9 <- left_join(tabla3.8m, tabla3.8v, by = c("Población")) %>%
 ```
 
 ##### Cuyo
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__Cuyo. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Cuyo. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1:4) %>% 
@@ -1968,11 +2296,23 @@ tabla3.9 %>%
   column_spec(4, bold = TRUE, width = "4cm") %>% 
   row_spec(0, bold = T, color = "white", background = colores[1])
 ```
+
 ##### GBA
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__GBA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**GBA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1, 5:7) %>% 
@@ -1990,10 +2330,21 @@ tabla3.9 %>%
 ```
 
 ##### NEA
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__NEA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**NEA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1, 8:10) %>% 
@@ -2011,10 +2362,21 @@ tabla3.9 %>%
 ```
 
 ##### NOA
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__NOA. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**NOA. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1, 11:13) %>% 
@@ -2032,10 +2394,21 @@ tabla3.9 %>%
 ```
 
 ##### Pampeana
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__Pampeana. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Pampeana. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1, 14:16) %>% 
@@ -2053,10 +2426,21 @@ tabla3.9 %>%
 ```
 
 ##### Patagonia
+
 <br><br>
 
-<p style="color:#E5616E">__Brechas de horas trabajadas__</p>
-<p style="color:#c9c9c9">__Patagonia. `r date`__</p>
+<p style="color:#E5616E">
+
+**Brechas de horas trabajadas**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Patagonia. `r date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla3.9 %>% 
   select(1, 17:19) %>% 
@@ -2079,9 +2463,10 @@ rm(tabla3.5, tabla3.6, tabla3.7, tabla3.8, tabla3.8b, tabla3.8m, tabla3.8v, tabl
 
 ## Tareas del hogar
 
----
+------------------------------------------------------------------------
 
 ### Distribución de las tareas domésticas
+
 <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -2109,20 +2494,30 @@ El trabajo doméstico suele recaer más en las mujeres que en los varones. Es de
 
 Este reparto desigual de las tareas domésticas entre varones y mujeres podría asociarse a las desigualdades vistas anteriormente en la composición del mercado de trabajo (obstáculos en el acceso a cargos jerárquicos, precarización laboral, etc ) y responde a un conjunto de normas sociales y estereotipos de género que asignan mandatos diferenciales a varones y mujeres.
 
-Dicha feminización de las tareas de cuidado penaliza a estas últimas, haciendo que enfrenten extensas cargas de trabajo en el hogar y, por ende, imponiendo una fuerte restricción temporal y afectando el acceso al mercado de trabajo y a la trayectoria laboral. 
+Dicha feminización de las tareas de cuidado penaliza a estas últimas, haciendo que enfrenten extensas cargas de trabajo en el hogar y, por ende, imponiendo una fuerte restricción temporal y afectando el acceso al mercado de trabajo y a la trayectoria laboral.
 
 <br><br>
 
-#### {.tabset .tabset-fade .tabset-pills}
+####  {.tabset .tabset-fade .tabset-pills}
 
 ##### Total nacional
+
 <br>
 
-A modo ilustrativo, se señala que: __del total de personas que realizan tareas domésticas, un `r inline_22`% son mujeres y un `r inline_23`% son varones.__ Esto sucede si tenemos en cuenta el total de los hogares, y seguramente la diferencia se agravaría si quitáramos los hogares unipersonales del conteo y/o incluyéramos a las trabajadoras de servicio doméstico.
-<br><br>
+A modo ilustrativo, se señala que: **del total de personas que realizan tareas domésticas, un `r inline_22`% son mujeres y un `r inline_23`% son varones.** Esto sucede si tenemos en cuenta el total de los hogares, y seguramente la diferencia se agravaría si quitáramos los hogares unipersonales del conteo y/o incluyéramos a las trabajadoras de servicio doméstico. <br><br>
 
-<p style="color:#E5616E">__Personas que realizan las tareas domésticas del hogar según sexo__</p>
-<p style="color:#c9c9c9">__No incluye trabajadoras de servicio doméstico. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Personas que realizan las tareas domésticas del hogar según sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**No incluye trabajadoras de servicio doméstico. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ## Prep data (nothing to change here)
 nrows <- 10
@@ -2178,13 +2573,14 @@ inline_25 <- tabla4.2 %>%
   pull(proporcion)
 ```
 
-A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres, un __`r inline_24`.__ Asimismo, del total de mujeres ocupadas, un __`r inline_25`__ se dedica a esta ocupación, conformando entonces una salida laboral popular. Para más información, podés consultar el informe [Las trabajadoras de servicio doméstico en Argentina](http://economiafeminita.com/informe-servicio-domestico/).
+A esto se suma el hecho de que prácticamente todas las personas que se dedican al servicio doméstico (es decir, que sí venden este trabajo en el mercado) son mujeres, un **`r inline_24`.** Asimismo, del total de mujeres ocupadas, un **`r inline_25`** se dedica a esta ocupación, conformando entonces una salida laboral popular. Para más información, podés consultar el informe [Las trabajadoras de servicio doméstico en Argentina](http://economiafeminita.com/informe-servicio-domestico/).
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla4.1, tabla4.2)
 ```
 
 ##### Por región
+
 <br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE, results='hide'}
@@ -2200,8 +2596,18 @@ tabla4.3 <- base_individual %>%
   mutate(proporcion = percent(round(proporcion/sum(proporcion),3),1))
 ```
 
-<p style="color:#E5616E">__Personas que realizan las tareas domésticas del hogar según sexo__</p>
-<p style="color:#c9c9c9">__Por región. `r date` . No incluye trabajadoras de servicio doméstico__</p>
+<p style="color:#E5616E">
+
+**Personas que realizan las tareas domésticas del hogar según sexo**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Por región. `r date` . No incluye trabajadoras de servicio doméstico**
+
+</p>
+
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(tabla4.3, aes(x=Region, y=proporcion, fill=Sexo)) +
     geom_bar(position="fill", stat="identity", width = 0.5) +
@@ -2228,29 +2634,39 @@ ggplot(tabla4.3, aes(x=Region, y=proporcion, fill=Sexo)) +
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 rm(tabla4.3)
 ```
+
 <br>
 
 ## Distribución del ingreso
 
----
+------------------------------------------------------------------------
 
 ### Distribución del Ingreso
+
 <br><br>
 
-También podemos analizar las brechas de género en la distribución de los ingresos. 
-<br><br>
+También podemos analizar las brechas de género en la distribución de los ingresos. <br><br>
 
-#### {.tabset .tabset-fade .tabset-pills}
+####  {.tabset .tabset-fade .tabset-pills}
 
 ##### Distribución del ingreso
-<br>
-En primer lugar, se ordena por deciles a las personas según su ingreso per cápita familiar (el ingreso total del hogar dividido por la cantidad de personas que lo componen). Es decir, se forman diez grupos de individuos, de igual tamaño, ordenados según el nivel de ingresos que le corresponden por el hogar al que pertenece. En el siguiente gráfico se puede observar la proporción de mujeres y de varones que finalmente componen cada decil. 
 
-En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general). A su vez, los resultados para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
-<br><br>
+<br> En primer lugar, se ordena por deciles a las personas según su ingreso per cápita familiar (el ingreso total del hogar dividido por la cantidad de personas que lo componen). Es decir, se forman diez grupos de individuos, de igual tamaño, ordenados según el nivel de ingresos que le corresponden por el hogar al que pertenece. En el siguiente gráfico se puede observar la proporción de mujeres y de varones que finalmente componen cada decil.
 
-<p style="color:#E5616E">__Composición según sexo de los deciles del ingreso per cápita familiar__</p>
-<p style="color:#c9c9c9">__Total de la población. `r aglo_date`__</p>
+En este caso, no hay diferencias destacables más allá de una leve preponderancia de las mujeres en todos los deciles, explicable por cuestiones demográficas (hay más mujeres que varones en la población general). A su vez, los resultados para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. <br><br>
+
+<p style="color:#E5616E">
+
+**Composición según sexo de los deciles del ingreso per cápita familiar**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Total de la población. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 tabla5.1_graf <-base_individual %>% 
   select(DECCFR, IPCF, PONDIH, Sexo) %>% 
@@ -2272,7 +2688,7 @@ ggplot(tabla5.1_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group = Sex
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
 ```
-             
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # ggsave("Graficos/Figura15.png", scale = 1)
 
@@ -2284,13 +2700,20 @@ ggplot(tabla5.1_graf, aes(x = as.numeric(DECCFR), Prop, fill = Sexo, group = Sex
 rm(tabla5.1_graf)
 ```
 
-En segundo lugar, se separa a la población en deciles según el ingreso total individual. Es decir, se ordena en base al nivel de ingresos que percibe cada individuo, no el hogar (caso anterior). En este caso puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres y, en paralelo, los deciles de mayores ingresos se componen mayoritariamente por varones. 
-Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. 
-En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. 
-<br><br>
+En segundo lugar, se separa a la población en deciles según el ingreso total individual. Es decir, se ordena en base al nivel de ingresos que percibe cada individuo, no el hogar (caso anterior). En este caso puede verse que los deciles más bajos de ingresos están compuestos mayoritariamente por mujeres y, en paralelo, los deciles de mayores ingresos se componen mayoritariamente por varones. Decimos entonces que los estratos de menores ingresos están feminizados, al tiempo que los estratos de mayores ingresos se encuentran masculinizados. En este caso también, los resultado para cada región son muy similares a los del total nacional, por lo cúal no resulta significativa su publicación. <br><br>
 
-<p style="color:#E5616E">__Composición según sexo de los deciles de ingresos totales individuales__</p>
-<p style="color:#c9c9c9">__Población perceptora de ingresos. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Composición según sexo de los deciles de ingresos totales individuales**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Población perceptora de ingresos. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 tabla5.2_graf <-base_individual %>% 
   select(DECINDR, P47T, PONDII, Sexo) %>% 
@@ -2320,12 +2743,12 @@ ggplot(tabla5.2_graf, aes(x = as.numeric(DECINDR), Prop, fill = Sexo, group= Sex
 #ggsave("Figura16.png", scale = 0.7, dpi = 300, width = 10, height = 7, bg = "#ffffff")
 ```
 
-¿Cuál es la diferencia entre los gráficos presentados? En el primer gráfico, las unidades de análisis son los hogares, sólo que se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de los hogares la diferencia se mantiene: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos.
-Entonces, _la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones._ 
-      
+¿Cuál es la diferencia entre los gráficos presentados? En el primer gráfico, las unidades de análisis son los hogares, sólo que se distribuyeron de forma "pareja" sus ingresos entre los miembros. De esta forma, la composición por sexo de los estratos de menores ingresos no tiene mayores diferencias respecto a la de los estratos de mayores ingresos. En cambio, en el segundo gráfico de esta sección vemos lo que pasa a nivel individual, lo cual es una forma de "abrir" hacia el interior de los hogares. La unidad familiar parece resolver la diferencia entre sexos, pero dentro de los hogares la diferencia se mantiene: los varones tienen más probabilidades de ganar más que las mujeres del mismo hogar. La distribución de los ingresos de las mujeres, sesgada hacia los menores ingresos, se compensa en la estructura familiar con la distribución de los ingresos de los varones, sesgada hacia los mayores ingresos. Entonces, *la familia como unidad de reproducción esconde y resuelve debajo de la superficie (la distribución aparentemente equitativa según los ingresos per cápita) la inequitativa distribución de las tareas de reproducción y las dificultades asociadas que tienen las mujeres para participar de forma plena en el mercado de trabajo y por tanto percibir ingresos semejantes a los de los varones.*
+
 <br>
 
 ##### Hogares monomarentales
+
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
@@ -2387,17 +2810,26 @@ inline_31 <- tabla5.3_graf %>%
   pull(Prop)
 ```
 
-Los hogares monomaparentales son aquellos con un solo jefe/a de hogar, sin cónyuge y con menores a cargo. Los llamamos monomarentales cuando la jefa de hogar es mujer, y monoparental cuando el jefe es varón. 
+Los hogares monomaparentales son aquellos con un solo jefe/a de hogar, sin cónyuge y con menores a cargo. Los llamamos monomarentales cuando la jefa de hogar es mujer, y monoparental cuando el jefe es varón.
 
-En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los que __tienen jefatura femenina__. 
+En el gráfico presentado se evidencia que los hogares monomaparentales se concentran en los deciles de menores ingresos. Además, si consideramos el sexo del jefe/a de hogar observamos que los más concentrados en los primeros deciles (de menores ingresos) son los que **tienen jefatura femenina**.
 
-Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomarentales, y un `r inline_29`% son hogares monoparentales, con lo cual la suma de hogares con un solo jefe/a de hogar, sin cónyuge y con menores a cargo totaliza el `r inline_30`% de los hogares. En cambio, en el décimo decil, la suma de este tipo de hogares representa solo el `r inline_31`% del total. 
+Como se lee en el gráfico, del total de hogares del primer decil, un `r inline_28`% son hogares monomarentales, y un `r inline_29`% son hogares monoparentales, con lo cual la suma de hogares con un solo jefe/a de hogar, sin cónyuge y con menores a cargo totaliza el `r inline_30`% de los hogares. En cambio, en el décimo decil, la suma de este tipo de hogares representa solo el `r inline_31`% del total.
 
-Cuando se habla de feminización de la pobreza se puede referir a la mayor incidencia cuantitativa de la pobreza en las mujeres respecto a los varones (que se puede observar en la sección "Pobreza"); a la diferente manera en que varones y mujeres viven las situaciones de pobreza y la enfrentan; como a la vulnerabilidad a la pobreza de las mujeres jefas de hogar, o de los hogares comandados por mujeres (que se observa en el gráfico).
-<br><br>
+Cuando se habla de feminización de la pobreza se puede referir a la mayor incidencia cuantitativa de la pobreza en las mujeres respecto a los varones (que se puede observar en la sección "Pobreza"); a la diferente manera en que varones y mujeres viven las situaciones de pobreza y la enfrentan; como a la vulnerabilidad a la pobreza de las mujeres jefas de hogar, o de los hogares comandados por mujeres (que se observa en el gráfico). <br><br>
 
-<p style="color:#E5616E">__Hogares monomarentales y monoparentales sobre el total de hogares por decil de ingreso total familiar__</p>
-<p style="color:#c9c9c9">__Total de la población. `r aglo_date`__</p>
+<p style="color:#E5616E">
+
+**Hogares monomarentales y monoparentales sobre el total de hogares por decil de ingreso total familiar**
+
+</p>
+
+<p style="color:#c9c9c9">
+
+**Total de la población. `r aglo_date`**
+
+</p>
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 ggplot(tabla5.3_graf, aes(x = as.numeric(DECCFR), Prop, fill = Jefe, group= Jefe, label = percent(Prop, 0))) +
   geom_col(position = "dodge")+
@@ -2418,17 +2850,18 @@ rm(tabla5.2_graf, tabla5.3_graf)
 
 ## Pobreza {#pobreza}
 
----
+------------------------------------------------------------------------
 
-### Pobreza{.tabset .tabset-fade .tabset-pills}
+### Pobreza {.tabset .tabset-fade .tabset-pills}
+
 <br><br>
 
-La definición más frecuente utilizada para hablar de pobreza es la monetaria, la cual se centra en la capacidad (o no) que tengan los hogares para cubrir ciertas necesidades materiales a partir de sus ingresos. En Argentina, la forma de medición de la pobreza utilizada oficialmente se conoce como método indirecto o “línea”, el cual procura definir si los hogares cuentan con ingresos suficientes para cubrir una canasta de alimentos llamada Canasta Básica Alimentaria y/o otros consumos básicos no alimentarios que conforman una Canasta Básica Total. Estas canastas son a su vez comparadas con los ingresos totales del hogar, permitiendo clasificarlos como _no pobres_, _pobres_ o _indigentes_, extendiéndose esa caracterización a cada una de las personas que los integran.
-<br>
+La definición más frecuente utilizada para hablar de pobreza es la monetaria, la cual se centra en la capacidad (o no) que tengan los hogares para cubrir ciertas necesidades materiales a partir de sus ingresos. En Argentina, la forma de medición de la pobreza utilizada oficialmente se conoce como método indirecto o "línea", el cual procura definir si los hogares cuentan con ingresos suficientes para cubrir una canasta de alimentos llamada Canasta Básica Alimentaria y/o otros consumos básicos no alimentarios que conforman una Canasta Básica Total. Estas canastas son a su vez comparadas con los ingresos totales del hogar, permitiendo clasificarlos como *no pobres*, *pobres* o *indigentes*, extendiéndose esa caracterización a cada una de las personas que los integran. <br>
 
----
+------------------------------------------------------------------------
 
 #### Total nacional
+
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
@@ -2601,6 +3034,7 @@ rm(tabla6.3_graf)
 ```
 
 #### Por región
+
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
@@ -2739,107 +3173,74 @@ rm(tabla6.6_graf, tabla6.1, tabla6.2)
 
 ## Glosario
 
----
+------------------------------------------------------------------------
 
 ### Glosario {.tabset .tabset-fade .tabset-pills}
-<br><br>
-En esta sección definimos conceptos que facilitan la lectura del informe.  
+
+<br><br> En esta sección definimos conceptos que facilitan la lectura del informe.\
 <br>
 
-__Brecha de ingresos:__ El ingreso total contempla ingresos laborales y no laborales, como rentas o subsidios. Este indicador calcula la diferencia entre los ingresos individuales promedios de los varones y las mujeres, expresada en términos del ingreso de los varones (generalmente el más alto). Es decir, que puede leerse como “las mujeres perciben ingresos que, en promedio, son un …% menores que los de los varones”. En Argentina esta brecha es estructural, aunque sensible a los ciclos económicos.
-<br>
+**Brecha de ingresos:** El ingreso total contempla ingresos laborales y no laborales, como rentas o subsidios. Este indicador calcula la diferencia entre los ingresos individuales promedios de los varones y las mujeres, expresada en términos del ingreso de los varones (generalmente el más alto). Es decir, que puede leerse como "las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones". En Argentina esta brecha es estructural, aunque sensible a los ciclos económicos. <br>
 
-__Brecha de la ocupación principal:__ Este indicador es la brecha de ingresos derivada de la ocupación principal, que calcula la diferencia entre los ingresos promedios percibidos por el empleo principal de los varones y las mujeres, expresada en términos del promedio percibido por los varones (generalmente el más alto). Excluye los ingresos no laborales, como rentas o subsidios.  Puede leerse como “las mujeres perciben ingresos derivados de su ocupación principal que, en promedio, son aún …% menores que los de los varones”. El fenómeno de que sea menor para las mujeres es algo que se repite en todo el mundo y se debe al tipo de inserción laboral que tienen las personas cuyo género condiciona la jerarquía del puesto donde trabajan, la rama de la ocupación, la cantidad de tiempo que destinan al mercado remunerado, cuánta responsabilidad tienen sobre las tareas domésticas, entre otras. Si bien existe la discriminación lisa y llana, la presencia de una brecha salarial mensual no implica necesariamente una diferencia salarial por hora.
-<br>
+**Brecha de la ocupación principal:** Este indicador es la brecha de ingresos derivada de la ocupación principal, que calcula la diferencia entre los ingresos promedios percibidos por el empleo principal de los varones y las mujeres, expresada en términos del promedio percibido por los varones (generalmente el más alto). Excluye los ingresos no laborales, como rentas o subsidios. Puede leerse como "las mujeres perciben ingresos derivados de su ocupación principal que, en promedio, son aún ...% menores que los de los varones". El fenómeno de que sea menor para las mujeres es algo que se repite en todo el mundo y se debe al tipo de inserción laboral que tienen las personas cuyo género condiciona la jerarquía del puesto donde trabajan, la rama de la ocupación, la cantidad de tiempo que destinan al mercado remunerado, cuánta responsabilidad tienen sobre las tareas domésticas, entre otras. Si bien existe la discriminación lisa y llana, la presencia de una brecha salarial mensual no implica necesariamente una diferencia salarial por hora. <br>
 
-__Calificación:__ Refiere a las competencias que requiere el puesto de trabajo. 
-<br>
+**Calificación:** Refiere a las competencias que requiere el puesto de trabajo. <br>
 
-__Categoría de jefes/jefas:__ La categoría de jefes/jefas refiere a ocupaciones cuyo fin es transmitir y aplicar decisiones generales directivas , así como organizar, supervisar y controlar procesos y personas comprometidas en su ejecución. Junto con la de Dirección constituyen las categorías jerárquicas más altas en la estructura organizativa de los establecimientos, que nos permiten ver el acceso de varones y mujeres a cargos jerárquicos. 
-<br>
+**Categoría de jefes/jefas:** La categoría de jefes/jefas refiere a ocupaciones cuyo fin es transmitir y aplicar decisiones generales directivas , así como organizar, supervisar y controlar procesos y personas comprometidas en su ejecución. Junto con la de Dirección constituyen las categorías jerárquicas más altas en la estructura organizativa de los establecimientos, que nos permiten ver el acceso de varones y mujeres a cargos jerárquicos. <br>
 
-__Desocupado:__ es el estado de una persona que está inserta en el mercado laboral, buscando un empleo aunque no lo consiga. 
-<br>
+**Desocupado:** es el estado de una persona que está inserta en el mercado laboral, buscando un empleo aunque no lo consiga. <br>
 
-__Estadísticas binarias:__ Hace referencia a que la variable “sexo” sólo adopta el valor de “masculino” o “femenino” en la base de datos utilizada, reforzando el paradigma heteronormativo y el binarismo de género. Sin disponer de una variable que aluda a la identidad de género, muchas identidades quedan invisibilizadas y con ellas, sus situaciones y necesidades específicas.
-<br>
+**Estadísticas binarias:** Hace referencia a que la variable "sexo" sólo adopta el valor de "masculino" o "femenino" en la base de datos utilizada, reforzando el paradigma heteronormativo y el binarismo de género. Sin disponer de una variable que aluda a la identidad de género, muchas identidades quedan invisibilizadas y con ellas, sus situaciones y necesidades específicas. <br>
 
-__Falta de descuento jubilatorio:__ Muestra el estado de una relación laboral asalariada que no cumple con la obligación de aportes. La falta de descuento jubilatorio suele ser un indicador de la falta de registro de la relación. Si bien es un fenómeno estructural en Argentina, la incidencia de esta problemática es mayor entre las mujeres asalariadas.
-<br>
+**Falta de descuento jubilatorio:** Muestra el estado de una relación laboral asalariada que no cumple con la obligación de aportes. La falta de descuento jubilatorio suele ser un indicador de la falta de registro de la relación. Si bien es un fenómeno estructural en Argentina, la incidencia de esta problemática es mayor entre las mujeres asalariadas. <br>
 
-__Feminización de la pobreza:__ Refiere al conjunto de procesos de empobrecimiento que afectan en mayor medida a las mujeres y que se manifiestan en una mayor proporción de mujeres entre las personas cuyos ingresos no llegan a cubrir la canasta básica.
-<br>
+**Feminización de la pobreza:** Refiere al conjunto de procesos de empobrecimiento que afectan en mayor medida a las mujeres y que se manifiestan en una mayor proporción de mujeres entre las personas cuyos ingresos no llegan a cubrir la canasta básica. <br>
 
-__Nivel educativo:__ El nivel educativo alcanzado es una forma de ver cuánto dedicaron al estudio quienes trabajan.
-<br>
+**Nivel educativo:** El nivel educativo alcanzado es una forma de ver cuánto dedicaron al estudio quienes trabajan. <br>
 
-__Ocupado/a/e:__ Es el estado de una persona que está inserta en el mercado laboral con un empleo, sea formal, informal, de jornada reducida, asalariado, por cuenta propia, de jefatura, entre otros. 
-<br>
+**Ocupado/a/e:** Es el estado de una persona que está inserta en el mercado laboral con un empleo, sea formal, informal, de jornada reducida, asalariado, por cuenta propia, de jefatura, entre otros. <br>
 
-__Ocupados/as demandantes:__  las personas que ya tienen un empleo pero buscan activamente otro o trabajar más horas.
-<br>
+**Ocupados/as demandantes:** las personas que ya tienen un empleo pero buscan activamente otro o trabajar más horas. <br>
 
-__Paredes de cristal / segregación horizontal:__ Es una forma de visibilizar la distribución asimétrica de las mujeres en ramas de la ocupación, que además de reproducir estereotipos de género representa un problema de ingresos, ya que las ramas feminizadas tienen sueldos promedios más bajos y mayores niveles de informalidad que los masculinizados.
-<br>
+**Paredes de cristal / segregación horizontal:** Es una forma de visibilizar la distribución asimétrica de las mujeres en ramas de la ocupación, que además de reproducir estereotipos de género representa un problema de ingresos, ya que las ramas feminizadas tienen sueldos promedios más bajos y mayores niveles de informalidad que los masculinizados. <br>
 
-__Población de 14 años y más:__ Es la población total de este informe, que incluye todas las personas que hayan alcanzado el umbral de los 14 años, el límite inferior de lo que se considera la “edad activa”.
-<br>
+**Población de 14 años y más:** Es la población total de este informe, que incluye todas las personas que hayan alcanzado el umbral de los 14 años, el límite inferior de lo que se considera la "edad activa". <br>
 
-__Población Económicamente Activa (PEA):__  La Población Económicamente Activa (PEA) incluye a las personas que ofrecen su trabajo en el mercado, sea que lo consiguen (ocupadas/os) o no (desocupadas/os). Al considerar únicamente el mercado laboral no contempla la condición de actividad expandida a tareas domésticas y de cuidados no remunerados. 
-<br>
+**Población Económicamente Activa (PEA):** La Población Económicamente Activa (PEA) incluye a las personas que ofrecen su trabajo en el mercado, sea que lo consiguen (ocupadas/os) o no (desocupadas/os). Al considerar únicamente el mercado laboral no contempla la condición de actividad expandida a tareas domésticas y de cuidados no remunerados. <br>
 
-__Ramas de la ocupación:__ Es una clasificación de las actividades económicas que realiza el establecimiento dónde trabajan las personas. La rama de actividad económica de una persona no depende de las tareas específicas de su trabajo, sino de las características de la unidad económica en la que trabaja. 
-<br>
+**Ramas de la ocupación:** Es una clasificación de las actividades económicas que realiza el establecimiento dónde trabajan las personas. La rama de actividad económica de una persona no depende de las tareas específicas de su trabajo, sino de las características de la unidad económica en la que trabaja. <br>
 
-__Regiones:__ En este informe se identifican 6 regiones: Gran Buenos Aires, Noroeste Argentino (NOA), Noreste Argentino (NEA), Cuyo, Pampeana y Patagonia. Debido a la disponibilidad de la muestra, algunas desagregaciones pierden validez y por esa razón se omite su publicación. En otros casos, las aperturas por región devuelven resultados muy similares a los del total nacional, y por esa razón no resulta significativa su publicación. Obtener datos específicos sobre cada una de las regiones no solo posibilita evidenciar las particularidades regionales de las asimetrías recorridas a lo largo del informe, sino que también permiten realizar comparaciones. 
-<br>
+**Regiones:** En este informe se identifican 6 regiones: Gran Buenos Aires, Noroeste Argentino (NOA), Noreste Argentino (NEA), Cuyo, Pampeana y Patagonia. Debido a la disponibilidad de la muestra, algunas desagregaciones pierden validez y por esa razón se omite su publicación. En otros casos, las aperturas por región devuelven resultados muy similares a los del total nacional, y por esa razón no resulta significativa su publicación. Obtener datos específicos sobre cada una de las regiones no solo posibilita evidenciar las particularidades regionales de las asimetrías recorridas a lo largo del informe, sino que también permiten realizar comparaciones. <br>
 
-__Subocupados/as:__ Todas las personas que trabajan menos de 35 horas semanales, están disponibles para trabajar más horas y desean aumentar la cantidad de horas que trabajan.
-<br>
+**Subocupados/as:** Todas las personas que trabajan menos de 35 horas semanales, están disponibles para trabajar más horas y desean aumentar la cantidad de horas que trabajan. <br>
 
-__Subocupados/as demandantes:__ Proporción de personas de la población económicamente activa que tienen un empleo de menos de 35 horas semanales, están disponibles para trabajar más horas y se encuentran buscando empleo
-<br>
+**Subocupados/as demandantes:** Proporción de personas de la población económicamente activa que tienen un empleo de menos de 35 horas semanales, están disponibles para trabajar más horas y se encuentran buscando empleo <br>
 
-__Subocupados/as no demandantes:__  Las personas que trabajan menos de 35 horas semanales, no están buscando activamente otro trabajo aunque desearían trabajar más horas pero por causas involuntarias no lo hacen. 
-<br>
+**Subocupados/as no demandantes:** Las personas que trabajan menos de 35 horas semanales, no están buscando activamente otro trabajo aunque desearían trabajar más horas pero por causas involuntarias no lo hacen. <br>
 
-__Tasa de actividad:__ Se calcula como la proporción que representa la Población Económicamente Activa entre la población total, ya sea de mujeres o de varones. Cabe destacar que esta definición de "Actividad" no contempla actividades como cocinar, limpiar, cuidar, etc. que son realizadas principalmente por mujeres fuera del mercado. 
-<br>
+**Tasa de actividad:** Se calcula como la proporción que representa la Población Económicamente Activa entre la población total, ya sea de mujeres o de varones. Cabe destacar que esta definición de "Actividad" no contempla actividades como cocinar, limpiar, cuidar, etc. que son realizadas principalmente por mujeres fuera del mercado. <br>
 
-__Tasa de empleo:__ La tasa muestra la proporción de quienes están en el mercado laboral como ocupades en relación a la población de mujeres y de varones, es decir, se recorta de la tasa de actividad la proporción de quienes están desocupadas.
-<br>
+**Tasa de empleo:** La tasa muestra la proporción de quienes están en el mercado laboral como ocupades en relación a la población de mujeres y de varones, es decir, se recorta de la tasa de actividad la proporción de quienes están desocupadas. <br>
 
-__Tasa de desocupación:__ a tasa muestra la proporción de personas que están buscando empleo pero no lo consiguen, entre la población económicamente activa . Esta situación es más recurrente entre mujeres.
-<br>
+**Tasa de desocupación:** a tasa muestra la proporción de personas que están buscando empleo pero no lo consiguen, entre la población económicamente activa . Esta situación es más recurrente entre mujeres. <br>
 
-__Tasa de subocupación:__ La tasa relaciona la cantidad de personas en situación de subocupación horaria respecto al total de la PEA. Estos empleos dan mayor flexibilidad para el manejo de las responsabilidades y son las mujeres las que presentan tasas de subocupación más altas, muchas veces debido a la carga de trabajo de cuidados que demanda muchas horas que no se llevan al mercado de trabajo. Las trabajadoras tienen mayores complicaciones al momento de conseguir un trabajo de tiempo completo. 
-<br>
+**Tasa de subocupación:** La tasa relaciona la cantidad de personas en situación de subocupación horaria respecto al total de la PEA. Estos empleos dan mayor flexibilidad para el manejo de las responsabilidades y son las mujeres las que presentan tasas de subocupación más altas, muchas veces debido a la carga de trabajo de cuidados que demanda muchas horas que no se llevan al mercado de trabajo. Las trabajadoras tienen mayores complicaciones al momento de conseguir un trabajo de tiempo completo. <br>
 
-__Techo de cristal / segregación vertical:__ Alude a los obstáculos que enfrentan las mujeres para ascender a cargos jerárquicos y puestos de decisión. La metáfora del cristal muestra que los impedimentos no son visibles ya que no hay normas explícitas que busquen segregar a las trabajadoras, pero que las barreras existen incluso cuando están igual o mejor calificadas que sus compañeros varones.
-<br>
+**Techo de cristal / segregación vertical:** Alude a los obstáculos que enfrentan las mujeres para ascender a cargos jerárquicos y puestos de decisión. La metáfora del cristal muestra que los impedimentos no son visibles ya que no hay normas explícitas que busquen segregar a las trabajadoras, pero que las barreras existen incluso cuando están igual o mejor calificadas que sus compañeros varones. <br>
 
-__Trabajo doméstico y de cuidados:__ También conocido como “trabajo reproductivo” es aquel que es imprescindible para mantener la vida de las personas. Se manifiesta en tareas como cocinar, lavar, ordenar, atender las necesidades de lxs miembrxs de un hogar y de la familia en general. Todas las personas necesitamos cuidados a lo largo de nuestras vidas y la concreción de los mismos suele depender en mayor medida de las identidades feminizadas.
-<br>
+**Trabajo doméstico y de cuidados:** También conocido como "trabajo reproductivo" es aquel que es imprescindible para mantener la vida de las personas. Se manifiesta en tareas como cocinar, lavar, ordenar, atender las necesidades de lxs miembrxs de un hogar y de la familia en general. Todas las personas necesitamos cuidados a lo largo de nuestras vidas y la concreción de los mismos suele depender en mayor medida de las identidades feminizadas. <br>
 
 ## Metodología
 
----
+------------------------------------------------------------------------
 
 ### Aclaraciones metodológicas
-<br><br>
-Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. 
-<br><br>
-Respecto del impacto de la pandemia por COVID-19, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados.
-<br><br>
-En cuanto a la medición de pobreza por hogar, se utiliza la metodología de INDEC para el cálculo oficial, disponible [aquí](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf). Además proponemos una metodología diferente que define la situación de pobreza de las personas a nivel individual. Para esto construimos Canastas Básicas Totales Individuales que resultan de multiplicar la Canasta Básica Total con las unidades de referencia que le corresponden a cada ocupade, según la tabla de equivalencias de INDEC, para luego compararla con el Ingreso Total Individual.
-<br><br>
-El documento se realizó utilizando el lenguaje de programación R. Para les curioses, todo el código se encuentra disponible para su descarga^1^. 
 
----
+<br><br> Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. <br><br> Respecto del impacto de la pandemia por COVID-19, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados. <br><br> En cuanto a la medición de pobreza por hogar, se utiliza la metodología de INDEC para el cálculo oficial, disponible [aquí](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf). Además proponemos una metodología diferente que define la situación de pobreza de las personas a nivel individual. Para esto construimos Canastas Básicas Totales Individuales que resultan de multiplicar la Canasta Básica Total con las unidades de referencia que le corresponden a cada ocupade, según la tabla de equivalencias de INDEC, para luego compararla con el Ingreso Total Individual. <br><br> El documento se realizó utilizando el lenguaje de programación R. Para les curioses, todo el código se encuentra disponible para su descarga^1^.
 
-^1^ Presionando en_  Code > Download Rmd _se accede a la descarga de la sintaxis completa de este informe.
-<br><br>
+------------------------------------------------------------------------
 
+^1^ Presionando en\_ Code \> Download Rmd \_se accede a la descarga de la sintaxis completa de este informe. <br><br>
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 #FIN DEL INFORME
