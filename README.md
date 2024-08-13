@@ -22,7 +22,7 @@ Quienes estén interesados en reproducir los cálculos necesarios para obtener l
 Tutoriales que detallan la metodología utilizada para calcular, cada semestre, el costo anual de menstruar en Argentina y la comparación con la evolución general de precios. Dirigido a quienes tengan un conocimiento básico de programación en R Software.
 
 
-## [Para citar nuestro trabajo](http://doi.org/10.5281/zenodo.4540186)
+## [Para citar nuestro trabajo](https://doi.org/10.5281/zenodo.13314398)
 
-Shokida Natsumi, Domenech Laia, Pradier, C., Santellán Celina, Espiñeira Lucía, Serpa Daiana, Fernández Erlauer Micaela, Lee, J., & Kozlowski, D. (2021). Ecofeminita/EcoFemiData: informes ecofemidata (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4540186
+Shokida, N. S., Domenech Burin, L., Pradier, C., Santellán, C., Espiñeira, L., Serpa, D., Fernández Erlauer, M., Lee, J., & Kozlowski, D. (2024). Ecofeminita: Informes Ecofemidata. Ecofeminita. https://doi.org/10.5281/zenodo.13314398
 
