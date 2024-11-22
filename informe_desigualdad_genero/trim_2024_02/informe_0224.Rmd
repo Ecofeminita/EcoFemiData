@@ -1248,8 +1248,8 @@ Como puede observarse en el cuadro siguiente, el porcentaje de personas que cuen
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.7 %>% 
-  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
-         Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
+  # mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
+  #        Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
   select('Nivel Educativo', Mujeres, Varones) %>% 
   kable(escape = FALSE, digits = 1, align = 'lcc') %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"), 

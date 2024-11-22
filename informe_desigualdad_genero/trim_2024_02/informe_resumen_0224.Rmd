@@ -717,8 +717,8 @@ Sin embargo, a igual nivel educativo, los ingresos laborales de las mujeres trab
 <p style="color:#c9c9c9">__Porcentaje por columnas. Ocupadas/os. `r aglo_date`__</p>
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tabla2.7 %>% 
-  mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
-         Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
+  # mutate(Mujeres = color_tile("#f7cfd3", colores[1])((Mujeres)),
+  #        Varones = color_tile("#EDEDED", colores[2])((Varones))) %>% 
   select('Nivel Educativo', Mujeres, Varones) %>% 
   kable(escape = FALSE, digits = 1, align = 'lcc') %>% 
   kable_styling(c("striped", "hover", "condensed", "responsive"), 
