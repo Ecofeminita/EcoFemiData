@@ -33,7 +33,7 @@ fuente <- "#Ecofemidata y EcoFeminita en base a EPH-INDEC"
 
 # {.tabset .tabset-fade .tabset-pills}
 
-## Home
+## Intro
 
 ---
 
@@ -71,6 +71,8 @@ library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente 
 source("../../R/funciones rama.R") 
 source("../../R/funciones formato.R")
 
+# NS: para evitar notación científica
+options(scipen = 999)
 
 #CP: me parece mejor así
 #source("R/funciones formato.R")
@@ -773,11 +775,11 @@ rm(tabla1, tabla2, tabla3, tabla4, tabla5)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Ingresos mensuales, de la ocupación principal
-tabla1a <- serv.dom %>% 
+tabla1a <- serv.dom %>%
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
-         PP3E_TOT != 999) %>% 
-  summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO),
-            "50% cobra menos de" = spatstat.geom::weighted.median(P21, PONDIIO)) %>% 
+         PP3E_TOT != 999) |> 
+  summarise("Ingreso promedio" = weighted.mean(as.numeric(P21), as.numeric(PONDIIO)),
+            "50% cobra menos de" = weighted.median(as.integer(P21), as.integer(PONDIIO))) %>% 
   mutate(Ingresos =  "Mensuales, de la ocupación principal")
 
 tabla1 <- tabla1a %>% 
@@ -791,7 +793,7 @@ tabla2a <- serv.dom %>%
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999) %>% 
   summarise("Ingreso promedio" = weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO),
-            "50% cobra menos de" = (spatstat.geom::weighted.median(P21/(PP3E_TOT * 30 / 7), PONDIIO))) %>% 
+            "50% cobra menos de" = weighted.median(P21/(PP3E_TOT * 30 / 7), PONDIIO)) %>% 
   mutate(Ingresos =  "Por hora, de la ocupación principal")
 
 tabla2 <- tabla2a %>% 
@@ -802,7 +804,7 @@ tabla2 <- tabla2a %>%
 # Ingresos mensuales, total de fuente laboral
 tabla3a <- serv.dom %>% 
   summarise("Ingreso promedio" = weighted.mean(P47T - T_VI, PONDII/sum(PONDII)),
-            "50% cobra menos de" = spatstat.geom::weighted.median(P47T - T_VI, PONDII)) %>% 
+            "50% cobra menos de" = weighted.median(P47T - T_VI, PONDII)) %>% 
   mutate(Ingresos =  "Mensuales, total de fuente laboral")
 
 tabla3 <- tabla3a %>% 
@@ -813,7 +815,7 @@ tabla3 <- tabla3a %>%
 # Ingresos mensuales, totales individuales
 tabla4a <- serv.dom %>% 
   summarise("Ingreso promedio" = weighted.mean(P47T, PONDII/sum(PONDII)),
-            "50% cobra menos de" = spatstat.geom::weighted.median(P47T, PONDII)) %>% 
+            "50% cobra menos de" = weighted.median(P47T, PONDII)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso total individual")
 
 tabla4 <- tabla4a %>% 
@@ -824,7 +826,7 @@ tabla4 <- tabla4a %>%
 # Ingresos mensuales, totales familiares
 tabla5a <- serv.dom %>% 
   summarise("Ingreso promedio" = weighted.mean(ITF, as.numeric(PONDIH)),
-            "50% cobra menos de" = spatstat.geom::weighted.median(ITF, PONDIH)) %>% 
+            "50% cobra menos de" = weighted.median(ITF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso total familiar")
 
 tabla5 <-  tabla5a %>% 
@@ -835,7 +837,7 @@ tabla5 <-  tabla5a %>%
 # Ingresos mensuales, per capita familiar
 tabla6a <- serv.dom %>% 
   summarise("Ingreso promedio" = weighted.mean(IPCF, as.numeric(PONDIH)), 
-            "50% cobra menos de" = spatstat.geom::weighted.median(IPCF, PONDIH)) %>% 
+            "50% cobra menos de" = weighted.median(IPCF, PONDIH)) %>% 
   mutate(Ingresos =  "Mensuales, ingreso per cápita familiar")
 
 tabla6 <- tabla6a %>% 
@@ -872,7 +874,7 @@ inline_38 <- tabla2a %>%
 tabla1ab <- serv.dom %>% 
   filter(PP3E_TOT != 999) %>% 
   summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO),
-            "50% cobra menos de" = spatstat.geom::weighted.median(P21, PONDIIO)) %>% 
+            "50% cobra menos de" = weighted.median(P21, PONDIIO)) %>% 
   mutate(Ingresos =  "Mensuales, de la ocupación principal")
 
 tabla1b <- tabla1ab %>% 
@@ -937,7 +939,7 @@ serv.dom %>%
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999) %>% 
   group_by(Descuento_jubilatorio) %>% 
-  summarise(Ingresos = formato_pesos(weighted.mean(P21, PONDIIO)),
+  summarise(Ingresos = formato_pesos(weighted.mean(as.numeric(P21), as.numeric(PONDIIO))),
             Ingresos_hs = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)),
             hs_ocup_princ = formato_porc(weighted.mean(PP3E_TOT, PONDERA))) %>% 
   arrange(Ingresos) %>% 
