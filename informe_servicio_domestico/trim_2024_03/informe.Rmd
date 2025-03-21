@@ -776,7 +776,7 @@ rm(tabla1, tabla2, tabla3, tabla4, tabla5)
 tabla1a <- serv.dom %>% 
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999) %>% 
-  summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO),
+  summarise("Ingreso promedio" = weighted.mean(P21, PONDIIO/sum(PONDIIO)),
             "50% cobra menos de" = spatstat.geom::weighted.median(P21, PONDIIO)) %>% 
   mutate(Ingresos =  "Mensuales, de la ocupación principal")
 
@@ -937,7 +937,7 @@ serv.dom %>%
   filter(PP3E_TOT > 0, # Horas trabajadas positivas
          PP3E_TOT != 999) %>% 
   group_by(Descuento_jubilatorio) %>% 
-  summarise(Ingresos = formato_pesos(weighted.mean(P21, PONDIIO)),
+  summarise(Ingresos = formato_pesos(weighted.mean(P21, PONDIIO/sum(PONDIIO))),
             Ingresos_hs = formato_pesos(weighted.mean(P21/(PP3E_TOT * 30 / 7), PONDIIO)),
             hs_ocup_princ = formato_porc(weighted.mean(PP3E_TOT, PONDERA))) %>% 
   arrange(Ingresos) %>% 
