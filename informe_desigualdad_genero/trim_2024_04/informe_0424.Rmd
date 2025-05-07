@@ -1,5 +1,6 @@
 ---
 title: "La desigualdad de género se puede medir"
+HEAD
 date: "Mayo de 2025"
 output:
   html_notebook:
