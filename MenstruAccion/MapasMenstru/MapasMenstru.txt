@@ -1,0 +1,56 @@
+Formatos mapas:
+- seguimos con las categorias que arme con colores
+- botonera que te mande al form 
+- Cuadros con los proyectos nacionales (son 3)
+- Falta confirmar si se puede incrustar como html en la pagina (casi seguro que si)
+
+MAPA ARGENTINA:
+- Editar lo que aparece en tooltip (qué vamos a mostrar?)
+- Confirmar las categorias y gradiente de colores
+
+MAPA MUNDO:
+- Revisar forma de mostrar varias categorías. Excención, rebaja, provision gratuita o ambas
+- Qué vamos a mostrar en el tooltip
+
+REPLICAS:
+- Pensar en si agregarlo al mapa con otro color y se sacan con la leyenda 
+
+Base de Datos:
+- Form estandarizado para contruir la base de datos (revisar)
+- Conseguir listado de municipios de argentina
+Arme proceso para que busque por OSM las coordenadas cuando actualicemos el mapa
+- Lu tiene que mandar base de ej del mundo (ya esta)
+
+REUNION LU 7/4
+
+Mapa Argentina: MENSTRUACCION EN ARGENTINA
+* Proyecto provincia -> 3 colores: si tiene + aprobada, si tiene + no aprobada, no tiene
+* Ordenanza municipal -> 2 colores: si tiene + aprobada, si tiene + no aprobada
+
+Tooltip:
+- Ciudad/provincia
+- Tipo proyecto y estado (aprobado o no)
+- Exige (si es muy choclo buscar para que aparezca por fuera del mapa o lo sacamos)
+- Presentado por
+
+Puntos de recolección: PENDIENTE
+- Correr proceso coordenadas geográficas
+- Agregar al mapa y ver si quedan bien
+
+Mapa Mundo: 
+- sólo pintamos los casos de pol publica aprobados
+- agregamos tootlip en lo que exige
+
+Reu 19/5
+- agregar tipo de proyecto al tooltip (provincial y municipal) *
+- ajustar cuando pasa el cursor por arriba para que no se prendan siempre *
+- cambiar tipografía a Montserrat (fijar ejemplo de la china en trello) *
+- agregar caption "colaboración ecofeminita + ecofemidata" *
+- clasificaciones mapa mundo = pol pub, no tiene *
+- agregar aclaraciones al tooltip (lu queda pendiente armar esto) *
+- Poner Tipo en vez de Tipo proyecto *
+
+QUEDA PENDIENTE:
+- cambiar el link al spreadsheet del form
+- subir al repo ecofemidata el mapa así Lu lo tiene a mano
+- mapa con puntos de recolección (esto lo veremos más adelante)
