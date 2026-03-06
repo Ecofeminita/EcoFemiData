@@ -185,7 +185,7 @@ arg_mapa <-
 
 arg_mapa
 
-htmlwidgets::saveWidget(arg_mapa, file = "~/DASERPA/MenstruArg.html")
+htmlwidgets::saveWidget(arg_mapa, file = "./MenstruAccion/MapasMenstru/MenstruArg.html")
 
 # Datos Mundo ####
 url <- "https://docs.google.com/spreadsheets/d/1XH_HTs7jUnlFsiQh-lRjvYq9GRWcsqWXErcA5pk8vVU/edit#gid=1197174787"
@@ -246,4 +246,4 @@ mundo_mapa <- hcmap("custom/world",
 
 mundo_mapa
 
-htmlwidgets::saveWidget(mundo_mapa, file = "~/DASERPA/MenstruMundo.html")
+htmlwidgets::saveWidget(mundo_mapa, file = "./MenstruAccion/MapasMenstru/MenstruMundo.html")
