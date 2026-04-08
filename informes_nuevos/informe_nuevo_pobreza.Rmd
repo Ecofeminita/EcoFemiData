@@ -1,0 +1,701 @@
+---
+title: "Informe Nuevo Pobreza"
+author: "Ecofemidata"
+date: "Abril de 2025"
+output:
+  html_notebook:
+    theme: flatly
+  html_document:
+    df_print: paged
+subtitle: Datos de la Encuesta Permanente de Hogares. 2do trimestre de 2025.
+urlcolor: null
+---
+
+```{=html}
+<style>
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: #E5616E;
+}
+
+ .nav-pills>li.active>a, .nav-pills>li.active>a:focus, .nav-pills>li.active>a:hover {
+    color: #ffffff;
+    background-color: #E5616E;
+}
+</style>
+```
+
+------------------------------------------------------------------------
+
+#  {.tabset .tabset-fade .tabset-pills}
+
+## Home
+
+------------------------------------------------------------------------
+
+### 
+
+En este informe se pueden explorar las diferencias en la inserción en el mercado de trabajo, en los ingresos que perciben, en la cantidad de horas que trabajan semanalmente, y la distribución de las tareas domésticas entre varones y mujeres. Presentamos esta información para el país en general y desagregada por región. <br><br>
+
+Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hacemos podés apoyarnos haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+
+------------------------------------------------------------------------
+
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2026). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. <http://doi.org/10.5281/zenodo.4540185>"
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+# Reiniciar R
+library(tidyverse)
+library(httr)
+library(stringr)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(openxlsx)
+library(gridExtra)
+library(ggridges)
+library(magrittr)
+library(DT)
+library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
+# Como fuente tomamos un script con el código de funciones para modificar el formato de los datos.
+options(scipen = 9999)
+source("../R/funciones formato.R")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Se levantan las bases usuarias de la EPH del trimestre correspondiente
+library(readxl)
+
+# (funciones del paquete 'eph')
+base_individual <- get_microdata(year = 2025, trimester = 2, type = "individual")
+base_hogar <- get_microdata(year = 2025, trimester = 2, type = "hogar")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Subtitulo y fuente para graficos
+# date <- "1er trimestre 2025"
+date <- paste0(base_individual$TRIMESTRE[1], ifelse(base_individual$TRIMESTRE[1] %in% c(1,3), "er", ifelse(base_individual$TRIMESTRE[1]==2, "do", "to")), " trimestre ", base_individual$ANO4[1])
+aglo_date <- paste0("Total de aglomerados urbanos. ", date)
+fuente <- "#Ecofemidata y Ecofeminita en base a EPH-INDEC"
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+base_individual <- base_individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"),
+         Region = as.character(REGION),
+         Region = case_when(REGION=="1" ~ "Gran Buenos Aires",
+                            REGION=="40" ~ "NOA",
+                            REGION=="41" ~ "NEA",
+                            REGION=="42" ~ "Cuyo",
+                            REGION=="43" ~ "Pampeana",
+                            REGION=="44" ~ "Patagonia"),
+         PP04D_COD = as.character(PP04D_COD),
+         PP04D_COD = case_when(nchar(PP04D_COD) == 5 ~ PP04D_COD,
+                               nchar(PP04D_COD) == 4 ~ paste0("0", PP04D_COD),
+                               nchar(PP04D_COD) == 3 ~ paste0("00", PP04D_COD),
+                               nchar(PP04D_COD) == 2 ~ paste0("000", PP04D_COD),
+                               nchar(PP04D_COD) == 1 ~ paste0("0000", PP04D_COD)),
+         CALIFICACION = substr(PP04D_COD, 5, 5),
+         CALIFICACION = case_when(CALIFICACION=="1" ~ "Profesionales",
+                                  CALIFICACION=="2" ~ "Técnicos",
+                                  CALIFICACION=="3" ~ "Operativos",
+                                  CALIFICACION=="4" ~ "No Calificados",
+                                  TRUE ~ "0"),
+         CALIFICACION = factor(CALIFICACION, c("No Calificados", "Operativos", "Técnicos", "Profesionales")),
+         JERARQUIA = substr(PP04D_COD, 3, 3),
+         JERARQUIA = case_when(JERARQUIA %in% c("0", "2") ~ "Dirección o Jefes",
+                               JERARQUIA=="1" ~ "Cuentapropia",
+                               JERARQUIA=="3" ~ "Trabajadores Asalariados",
+                               TRUE ~ "0"),
+         JERARQUIA = factor(JERARQUIA, c("Dirección o Jefes", "Trabajadores Asalariados", "Cuentapropia")),
+         NIVEL_EDUCATIVO = case_when(NIVEL_ED %in% c(1, 7) ~ "Sin Instrucción",
+                                     NIVEL_ED %in% c(2, 3) ~ "Primaria",
+                                     NIVEL_ED %in% c(4, 5) ~ "Secundaria",
+                                     NIVEL_ED == 6         ~ "Superior",
+                                     NIVEL_ED == 9         ~ "NS/NR"),
+         NIVEL_EDUCATIVO = factor(NIVEL_EDUCATIVO, levels = c("Sin Instrucción", "Primaria", "Secundaria", "Superior")),
+         GRUPO_EDAD = case_when(CH06 >= 14 & CH06 <= 29 ~ "de 14 a 29 años",
+                                CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años"),
+         plan = ifelse(!is.na(PP07H) & PP07H > 0, 1, 0))
+
+# colores = c("#aa165a","#16aa66")
+colores = c("#E5616E", "#c9c9c9")
+coloresb = c("#8CDDD3", "#8594C6", "#F8F5EE")
+```
+
+## Pobreza {#pobreza}
+
+------------------------------------------------------------------------
+
+### Pobreza {.tabset .tabset-fade .tabset-pills}
+
+<br><br>
+
+La definición más frecuente utilizada para hablar de pobreza es la monetaria, la cual se centra en la capacidad (o no) que tengan los hogares para cubrir ciertas necesidades materiales a partir de sus ingresos. En Argentina, la forma de medición de la pobreza utilizada oficialmente se conoce como método indirecto o "línea", el cual procura definir si los hogares cuentan con ingresos suficientes para cubrir una canasta de alimentos llamada Canasta Básica Alimentaria y/o otros consumos básicos no alimentarios que conforman una Canasta Básica Total. Estas canastas son a su vez comparadas con los ingresos totales del hogar, permitiendo clasificarlos como *no pobres*, *pobres* o *indigentes*, extendiéndose esa caracterización a cada una de las personas que los integran. <br>
+
+------------------------------------------------------------------------
+
+#### Total nacional
+
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+# Cargamos las CBA y CBT
+canastas <- get_poverty_lines(regional = TRUE)
+
+# condicional para que se muestre la seccion si hay canastas disponibles
+date_trimestre <- paste(base_individual$ANO4[1], base_individual$TRIMESTRE[1], sep = ".")
+show.pobreza <- nrow(canastas %>% filter(periodo==date_trimestre))>0
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  # Calculamos pobreza e indigencia por metodo tradicional
+  tabla6.1 <- base_individual %>% 
+    calculate_poverty(., basket = canastas, print_summary = FALSE) %>%
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0)
+  
+  # Calculamos pobreza e indigencia por ingreso total individual
+  tabla6.2 <- base_individual %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           P47T != -9) %>% #ITI
+    mutate(periodo = paste(ANO4, TRIMESTRE, sep = ".")) %>% 
+    left_join(eph::adulto_equivalente, by = c("CH04", "CH06")) %>% 
+    left_join(canastas, by = c(REGION = "codigo", "periodo")) %>% 
+    mutate(CBA_individual = CBA * adequi, 
+           CBT_individual = CBT * adequi, 
+           situacion = case_when(P47T < CBA_individual ~ "indigente", 
+                                 P47T >= CBA_individual & P47T < CBT_individual ~ "pobre", 
+                                 P47T >= CBT_individual ~ "no_pobre"), 
+           situacion = case_when(PONDII == 0 ~ NA_character_, TRUE ~ situacion)) %>% 
+    select(-adequi, -periodo, -CBA, -CBT) 
+  
+  
+  tabla6.1_graf <- tabla6.1 %>% 
+    group_by(Sexo) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(values_from = c(Pobreza, Indigencia),
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Pobreza_Mujeres-Pobreza_Varones, 1),
+           Brecha_Indigencia = round(Indigencia_Mujeres-Indigencia_Varones, 1),
+           Metodología = "Hogar")
+  
+  tabla6.2_graf <- tabla6.2 %>% 
+    group_by(Sexo) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(values_from = c(Pobreza, Indigencia),
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Pobreza_Mujeres-Pobreza_Varones, 1),
+           Brecha_Indigencia = round(Indigencia_Mujeres-Indigencia_Varones, 1),
+           # xp = Pobreza_Mujeres-(Brecha_Pobreza/2),
+           # xi = Indigencia_Mujeres-(Brecha_Indigencia/2),
+           Metodología = "Individual")
+  
+  tabla6.1_graf <- bind_rows(select(tabla6.1_graf, Metodología, Brecha_Pobreza, Brecha_Indigencia), 
+                             select(tabla6.2_graf, Metodología, Brecha_Pobreza, Brecha_Indigencia))
+  
+  inline_26 <- tabla6.1_graf %>% 
+    filter(Metodología == "Hogar") %>% 
+    pull(Brecha_Pobreza) %>% 
+    abs()
+  
+  inline_27 <- tabla6.1_graf %>% 
+    filter(Metodología == "Individual") %>% 
+    pull(Brecha_Pobreza) %>% 
+    abs()
+}
+  
+```
+
+`r if(show.pobreza) {paste0("Si en vez de caracterizar a las personas de acuerdo al hogar al que pertenecen, observamos la capacidad que tienen varones y mujeres para cubrir sus necesidades recurriendo a los ingresos que obtienen individualmente, veríamos que la incidencia de la pobreza afecta en mayor medida a las ocupadas que a los ocupados. <br><br>Las brechas están calculadas como ___Tasa de pobreza mujeres - Tasa de pobreza varones___, por lo que las diferencias que vemos están expresadas en puntos porcentuales, en este sentido si se observan valores negativos es porque existe una mayor incidencia de la pobreza en varones, mientras que si el valor de la brecha de positivo implica que son las mujeres las que se ven afectadas mayormente. <br><br>En el siguiente gráfico vemos que tomando al hogar como unidad de medida, los varones tienen un ",inline_26,"p.p. mayor de incidencia en la pobreza que las mujeres ocupadas. En cambio, si contrastamos las canastas calculadas para cada persona con sus ingresos totales individuales, la incidencia pasa a ser de un ",inline_27,"p.p. más para las mujeres. Esto pone en evidencia que la pobreza medida por ingresos afecta mayoritariamente a las mujeres si tuvieran que cubrir sus necesidades de forma individual. <br><br>")} else {"_Todavía no estan disponibles los datos de pobreza para este trimestre. Podes ver la última actualización de esta sección en el informe del trimestre anterior._"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Diferencias de tasas de pobreza e indigencia por sexo__</p><p style='color:#c9c9c9'>__Ocupadas/os. Metodología hogar e individual. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.1_graf %>% 
+    mutate(Brecha_Pobreza = color_tile("#E3E2E7", coloresb[2])((Brecha_Pobreza)),
+           Brecha_Indigencia = color_tile("#E6F1E9", coloresb[1])((Brecha_Indigencia))) %>% 
+    select('Metodología', 'Brecha Pobreza'=Brecha_Pobreza, 'Brecha Indigencia'=Brecha_Indigencia) %>% 
+    kable(escape = FALSE, digits = 1, align = 'lcc') %>% 
+    kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                  #full_width = F, position = "left",
+                  fixed_thead = T, font_size = 20) %>% 
+    footnote(general = fuente,
+             general_title = "\n") %>% 
+    column_spec(1, width = "5cm") %>% 
+    column_spec(2, color = "black", width = "3cm") %>% 
+    column_spec(3, color = "black", width = "3cm") %>% 
+    row_spec(0, bold = T, color = "white", background = coloresb[2])
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.1_graf, tabla6.2_graf)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.3_graf <- organize_caes(tabla6.1) %>% 
+    mutate(Rama = caes_eph_label) %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           !is.na(Rama)) %>%  # Ingresos positivos
+    filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud",
+                       "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+                       "Construccion")) %>% 
+    mutate(Rama = as.character(Rama),
+           Rama = case_when(
+             Rama == "Servicios sociales y de salud" ~ "Serv. sociales y de salud",
+             Rama == "Transporte, almacenamiento y comunicaciones" ~ "Transporte, almacen. y comu.",
+             TRUE ~ Rama
+           )) %>% 
+    group_by(Rama) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1)) %>% 
+    ungroup() %>% 
+    pivot_longer(cols = c(Pobreza, Indigencia),
+                 names_to = "Situación",
+                 values_to = "Tasa") 
+}
+```
+
+`r if(show.pobreza) {"<br><br> A continuación vemos las tasas de pobreza e indigencia por rama de la ocupación en la que se encuentran las ocupadas y ocupados de acuerdo a la medición por hogar. Podemos afirmar que las trabajadoras del servicio doméstico están sobrerrepresentadas en los hogares en situación de mayor vulnerabilidad, superando incluso las tasas a nivel general calculadas por INDEC. <br><br>"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Tasas de pobreza e indigencia__</p><p style='color:#c9c9c9'>__Según ramas de la ocupación. Medición hogar. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  ggplot(tabla6.3_graf, aes(x = Tasa, y= Rama %>% reorder(Tasa), fill = Situación, 
+                            label = paste0(Tasa, "%"))) +
+    geom_col(position = "dodge") +
+    geom_text(position = position_dodge(width = .9), hjust =-.1, size = 2.5) +
+    scale_fill_manual(values = c(coloresb[2], coloresb[1]), breaks = c("Pobreza", "Indigencia")) +
+    scale_x_continuous(limits = c(0, 63)) +
+    labs(caption = fuente) +
+    theme_minimal() +
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          plot.title=element_text(size=10),
+          plot.subtitle=element_text(size=9),
+          legend.title = element_text(size=8),
+          legend.text = element_text(size=7),
+          legend.key.size = unit(0.5, 'cm'))
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.3_graf)
+```
+
+#### NUEVO Pobreza y programas sociales
+
+`r if(show.pobreza) {"Esta tabla muestra cómo se distribuye la población según su situación de pobreza y la recepción de programas sociales. Permite identificar en qué medida los hogares en situación de mayor vulnerabilidad acceden a transferencias de ingresos."}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+
+tabla_planes <- tabla6.1 %>%
+  mutate(plan = ifelse(!is.na(PP07H) & PP07H > 0, 1, 0)) %>%
+  group_by(situacion, plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  group_by(situacion) %>%
+  mutate(pct = round(personas / sum(personas) * 100, 1)) %>%
+  ungroup()
+
+}
+```
+
+```{r echo=FALSE}
+if(show.pobreza){
+tabla_planes %>%
+  mutate(plan = ifelse(plan == 1, "Recibe plan", "No recibe plan")) %>%
+  kable() %>%
+  kable_styling()
+}
+```
+
+```{r include=FALSE Creo base histórica}
+library(dplyr)
+library(purrr)
+
+base_a <- readRDS("C:/Users/Celina/Documents/EF/shinyapp Git/preprocesamiento/fuentes/bases_eph.rds")
+base_b <- readRDS("C:/Users/Celina/Documents/EF/shinyapp Git/preprocesamiento/fuentes/bases_eph_b.rds")
+
+base_a <- base_a %>% unnest(cols = c(microdata))
+
+base_b <- base_b %>% unnest(cols = c(microdata)) 
+base_b <- base_b %>% 
+  mutate(year = ANO4,
+         period = TRIMESTRE,
+         type = "individual")
+
+base_c <- get_microdata(year = 2025, 
+                        trimester = 1:2,
+                        type =  'individual') %>% 
+  mutate(year = ANO4,
+         period = TRIMESTRE,
+         type = "individual")
+
+
+datos_hist <- bind_rows(base_a, base_b, base_c)
+
+```
+
+##### Evolución
+
+ESTOY TRABADA ACÁ EN EL ERROR
+
+```{r echo=FALSE}
+
+prueba <- datos_hist %>%
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>%
+  mutate(
+    semestre = paste0(
+      ifelse(TRIMESTRE %in% c(1,2), "1S", "2S"),
+      " ",
+      ANO4
+    )
+  )
+
+prueba %>%
+  filter(!is.na(situacion)) %>%
+  summarise(
+    pobreza = mean(situacion %in% c("pobre", "indigente")) * 100,
+    .by = c(ANO4, semestre)
+  )
+
+```
+
+#### Evolución del poder adquisitivo de la AUH
+
+```{r echo=FALSE}
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Datos PARA CORREGIR
+evol_auh <- tibble(
+  semestre = c("1S 2023","2S 2023","1S 2024","2S 2024","1S 2025"),
+  CBA_real = c(100, 111.734, 101.572, 95.7887, 93.7258),
+  CBT_real = c(100, 103.215, 101.115, 97.9356, 93.7247),
+  AUH_real = c(100, 72.2653, 144.664, 149.826, 148.628),
+  AUH_CBA  = c(41.0, 26.5, 58.4, 64.2, 65.0),
+  AUH_CBT  = c(18.4, 12.9, 26.3, 28.1, 29.2)
+) %>%
+  mutate(
+    semestre = factor(
+      semestre,
+      levels = c("1S 2023","2S 2023","1S 2024","2S 2024","1S 2025"),
+      labels = c("1°23","2°23","1°24","2°24","1°25")
+    )
+  )
+
+# Escalado
+scale_factor <- max(evol_auh$AUH_CBA, evol_auh$AUH_CBT) / 
+                max(evol_auh$AUH_real)
+
+# Datos en formato largo
+df_long <- evol_auh %>%
+  pivot_longer(
+    cols = -semestre,
+    names_to = "serie",
+    values_to = "valor"
+  ) %>%
+  mutate(
+    tipo = case_when(
+      serie %in% c("AUH_CBA","AUH_CBT") ~ "cobertura",
+      TRUE ~ "indice"
+    ),
+    valor_plot = ifelse(tipo == "indice", valor * scale_factor, valor)
+  )
+
+# Gráfico
+ggplot(df_long, aes(x = semestre, y = valor_plot, color = serie, group = serie)) +
+  
+  geom_line(aes(linetype = tipo), size = 1.2) +
+  geom_point(size = 2) +
+  
+  scale_y_continuous(
+    name = "% de cobertura AUH",
+    sec.axis = sec_axis(~ . / scale_factor,
+                        name = "Índice real (1°23 = 100)",
+                        breaks = c(50, 100, 150))
+  ) +
+  scale_color_manual(
+    values = c(
+      "AUH_CBA" = "#E94F64",
+      "AUH_CBT" = "#2EC4B6",
+      "CBA_real" = "#E94F64",
+      "CBT_real" = "#2EC4B6",
+      "AUH_real" = "#999999"
+    ),
+    labels = c(
+      "AUH_CBA" = "AUH/CBA",
+      "AUH_CBT" = "AUH/CBT",
+      "CBA_real" = "CBA real",
+      "CBT_real" = "CBT real",
+      "AUH_real" = "AUH real"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c("cobertura" = "dashed", "indice" = "solid"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Participación de la AUH sobre CBA y CBT (izq.) y evolución real (der.)",
+    x = "Semestre",
+    color = NULL
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+#### Por región
+
+<br>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  tabla6.4_graf <- tabla6.1 %>% 
+    group_by(Sexo, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(id_cols = Region,
+                values_from = Pobreza,
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Mujeres-Varones, 1),
+           # xp = Mujeres-(Brecha_Pobreza/2),
+           Metodología = "Hogar")
+  # arrange(desc(Brecha_Pobreza))
+  
+  tabla6.5_graf <- tabla6.2 %>% 
+    group_by(Sexo, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 2)) %>% 
+    ungroup() %>%
+    pivot_wider(id_cols = Region,
+                values_from = Pobreza,
+                names_from = Sexo) %>%
+    mutate(Brecha_Pobreza = round(Mujeres-Varones, 1),
+           # xp = Mujeres-(Brecha_Pobreza/2),
+           Metodología = "Individual") 
+  # arrange(desc(Brecha_Pobreza))
+  
+  tabla6.4_graf <- bind_rows(select(tabla6.4_graf, Metodología, Region, Brecha_Pobreza), 
+                             select(tabla6.5_graf, Metodología, Region, Brecha_Pobreza)) %>% 
+    pivot_wider(id_cols = Metodología,
+                names_from = Region,
+                values_from = Brecha_Pobreza)
+}
+```
+
+`r if(show.pobreza) {"Si en vez de caracterizar a las personas de acuerdo al hogar al que pertenecen, observamos la capacidad que tienen varones y mujeres para cubrir sus necesidades recurriendo a los ingresos que obtienen individualmente, veríamos que la incidencia de la pobreza afecta en mayor medida a las ocupadas que a los ocupados. <br><br>Las brechas están calculadas como ___Tasa de pobreza mujeres - Tasa de pobreza varones___, por lo que las diferencias que vemos están expresadas en puntos porcentuales, en este sentido si se observan valores negativos es porque existe una mayor incidencia de la pobreza en varones, mientras que si el valor de la brecha de positivo implica que son las mujeres las que se ven afectadas mayormente.<br><br>"} else {"_Todavía no estan disponibles los datos de pobreza para este trimestre. Podes ver la última actualización de esta sección en el informe del trimestre anterior._"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Diferencias de tasas de pobreza por sexo y región__</p><p style='color:#c9c9c9'>__Ocupadas/os. Metodología hogar e individual. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if(show.pobreza){
+  
+  tabla6.4_graf %>% 
+    rename(GBA='Gran Buenos Aires') %>% 
+    mutate(Cuyo = color_tile("#E3E2E7", coloresb[2])((Cuyo)),
+           GBA = color_tile("#E3E2E7", coloresb[2])((GBA)),
+           NEA = color_tile("#E3E2E7", coloresb[2])((NEA)),
+           NOA = color_tile("#E3E2E7", coloresb[2])((NOA)),
+           Pampeana = color_tile("#E3E2E7", coloresb[2])((Pampeana)),
+           Patagonia = color_tile("#E3E2E7", coloresb[2])((Patagonia))) %>% 
+    kable(escape = FALSE, digits = 1, align = 'lcccccc') %>% 
+    kable_styling(c("striped", "hover", "condensed", "responsive"), 
+                  #full_width = F, position = "left",
+                  fixed_thead = T, font_size = 20) %>% 
+    footnote(general = fuente,
+             general_title = "\n") %>% 
+    column_spec(1, width = "5cm") %>% 
+    column_spec(2, color = "black", width = "3cm") %>% 
+    column_spec(3, color = "black", width = "3cm") %>% 
+    column_spec(4, color = "black", width = "3cm") %>% 
+    column_spec(5, color = "black", width = "3cm") %>% 
+    column_spec(6, color = "black", width = "3cm") %>% 
+    column_spec(7, color = "black", width = "3cm") %>% 
+    row_spec(0, bold = T, color = "white", background = coloresb[2])
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.4_graf, tabla6.5_graf)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  tabla6.6_graf <- organize_caes(tabla6.1) %>% 
+    mutate(Rama = caes_eph_label) %>% 
+    filter(ESTADO == 1,
+           PP3E_TOT > 0, # Horas trabajadas positivas
+           PP3E_TOT != 999,
+           P21 > 0,
+           !is.na(Rama)) %>%  # Ingresos positivos
+    filter(Rama %in% c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud",
+                       "Industria manufacturera", "Actividades primarias", "Transporte, almacenamiento y comunicaciones",
+                       "Construccion")) %>% 
+    mutate(Rama = as.character(Rama),
+           Rama = case_when(
+             Rama == "Servicios sociales y de salud" ~ "Serv. sociales y de salud",
+             Rama == "Transporte, almacenamiento y comunicaciones" ~ "Transporte, almacen. y comu.",
+             TRUE ~ Rama
+           )) %>% 
+    group_by(Rama, Region) %>% 
+    summarise(
+      Pobreza = round(sum(PONDIH[situacion %in% c("pobre","indigente")], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1), 
+      Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE)/sum(PONDIH, na.rm = TRUE)*100, 1)) %>% 
+    ungroup() %>% 
+    pivot_longer(cols = c(Pobreza, Indigencia),
+                 names_to = "Situación",
+                 values_to = "Tasa") %>% 
+    filter(Situación=="Pobreza")
+}
+```
+
+`r if(show.pobreza) {"<br><br> A continuación vemos las tasas de pobreza e indigencia por región y rama de la ocupación en la que se encuentran las ocupadas y ocupados de acuerdo a la medición por hogar. Podemos afirmar que las trabajadoras del servicio doméstico están sobrerrepresentadas en los hogares en situación de mayor vulnerabilidad indistintamente de la región en la que se encuentren, superando incluso las tasas a nivel general calculadas por INDEC. <br><br>"}`
+
+`r if(show.pobreza) {paste0("<p style='color:#E5616E'>__Proporción de personas que integran hogares en situación de pobreza__</p><p style='color:#c9c9c9'>__Según región y ramas de la ocupación. ", aglo_date ,"__</p>")}`
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+if(show.pobreza){
+  
+  ggplot(tabla6.6_graf, aes(Region, Rama, fill= Tasa)) + 
+    geom_tile() +
+    geom_text(aes(label = Tasa), size=4) + 
+    scale_fill_gradient(low = "#F8F5EE",
+                        # low = coloresb[1],
+                        high = coloresb[2]) +
+    scale_x_discrete(labels = c("Cuyo", "GBA", "NEA", "NOA", "Pampeana", "Patagonia"),
+                     limits = c("Cuyo", "Gran Buenos Aires", "NEA", "NOA", "Pampeana", "Patagonia")) +
+    theme_minimal() +
+    labs(caption = fuente) +
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          plot.subtitle=element_text(size=9),
+          legend.title=element_text(size=10))
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rm(tabla6.6_graf, tabla6.1, tabla6.2)
+```
+
+## Glosario
+
+------------------------------------------------------------------------
+
+### Glosario {.tabset .tabset-fade .tabset-pills}
+
+<br><br> En esta sección definimos conceptos que facilitan la lectura del informe.\
+<br>
+
+**Brecha de ingresos:** El ingreso total contempla ingresos laborales y no laborales, como rentas o subsidios. Este indicador calcula la diferencia entre los ingresos individuales promedios de los varones y las mujeres, expresada en términos del ingreso de los varones (generalmente el más alto). Es decir, que puede leerse como "las mujeres perciben ingresos que, en promedio, son un ...% menores que los de los varones". En Argentina esta brecha es estructural, aunque sensible a los ciclos económicos. <br>
+
+**Brecha de la ocupación principal:** Este indicador es la brecha de ingresos derivada de la ocupación principal, que calcula la diferencia entre los ingresos promedios percibidos por el empleo principal de los varones y las mujeres, expresada en términos del promedio percibido por los varones (generalmente el más alto). Excluye los ingresos no laborales, como rentas o subsidios. Puede leerse como "las mujeres perciben ingresos derivados de su ocupación principal que, en promedio, son aún ...% menores que los de los varones". El fenómeno de que sea menor para las mujeres es algo que se repite en todo el mundo y se debe al tipo de inserción laboral que tienen las personas cuyo género condiciona la jerarquía del puesto donde trabajan, la rama de la ocupación, la cantidad de tiempo que destinan al mercado remunerado, cuánta responsabilidad tienen sobre las tareas domésticas, entre otras. Si bien existe la discriminación lisa y llana, la presencia de una brecha salarial mensual no implica necesariamente una diferencia salarial por hora. <br>
+
+**Calificación:** Refiere a las competencias que requiere el puesto de trabajo. <br>
+
+**Categoría de jefes/jefas:** La categoría de jefes/jefas refiere a ocupaciones cuyo fin es transmitir y aplicar decisiones generales directivas , así como organizar, supervisar y controlar procesos y personas comprometidas en su ejecución. Junto con la de Dirección constituyen las categorías jerárquicas más altas en la estructura organizativa de los establecimientos, que nos permiten ver el acceso de varones y mujeres a cargos jerárquicos. <br>
+
+**Desocupado:** es el estado de una persona que está inserta en el mercado laboral, buscando un empleo aunque no lo consiga. <br>
+
+**Estadísticas binarias:** Hace referencia a que la variable "sexo" sólo adopta el valor de "masculino" o "femenino" en la base de datos utilizada, reforzando el paradigma heteronormativo y el binarismo de género. Sin disponer de una variable que aluda a la identidad de género, muchas identidades quedan invisibilizadas y con ellas, sus situaciones y necesidades específicas. <br>
+
+**Falta de descuento jubilatorio:** Muestra el estado de una relación laboral asalariada que no cumple con la obligación de aportes. La falta de descuento jubilatorio suele ser un indicador de la falta de registro de la relación. Si bien es un fenómeno estructural en Argentina, la incidencia de esta problemática es mayor entre las mujeres asalariadas. <br>
+
+**Feminización de la pobreza:** Refiere al conjunto de procesos de empobrecimiento que afectan en mayor medida a las mujeres y que se manifiestan en una mayor proporción de mujeres entre las personas cuyos ingresos no llegan a cubrir la canasta básica. <br>
+
+**Nivel educativo:** El nivel educativo alcanzado es una forma de ver cuánto dedicaron al estudio quienes trabajan. <br>
+
+**Ocupado/a/e:** Es el estado de una persona que está inserta en el mercado laboral con un empleo, sea formal, informal, de jornada reducida, asalariado, por cuenta propia, de jefatura, entre otros. <br>
+
+**Ocupados/as demandantes:** las personas que ya tienen un empleo pero buscan activamente otro o trabajar más horas. <br>
+
+**Paredes de cristal / segregación horizontal:** Es una forma de visibilizar la distribución asimétrica de las mujeres en ramas de la ocupación, que además de reproducir estereotipos de género representa un problema de ingresos, ya que las ramas feminizadas tienen sueldos promedios más bajos y mayores niveles de informalidad que los masculinizados. <br>
+
+**Población de 14 años y más:** Es la población total de este informe, que incluye todas las personas que hayan alcanzado el umbral de los 14 años, el límite inferior de lo que se considera la "edad activa". <br>
+
+**Población Económicamente Activa (PEA):** La Población Económicamente Activa (PEA) incluye a las personas que ofrecen su trabajo en el mercado, sea que lo consiguen (ocupadas/os) o no (desocupadas/os). Al considerar únicamente el mercado laboral no contempla la condición de actividad expandida a tareas domésticas y de cuidados no remunerados. <br>
+
+**Ramas de la ocupación:** Es una clasificación de las actividades económicas que realiza el establecimiento dónde trabajan las personas. La rama de actividad económica de una persona no depende de las tareas específicas de su trabajo, sino de las características de la unidad económica en la que trabaja. <br>
+
+**Regiones:** En este informe se identifican 6 regiones: Gran Buenos Aires, Noroeste Argentino (NOA), Noreste Argentino (NEA), Cuyo, Pampeana y Patagonia. Debido a la disponibilidad de la muestra, algunas desagregaciones pierden validez y por esa razón se omite su publicación. En otros casos, las aperturas por región devuelven resultados muy similares a los del total nacional, y por esa razón no resulta significativa su publicación. Obtener datos específicos sobre cada una de las regiones no solo posibilita evidenciar las particularidades regionales de las asimetrías recorridas a lo largo del informe, sino que también permiten realizar comparaciones. <br>
+
+**Subocupados/as:** Todas las personas que trabajan menos de 35 horas semanales, están disponibles para trabajar más horas y desean aumentar la cantidad de horas que trabajan. <br>
+
+**Subocupados/as demandantes:** Proporción de personas de la población económicamente activa que tienen un empleo de menos de 35 horas semanales, están disponibles para trabajar más horas y se encuentran buscando empleo <br>
+
+**Subocupados/as no demandantes:** Las personas que trabajan menos de 35 horas semanales, no están buscando activamente otro trabajo aunque desearían trabajar más horas pero por causas involuntarias no lo hacen. <br>
+
+**Tasa de actividad:** Se calcula como la proporción que representa la Población Económicamente Activa entre la población total, ya sea de mujeres o de varones. Cabe destacar que esta definición de "Actividad" no contempla actividades como cocinar, limpiar, cuidar, etc. que son realizadas principalmente por mujeres fuera del mercado. <br>
+
+**Tasa de empleo:** La tasa muestra la proporción de quienes están en el mercado laboral como ocupades en relación a la población de mujeres y de varones, es decir, se recorta de la tasa de actividad la proporción de quienes están desocupadas. <br>
+
+**Tasa de desocupación:** La tasa muestra la proporción de personas que están buscando empleo pero no lo consiguen, entre la población económicamente activa . Esta situación es más recurrente entre mujeres. <br>
+
+**Tasa de subocupación:** La tasa relaciona la cantidad de personas en situación de subocupación horaria respecto al total de la PEA. Estos empleos dan mayor flexibilidad para el manejo de las responsabilidades y son las mujeres las que presentan tasas de subocupación más altas, muchas veces debido a la carga de trabajo de cuidados que demanda muchas horas que no se llevan al mercado de trabajo. Las trabajadoras tienen mayores complicaciones al momento de conseguir un trabajo de tiempo completo. <br>
+
+**Techo de cristal / segregación vertical:** Alude a los obstáculos que enfrentan las mujeres para ascender a cargos jerárquicos y puestos de decisión. La metáfora del cristal muestra que los impedimentos no son visibles ya que no hay normas explícitas que busquen segregar a las trabajadoras, pero que las barreras existen incluso cuando están igual o mejor calificadas que sus compañeros varones. <br>
+
+**Trabajo doméstico y de cuidados:** También conocido como "trabajo reproductivo" es aquel que es imprescindible para mantener la vida de las personas. Se manifiesta en tareas como cocinar, lavar, ordenar, atender las necesidades de lxs miembrxs de un hogar y de la familia en general. Todas las personas necesitamos cuidados a lo largo de nuestras vidas y la concreción de los mismos suele depender en mayor medida de las identidades feminizadas. <br>
+
+## Metodología
+
+------------------------------------------------------------------------
+
+### Aclaraciones metodológicas
+
+<br><br> Para realizar los cálculos se utilizan bases de datos publicadas por la Encuesta Permanente de Hogares del INDEC. Esta encuesta releva características demográficas, sociales, económicas, con especial atención a las formas de participación en el mercado laboral, entre hogares y personas de 31 aglomerados urbanos. <br><br> Respecto del impacto de la pandemia por COVID-19, tanto sobre los resultados como sobre la calidad de los datos, cabe aclarar que la encuesta pasó de la modalidad presencial a la telefónica para contactar y realizar la entrevista a los hogares. El propio INDEC advierte que ciertos datos no cuentan con la calidad con la que habitualmente la EPH presenta sus resultados. <br><br> En cuanto a la medición de pobreza por hogar, se utiliza la metodología de INDEC para el cálculo oficial, disponible [aquí](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf). Además proponemos una metodología diferente que define la situación de pobreza de las personas a nivel individual. Para esto construimos Canastas Básicas Totales Individuales que resultan de multiplicar la Canasta Básica Total con las unidades de referencia que le corresponden a cada ocupade, según la tabla de equivalencias de INDEC, para luego compararla con el Ingreso Total Individual. <br><br> El documento se realizó utilizando el lenguaje de programación R. Para les curioses, todo el código se encuentra disponible para su descarga^1^.
+
+------------------------------------------------------------------------
+
+^1^ Presionando en\_ Code \> Download Rmd \_se accede a la descarga de la sintaxis completa de este informe. <br><br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#FIN DEL INFORME
+```
+
