@@ -37,7 +37,7 @@ library(magrittr)
 library(scales)
 library(kableExtra)
 
-datos <- read.csv("Fuentes/precios-gestion-menstrual-2025-09-17.csv", 
+datos <- read.csv("Fuentes/precios-gestion-menstrual-2026-04-01.csv", 
                   header = TRUE, sep = ",", dec = ".", 
                   fill = TRUE, encoding = "UTF-8")
 
@@ -100,7 +100,7 @@ cant <- function(x){
 Guardamos el valor de la fecha a la que corresponde el ejercicio.
 
 ```{r message=FALSE, warning=FALSE}
-date <- "Septiembre 2025"
+date <- "Marzo 2026"
 ```
 
 ## Exploración de los datos
@@ -518,5 +518,5 @@ ggplot(datos, aes(x = precio_unidad, y = Provincia,
 Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
 
 ```{r echo=TRUE}
-saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2025-09-17-limpio.RDS")
+saveRDS(datos, file = "Fuentes/precios-gestion-menstrual-2026-04-01-limpio.RDS")
 ```

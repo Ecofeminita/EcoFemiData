@@ -1,7 +1,7 @@
 ---
 title: 'Cálculo: ¿Cuánto cuesta menstruar?'
 author: 'Ecofeminita / #MenstruAcción / Ecofemidata'
-subtitle: Datos de Septiembre 2025
+subtitle: Datos de Marzo 2026
 output:
   html_document:
     toc: no
@@ -28,7 +28,7 @@ library(readxl)
 library(DT)
 library(lubridate)
 
-datos <- readRDS("Fuentes/precios-gestion-menstrual-2025-09-17-limpio.RDS")
+datos <- readRDS("Fuentes/precios-gestion-menstrual-2026-04-01-limpio.RDS")
 
 menstruan <- read_excel("Fuentes/poblaciones.xls") %>% 
   select(Provincia, Menstruan) # Para sacar las columnas con comentarios
@@ -40,7 +40,7 @@ cants_categorias <- datos %>% group_by(Categoría) %>% summarise(n=n())
 
 ## Presentación
 
-En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/lasdesistemas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 17 de Septiembre de 2025 sobre la página Precios Claros, sumándose esta información a la que obtenemos todos los Marzos y Septiembres desde 2019. En esta instancia, se obtuvieron, luego de realizar una limpieza y preprocesamiento, `r nrow(datos)` observaciones de tampones y toallitas.
+En el marco del cálculo del costo de menstruar en Argentina, llevado a cabo desde la campaña #MenstruAcción y EcoFeminita, en el presente documento de trabajo se encuentra la exploración, organización y limpieza de los datos obtenidos mediante el [#MenstruScrapper](https://github.com/lasdesistemas/menstruscrapper), desarrollado por Nayla Portas de [LAS] de sistemas. El #MenstruScrapper fue ejecutado el día 1 de Abril de 2026 sobre la página Precios Claros, sumándose esta información a la que obtenemos todos los Marzos y Septiembres desde 2019. En esta instancia, se obtuvieron, luego de realizar una limpieza y preprocesamiento, `r nrow(datos)` observaciones de tampones y toallitas.
 
 + Respecto de los tampones: Se obtuvieron `r cants_categorias %>% filter(Categoría == "tampones") %>% pull(n)` precios.
 + Respecto de las toallitas: Se obtuvieron `r cants_categorias %>% filter(Categoría == "toallitas") %>% pull(n)` precios.
@@ -202,7 +202,7 @@ A continuación, agrego los precios actuales de toallitas y tampones a la serie 
 
 precios_pgm <- precios_pgm %>% 
   add_row(
-    Mes = as.Date("2025-09-01"),
+    Mes = as.Date("2026-03-01"),
     Toallitas = round(valor_toallitas, 2),
     Tampones = round(valor_tampones, 2)
   )
@@ -282,13 +282,13 @@ ggplot(base100bis, aes(x = Mes, y = Indice, group = Categoria, color = Categoria
   theme(legend.position = "top",
         text = element_text(size = 13)) +
   scale_color_manual(values = colorcitos) +
-  expand_limits(x = as.POSIXct(c("2019-03-01", "2025-09-01"))) + 
+  expand_limits(x = as.POSIXct(c("2019-03-01", "2026-03-01"))) + 
   labs(title = "Inflación de Toallitas y Tampones vs. Salud y Nivel General del IPC-INDEC",
-       subtitle = "Marzo 2019 - Septiembre 2025", #<------------------------------------------------- CAMBIAR
+       subtitle = "Marzo 2019 - Marzo 2026", #<------------------------------------------------- CAMBIAR
        x = "",
        y = "Indice de precios",
        caption = "Fuente: #MenstruAcción y #EcoFemiData (EcoFeminita)") +
-  scale_x_datetime(breaks = seq(as.POSIXct('2019-03-01'), by='6 months', length = 13), #<------------------------ CAMBIAR
-                   labels = c("03-2019", "09-2019", "03-2020", "09-2020", "03-2021", "09-2021", "03-2022", "09-2022", "03-2023", "09-2023", "03-2024", "09-2024", "03-2025")) #<------------- CAMBIAR
+  scale_x_datetime(breaks = seq(as.POSIXct('2019-03-01'), by='6 months', length = 15), #<------------------------ CAMBIAR
+                   labels = c("03-2019", "09-2019", "03-2020", "09-2020", "03-2021", "09-2021", "03-2022", "09-2022", "03-2023", "09-2023", "03-2024", "09-2024", "03-2025", "09-2025", "03-2026")) #<------------- CAMBIAR
 ```
 
