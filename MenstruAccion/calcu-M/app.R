@@ -826,7 +826,7 @@ server <- function(input, output, session) {
     
     # Precios unitarios (step6)
     p_toallas <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="toallitas"])
-    p_protectores <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="protectores"])
+    p_protectores <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="protectores diarios"])
     p_tampones <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="tampones"])
     # copa_month <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="copa"])
     

@@ -11,7 +11,14 @@ suppressPackageStartupMessages(library(scales))
 
 
 ## Insumos ----
-datos <- read.csv("MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+# datos <- read.csv("MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_tamp <- read.csv("MenstruAccion/Calcu-M/insumos/precios-tampones.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_toall <- read.csv("MenstruAccion/Calcu-M/insumos/precios-toallitas.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_protect <- read.csv("MenstruAccion/Calcu-M/insumos/precios-protectores-diarios.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos <- bind_rows(datos_tamp, datos_toall, datos_protect)
+
+rm(datos_tamp, datos_toall, datos_protect)
+
 regiones <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/insumos/provincias_regiones.xlsx", sheet = 1)
 
 datos$Marca <- trimws(datos$Marca) # quito espacios sobrantes en los nombres de las marcas (da problemas para el summarise)
@@ -35,6 +42,7 @@ categ <- datos %>%
 
 cant_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(n)
 cant_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(n)
+cant_protectores <- categ %>% filter(Categoría == "protectores diarios") %>% pull(n)
 cant_copas <- categ %>% filter(Categoría == "copa") %>% pull(n)
 
 # Vista previa del dataset:
@@ -70,6 +78,7 @@ categ
 
 perc_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(porcentaje)
 perc_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(porcentaje)
+perc_protectores <- categ %>% filter(Categoría == "protectores diarios") %>% pull(porcentaje)
 perc_copa <- categ %>% filter(Categoría == "copa") %>% pull(porcentaje)
 
 # Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. 
@@ -159,7 +168,7 @@ datos %>%
   ggplot(., aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
   geom_density_ridges(scale = 3, bandwidth = 20) +
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred")) +
+  scale_fill_manual(values = c("orange", "red", "violetred", "green")) +
   theme(legend.position = "none") +
   labs(title = "Precio de lista de productos de gestión menstrual según categoría",
        subtitle = date,
@@ -341,7 +350,7 @@ datos <- datos %>%
 ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = Categoría)) +
   geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 10
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred")) +
+  scale_fill_manual(values = c("orange", "red", "violetred", "green")) +
   theme(legend.position = "none") +
   labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
        subtitle = date,
@@ -364,7 +373,7 @@ datos <- datos %>%
 ggplot(datos, aes(x = precio_unidad, y = Region, fill = Categoría, alpha = Region)) +
   geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 1
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred"))+
+  scale_fill_manual(values = c("orange", "red", "violetred", "green"))+
   facet_wrap(. ~ Categoría, scales = 'free') +
   theme(legend.position = "none") +
   labs(title = "Precio por unidad de productos de gestión menstrual según categoría y región",
