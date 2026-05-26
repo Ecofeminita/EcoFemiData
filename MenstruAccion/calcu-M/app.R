@@ -5,6 +5,11 @@ suppressPackageStartupMessages(library(shinyFeedback))
 suppressPackageStartupMessages(library(shinythemes))
 suppressPackageStartupMessages(library(shinyWidgets))
 suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(googlesheets4))
+
+# Google Sheets-------------------------
+SHEET_ID <- "1VaflzpcENN8XN8kpC-IU8jLdhD_mSAnrcPMt6VTjBvU"
+gs4_auth(path = ".secrets/service-account.json")
 
 # Helpers-------------------------
 safe_num <- function(x) {
@@ -15,6 +20,35 @@ safe_num <- function(x) {
 money_fmt <- function(x) {
   # Formato simple (sin depender de paquetes)
   format(round(x, 0), big.mark = ".", decimal.mark = ",")
+}
+
+guardar_respuesta <- function(input, g) {
+  collapse <- function(x) paste(x %||% "", collapse = ", ")
+  fila <- data.frame(
+    timestamp          = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+    life_stage         = input$life_stage %||% "",
+    gender             = input$gender %||% "",
+    age_range          = input$age_range %||% "",
+    province           = input$province %||% "",
+    coverage           = input$coverage %||% "",
+    regular_period     = input$regular_period %||% "",
+    menstrual_products = collapse(input$menstrual_products_used),
+    qty_toallas        = as.integer(input$qty_toallas %||% 0),
+    qty_protectores    = as.integer(input$qty_protectores %||% 0),
+    qty_tampones       = as.integer(input$qty_tampones %||% 0),
+    meds_used          = collapse(input$meds_used),
+    othersmeds_used    = collapse(input$othersmeds_used),
+    practices_used     = collapse(input$practices_used),
+    selfcare_used      = if (g == "menopausia") collapse(input$selfcare_used) else "",
+    supplements_used   = if (g == "menopausia") collapse(input$supplements_used) else "",
+    exercise_weekly    = if (g == "menopausia") (input$exercise_weekly %||% "") else "",
+    other_costs        = if (g == "menopausia") (input$other_costs %||% "") else "",
+    stringsAsFactors   = FALSE
+  )
+  tryCatch(
+    sheet_append(SHEET_ID, fila),
+    error = function(e) warning("No se pudo guardar la respuesta: ", e$message)
+  )
 }
 
 # Constantes de encuesta-------------------------
@@ -730,6 +764,7 @@ server <- function(input, output, session) {
       if (identical(group(), "menopausia")) {
         step(5)
       } else {
+        guardar_respuesta(input, group())
         step(6)
       }
     }
@@ -745,8 +780,8 @@ server <- function(input, output, session) {
       notify_required()
       return()
     }
-    
-    
+
+    guardar_respuesta(input, group())
     step(6)
   })
   

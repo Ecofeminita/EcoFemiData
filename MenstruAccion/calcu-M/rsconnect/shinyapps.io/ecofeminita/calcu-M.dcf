@@ -1,0 +1,13 @@
+name: calcu-M
+title: calcu-M
+username: ecofeminita
+account: ecofeminita
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17406454
+bundleId: 12042564
+url: https://ecofeminita.shinyapps.io/calcu-M/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: limpieza_organizacion_calculo.R|preprocesamiento.R|test_sheets_connection.R

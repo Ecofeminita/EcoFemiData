@@ -42,3 +42,10 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 ENGHO1718/
+
+# Variables para calcu-m
+.env
+*.json
+
+# Credenciales de Google Service Account
+.secrets/
