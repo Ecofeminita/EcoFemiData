@@ -1,0 +1,71 @@
+---
+title: "Pobreza_nuevo"
+output: html_document
+date: "2026-08-14"
+---
+
+base de pobreza institucional. general, itfpc, hogar. 
+ 
+
+```{r}
+tabla_1 <- base_individual %>% 
+    calculate_poverty(., basket = canastas, print_summary = FALSE)
+```
+
+base de pobreza  individual - separado por genero, region , edad.
+
+```{r}
+ tabla_2 <- base_individual %>% 
+        mutate(periodo = paste(ANO4, TRIMESTRE, sep = ".")) %>% 
+    left_join(eph::adulto_equivalente, by = c("CH04", "CH06")) %>% 
+    left_join(canastas, by = c(REGION = "codigo", "periodo")) %>% 
+    mutate(CBA_individual = CBA * adequi, 
+           CBT_individual = CBT * adequi, 
+           situacion = case_when(P47T < CBA_individual ~ "indigente", 
+                                 P47T >= CBA_individual & P47T < CBT_individual ~ "pobre", 
+                                 P47T >= CBT_individual ~ "no pobre"), 
+           situacion = case_when(PONDII == 0 ~ NA_character_, TRUE ~ situacion)) %>% 
+    select(-adequi, -periodo, -CBA, -CBT) 
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+# Cargamos las CBA y CBT
+canastas <- get_poverty_lines(regional = TRUE)
+
+# condicional para que se muestre la seccion si hay canastas disponibles
+date_trimestre <- paste(base_individual$ANO4[1], base_individual$TRIMESTRE[1], sep = ".")
+show.pobreza <- nrow(canastas %>% filter(periodo==date_trimestre))>0
+```
+
+
+```{r}
+tabla_pobreza1 <- tabla_1 %>% 
+  summarise(
+    Pobreza_abs    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    Indigencia_abs = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza        = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia     = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+
+
+tabla_pobreza2 <- tabla_2 %>% 
+  summarise(
+    Pobreza_abs    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    Indigencia_abs = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza        = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia     = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+
+```
+por genero
+```{r}
+tabla_pobreza2 <- tabla_2 %>% 
+  mutate( )
+  
+  summarise(
+    Pobreza_abs    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    Indigencia_abs = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza        = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia     = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  ) 
+```
+
