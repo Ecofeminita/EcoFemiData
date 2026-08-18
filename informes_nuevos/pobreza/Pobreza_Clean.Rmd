@@ -141,10 +141,10 @@ base_individual <- base_individual %>%
 colores = c("#E5616E", "#c9c9c9")
 coloresb = c("#8CDDD3", "#8594C6", "#F8F5EE")
 ```
-```
 
-#Codigo###
+CODIGO
 Cargamos las CBA y CBTcondicional para que se muestre la seccion si hay canastas disponibles
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 
@@ -200,6 +200,24 @@ tabla_pobreza1 <- tabla_1 %>%
     Pobreza        = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
     Indigencia     = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
   )
+ 
+  inline_1 <- tabla_pobreza1 %>% 
+   pull(Pobreza)%>% 
+  formato_porc ()
+ ACA
+```
+En Argentina la tasa de pobreza asciende a  `r inline_1`, esto se traduce en que en nuestro pais unas  `r inline_2`
+personas son pobres. Cuando habalmos de indigencia la tasa es de  `r inline_3`, lo cual se traduce en  `r inline_4` personas en situacion de indigencia. 
+
+
+ <p style="color:#E5616E">__Tasa de pobreza__</p>
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+inline_1 %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
 
 
 tabla_pobreza2 <- tabla_2 %>% 
@@ -212,10 +230,8 @@ tabla_pobreza2 <- tabla_2 %>%
 
 
 ```
-
 Por región (nuevo) totales y distribución
 ``` {r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
-
     tabla_distribucion_pobreza_region <- tabla_1 %>% 
   group_by(region) %>% 
   summarise(
@@ -231,8 +247,21 @@ Por región (nuevo) totales y distribución
     IndigenciaXCategoria = round(IndigenciaXCategoria, 0)
   ) 
 
+
 ```
-  
+
+
+<p style="color:#E5616E">__Distribucion de personas en situación de pobreza e indigencia por región__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla_distribucion_pobreza_region %>% 
+  kable(align = "l") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+
 por genero
 ```{r}
 tabla_pobrezaSexo <- tabla_1 %>% 
@@ -832,7 +861,7 @@ tabla_pobreza_alternativa <- tabla_1 %>%
     miembros_hogar = n(),
     transferencia_hogar = sum(ifelse(V5_01_M > 0, V5_01_M, 0), na.rm = TRUE),
       ITF = ITF - transferencia_hogar,
-    IPCF = ITF / miembros_hogar  # Dividimos por la cantidad de miembros calculada
+    IPCF = ITF / miembros_hogar  
   ) %>% 
   ungroup() %>% 
   select(-transferencia_hogar, -miembros_hogar) %>% 
@@ -845,9 +874,7 @@ tabla_pobreza_alternativa <- tabla_1 %>%
     Indigencia           = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
   )
   
-  
-  
-  
+ 
   
   tabla_pobreza_alternativa <- tabla_1 %>% 
   rename(
@@ -902,7 +929,6 @@ tabla_pobreza_alternativa_AUH <- tabla_1 %>%
   group_by(CODUSU, NRO_HOGAR) %>% 
   mutate(
     miembros_hogar = n(),
-    # ACÁ ESTÁ EL CAMBIO: Usamos monto_AUH en lugar de V5_01_M
     transferencia_hogar = sum(ifelse(monto_AUH > 0, monto_AUH, 0), na.rm = TRUE),
     ITF = ITF - transferencia_hogar,
     IPCF = ITF / miembros_hogar  
@@ -943,6 +969,22 @@ tabla_comparativa_AUH <- tabla_plan_AUH_Sexo %>%
     by = c("situacion", "Sexo"),
     suffix = c(" (Con AUH)", " (Sin AUH)")
   )
+```
+ 
+ 
+  <p style="color:#E5616E">__Porcentaje de mujeres y de varones en el sector__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tabla_comparativa_AUH %>% 
+  mutate(Total = sum(PONDERA)) %>% 
+  group_by(Sexo) %>% 
+  summarise(Porcentaje = formato_porc(sum(PONDERA)/unique(Total)*100)) %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
 ```
 JUBILACION- 
 ```{r}
