@@ -1,4 +1,4 @@
-# 1. Limpieza y organizacion de los  ----
+# 1. Limpieza y organizacion de los PGM----
 
 ## Librerias ----
 options(scipen=100, digits=4)
@@ -15,9 +15,13 @@ suppressPackageStartupMessages(library(scales))
 datos_tamp <- read.csv("MenstruAccion/Calcu-M/insumos/precios-tampones.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
 datos_toall <- read.csv("MenstruAccion/Calcu-M/insumos/precios-toallitas.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
 datos_protect <- read.csv("MenstruAccion/Calcu-M/insumos/precios-protectores-diarios.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
-datos <- bind_rows(datos_tamp, datos_toall, datos_protect)
+datos_protect_inc <- read.csv("MenstruAccion/Calcu-M/insumos/precios-protectores-incontinencia.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+# datos_protect_inc <- datos_protect_inc %>% filter(!grepl("Pan", Nombre))
 
-rm(datos_tamp, datos_toall, datos_protect)
+datos <- bind_rows(datos_tamp, datos_toall, datos_protect, datos_protect_inc)
+# datos <- bind_rows(datos, datos_protect, datos_protect_inc)
+
+rm(datos_tamp, datos_toall, datos_protect, datos_protect_inc)
 
 regiones <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/insumos/provincias_regiones.xlsx", sheet = 1)
 
@@ -43,6 +47,7 @@ categ <- datos %>%
 cant_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(n)
 cant_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(n)
 cant_protectores <- categ %>% filter(Categoría == "protectores diarios") %>% pull(n)
+cant_protectores_inc <- categ %>% filter(Categoría == "protectores para incontinencia") %>% pull(n)
 cant_copas <- categ %>% filter(Categoría == "copa") %>% pull(n)
 
 # Vista previa del dataset:
@@ -79,6 +84,7 @@ categ
 perc_toallitas <- categ %>% filter(Categoría == "toallitas") %>% pull(porcentaje)
 perc_tampones <- categ %>% filter(Categoría == "tampones") %>% pull(porcentaje)
 perc_protectores <- categ %>% filter(Categoría == "protectores diarios") %>% pull(porcentaje)
+perc_protectores <- categ %>% filter(Categoría == "protectores para incontinencia") %>% pull(porcentaje)
 perc_copa <- categ %>% filter(Categoría == "copa") %>% pull(porcentaje)
 
 # Cabe destacar que esta composición corresponde a la disponibilidad de precios, no refleja la estructura del consumo. 
@@ -168,7 +174,7 @@ datos %>%
   ggplot(., aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
   geom_density_ridges(scale = 3, bandwidth = 20) +
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred", "green")) +
+  scale_fill_manual(values = c("orange", "red", "violetred", "green", "blue")) +
   theme(legend.position = "none") +
   labs(title = "Precio de lista de productos de gestión menstrual según categoría",
        subtitle = date,
@@ -189,7 +195,7 @@ datos %>%
   ggplot(., aes(x = Precio.de.lista, y = Categoría, fill = Categoría)) +
   geom_density_ridges(scale = 3, bandwidth = 20) +
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred")) +
+  scale_fill_manual(values = c("orange", "red", "violetred", "green")) +
   theme(legend.position = "none") +
   labs(title = "Precio de lista de productos de gestión menstrual según categoría",
        subtitle = date,
@@ -205,7 +211,7 @@ datos %>%
   ggplot(., aes(x = Precio.de.lista, y = Region, fill = Categoría, alpha = Region)) +
   geom_density_ridges(scale = 2, bandwidth = 20) + # el bandwidth anterior estaba en 10
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred"))+
+  scale_fill_manual(values = c("orange", "red", "violetred", "green"))+
   facet_wrap(. ~ Categoría) +
   theme(legend.position = "none") +
   labs(title = "Precio de lista de productos de gestión menstrual según categoría y región",
@@ -350,7 +356,7 @@ datos <- datos %>%
 ggplot(datos, aes(x = precio_unidad, y = Categoría, fill = Categoría)) +
   geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 10
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred", "green")) +
+  scale_fill_manual(values = c("orange", "red", "violetred", "green", "blue")) +
   theme(legend.position = "none") +
   labs(title = "Precio por unidad de productos de gestión menstrual según categoría",
        subtitle = date,
@@ -373,7 +379,7 @@ datos <- datos %>%
 ggplot(datos, aes(x = precio_unidad, y = Region, fill = Categoría, alpha = Region)) +
   geom_density_ridges(scale = 2, bandwidth = 1.25) + # el bandwidth anterior estaba en 1
   theme_minimal() +
-  scale_fill_manual(values = c("orange", "red", "violetred", "green"))+
+  scale_fill_manual(values = c("orange", "red", "violetred", "green", "blue"))+
   facet_wrap(. ~ Categoría, scales = 'free') +
   theme(legend.position = "none") +
   labs(title = "Precio por unidad de productos de gestión menstrual según categoría y región",

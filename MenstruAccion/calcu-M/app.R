@@ -43,6 +43,9 @@ guardar_respuesta <- function(input, g) {
     supplements_used   = if (g == "menopausia") collapse(input$supplements_used) else "",
     exercise_weekly    = if (g == "menopausia") (input$exercise_weekly %||% "") else "",
     other_costs        = if (g == "menopausia") (input$other_costs %||% "") else "",
+    organizacion       = input$organizacion %||% "",
+    other_meds_text    = if (g == "menopausia") (input$other_meds_text %||% "") else "",
+    other_meds_cost    = if (g == "menopausia") as.numeric(input$other_meds_cost %||% 0) else 0,
     stringsAsFactors   = FALSE
   )
   tryCatch(
@@ -74,6 +77,8 @@ GENDER <- c(
   "Mujer cis", "Varón trans", "No binarie", "Varón cis", "Otra identidad de género", "Prefiero no responder"
 )
 
+REFERRAL_ORGS <- c("Ecofeminita", "Sociales UBA", "No pausa", "Otra", "Ninguna")
+
 COVERAGE <- c(
   "Obra social",
   "Prepaga",
@@ -85,8 +90,8 @@ MENSTRUAL_PRODUCTS <- c("Toallas higiénicas", "Protectores diarios", "Tampones"
 
 SELFCARE_PRODUCTS <- c(
   "Geles lubricantes o hidratantes vaginales",
-  "Crema corporal/facial", 
-  "Toallas para incontinencia leve",
+  "Crema corporal/facial",
+  "Protectores de incontinencias",
   "Consultorio de Ginecología",
   "Consultorio de Psicología",
   "Consultorio de Sexología",
@@ -95,10 +100,16 @@ SELFCARE_PRODUCTS <- c(
   "Terapias alternativas",
   "Hierbas medicinales u otros productos no farmacológicos",
   "Ninguno/a"
-  )
+)
+
+# Cantidad mensual asumida para "Protectores de incontinencias" (no se le pide
+# cantidad a la persona, a diferencia de toallas/protectores diarios/tampones):
+# Estudios de salud sugieren que una persona con incontinencia moderada utiliza unos 120 apósitos al mes (un promedio de 4 al día)
+QTY_INCONTINENCIA_MES <- 120
 
 MEDS <- c(
-  "Estradiol — terapia hormonal con estrógenos (pastillas/comprimidos)",
+  "Estradiol (pastillas/comprimidos) — terapia hormonal con estrógenos",
+  "Estradiol (gel o crema) — terapia hormonal con estrógenos de uso transdérmico",
   "Estriol — estrógeno de uso vaginal o tópico (gel, óvulos o crema)",
   "Promestriene — crema u óvulos vaginales para sequedad o molestias íntimas",
   "Prasterona (DHEA) — tratamiento vaginal hormonal para sequedad o dolor",
@@ -137,7 +148,7 @@ SUPPLEMENTS <- c(
   "Magnesio",
   "Hierro",
   "Ninguno/a"
-  )
+)
 
 # Data-------------------------
 preciosPGM <- read.csv("./insumos/preciosPGM.csv", encoding='UTF-8')
@@ -330,7 +341,9 @@ server <- function(input, output, session) {
                    div(class="question-block",
                        radioButtons("life_stage", "¿En qué momento del ciclo vital te ubicás?", choices = LIFE_STAGE, selected = character(0), width = '100%'),
                        hr(),
-                       radioButtons("gender", "¿Con qué género te autopercibís?", choices = GENDER, selected = character(0), width = '100%')
+                       radioButtons("gender", "¿Con qué género te autopercibís?", choices = GENDER, selected = character(0), width = '100%'),
+                       hr(),
+                       selectInput("organizacion", "¿A través de qué organización llegaste a la calculadora?", choices = REFERRAL_ORGS, selected = "Ninguna")
                    ),
                ),
                div(class="question-block",
@@ -544,9 +557,12 @@ server <- function(input, output, session) {
     if (s == 5) {
       
       others_ui <- tagList(
-        div(class="two-col",
-            textInput("other_costs", "", value = "", width = '100%')
-        )
+        textInput("other_costs", "", value = "", placeholder = "Ej: vestimenta, ropa de cama, ventilación/climatización. Si son varios, separalos con comas", width = '100%')
+      )
+      
+      other_meds_ui <- tagList(
+        textInput("other_meds_text", "", value = "", placeholder = "¿Qué tratamiento o medicamento? Si son varios, separalos con comas", width = '100%'),
+        numericInput("other_meds_cost", "Contanos el costo mensual total aproximado ($)", value = 0, min = 0, step = 100, width = '100%')
       )
       
       
@@ -575,8 +591,11 @@ server <- function(input, output, session) {
                        hr(),
                        radioButtons("exercise_weekly", "¿Realizás ejercicio físico semanal?", choices = c("Si", "No"), selected = character(0)),
                        hr(),
-                       HTML("<b>¿Agregarías otros gastos que hayas empezado a realizar como recomendación para la menopausa y que no fueron mencionados en la encuesta? (por ejemplo, vestimenta, ropa de cama, productos de higiene, ventilación/climatización, transporte a consultas médicas, entre otras)</b>"),
-                       others_ui
+                       HTML("<b>¿Agregarías otros gastos que hayas empezado a realizar como recomendación para la menopausa y que no fueron mencionados en la encuesta?</b>"),
+                       others_ui,
+                       hr(),
+                       HTML("<b>¿Agregarías algún tratamiento o medicamento que no haya aparecido en la encuesta?</b>"),
+                       other_meds_ui
                    )
                ),
                div(class="wizard-nav",
@@ -780,7 +799,7 @@ server <- function(input, output, session) {
       notify_required()
       return()
     }
-
+    
     guardar_respuesta(input, group())
     step(6)
   })
@@ -863,20 +882,23 @@ server <- function(input, output, session) {
     p_toallas <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="toallitas"])
     p_protectores <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="protectores diarios"])
     p_tampones <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="tampones"])
-    # copa_month <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="copa"])
+    copa_month <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="copa"])
     
     menstrual_cost <- data.frame(
-      Rubro = c("Toallas higiénicas", "Protectores diarios", "Tampones"),
+      Rubro = c("Toallas higiénicas", "Protectores diarios", "Tampones", "Copa"),
       Costo = c(qty_toallas * p_toallas,
-                  qty_protectores * p_protectores,
-                  qty_tampones * p_tampones
-                  # copa_month
+                qty_protectores * p_protectores,
+                qty_tampones * p_tampones,
+                copa_month
       )
     )
     
     # Costos mensuales estimados para medicamentos
-    meds_used <- input$meds_used %>% stringr::str_to_lower()  
-    meds_used <- stringr::str_extract(meds_used, "^\\w{5,}((?=\\s)|$)")
+    meds_used <- input$meds_used %>% stringr::str_to_lower()
+    meds_used <- dplyr::case_when(
+      stringr::str_detect(meds_used, "^estradiol") & stringr::str_detect(meds_used, "gel|crema") ~ "estradiol_gel",
+      TRUE ~ stringr::str_extract(meds_used, "^\\w{5,}((?=\\s)|$)")
+    )
     
     othersmeds_used <- input$othersmeds_used %>% stringr::str_to_lower()  
     othersmeds_used <- stringr::str_extract(othersmeds_used, "^\\w{5,}((?=\\s)|$)")
@@ -888,9 +910,29 @@ server <- function(input, output, session) {
     
     meds_month <- safe_num(cost_meds_month)
     
+    # Costo mensual estimado para protectores de incontinencia (cantidad fija asumida,
+    # no hay input de cantidad para este ítem; se resuelve solo a partir del momento
+    # en que preciosPGM.csv tenga una fila con Categoría == "protectores para incontinencia")
+    p_incontinencia <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="protectores para incontinencia"])
+    selfcare_month <- if ("Protectores de incontinencias" %in% input$selfcare_used) {
+      QTY_INCONTINENCIA_MES * p_incontinencia
+    } else {
+      0
+    }
+    
+    # Costo mensual estimado de tratamientos/medicamentos cargados a mano (step5,
+    # solo menopausia), con el nombre que haya escrito la persona si lo completó
+    other_meds_cost_month <- safe_num(input$other_meds_cost)
+    other_meds_text <- trimws(input$other_meds_text %||% "")
+    other_meds_label <- if (other_meds_text != "") {
+      paste0("Otros tratamientos o medicamentos (", other_meds_text, ")")
+    } else {
+      "Otros tratamientos o medicamentos"
+    }
+    
     other_costs <- data.frame(
-      Rubro = c("Medicamentos"),
-      Costo = c(meds_month)
+      Rubro = c("Medicamentos", "Productos de autocuidado", other_meds_label),
+      Costo = c(meds_month, selfcare_month, other_meds_cost_month)
     )
     
     bd <- rbind(menstrual_cost, other_costs)
@@ -921,6 +963,8 @@ server <- function(input, output, session) {
     
     if(g != "menstrual"){
       selfcare_used <- input$selfcare_used %||% ""
+      # excluido de este listado de "costos no incluidos": ya se suma al total en cost_breakdown()
+      selfcare_used <- selfcare_used[selfcare_used != "Protectores de incontinencias"]
       supplements_used <- input$supplements_used %||% ""
       exercise_weekly <- input$exercise_weekly %||% ""
       exercise_weekly <- ifelse(exercise_weekly=="Si", "Ejercicio físico", "")
@@ -959,15 +1003,15 @@ server <- function(input, output, session) {
       hr(),
       h4("Desglose mensual"),
       tags$div(style = " display: flex; align-items: center; width: 100%; margin-top: 10px; margin-bottom: 10px; ",
-        tags$div(style = " flex: 0 0 auto; ",
-          tableOutput("breakdown_table")
-        ),
-        tags$div(style = " flex: 1; display: flex; justify-content: center; ",
-          tags$img(
-            src = "Iso+logo_calcu.m-04.png",
-            style = " width: 160px; height: auto; "
-          )
-        )
+               tags$div(style = " flex: 0 0 auto; ",
+                        tableOutput("breakdown_table")
+               ),
+               tags$div(style = " flex: 1; display: flex; justify-content: center; ",
+                        tags$img(
+                          src = "Iso+logo_calcu.m-04.png",
+                          style = " width: 160px; height: auto; "
+                        )
+               )
       ),
       hr(),
       h5("Nota metodologica"),

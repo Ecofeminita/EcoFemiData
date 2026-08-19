@@ -176,6 +176,7 @@ medicamentos_limpio <- medicamentos_limpio %>%
     droga_costeo = case_when(
       str_detect(droga, "isoflavonas de soja") ~ "isoflavonas",
       str_detect(droga, "paroxetina") ~ "paroxetina",
+      str_detect(droga, "estradiol") & str_detect(forma, "crema") ~ "estradiol_gel",
       str_detect(droga, "estradiol") ~ "estradiol",
       str_detect(droga, "progesterona") ~ "progesterona",
       str_detect(droga, "drospirenona\\+estradiol") ~ "fem",
@@ -192,7 +193,9 @@ medicamentos_limpio <- medicamentos_limpio %>%
 referencia_formas <- tibble::tribble(
   ~droga_costeo, ~forma_ref, ~unidad_mes_base,
   "estradiol", "comprimidos", 30,
-  
+
+  "estradiol_gel", "crema", 1,
+
   "fem", "comprimidos", 10,
   
   "progesterona", "comprimidos", 30,
@@ -271,4 +274,3 @@ costo_medicamentos <- medicamentos_limpio_ref %>%
 # Exporto los csv con los precios
 write.csv(precio_nacional, "MenstruAccion/Calcu-M/insumos/preciosPGM.csv")
 write.csv(costo_medicamentos, "MenstruAccion/Calcu-M/insumos/preciosMED.csv")
-
