@@ -1,4 +1,5 @@
 # Insumos para shinyapp (prepro) ----
+setwd(rstudioapi::getActiveProject())
 
 # reiniciamos completamente RStudio para el preprocesamiento
 .rs.restartR() # esperar a que termine y luego correr rm() y gc()
@@ -43,7 +44,7 @@ precio_nacional <- precio_provincia %>%
 rm(df_raw, menstruan)
 
 ## Medicamentos ----
-medicamentos <- read.csv("./MenstruAccion/scrappeoMedicamentos/scrappeoMedicamentos.csv") %>% janitor::clean_names()
+medicamentos <- read.csv("MenstruAccion/scrappeoMedicamentos/scrappeoMedicamentos.csv") %>% janitor::clean_names()
 medicamentos$fecha <- as.Date(medicamentos$fecha, format = "%d/%m/%Y")
 medicamentos <- medicamentos %>% select(nombre, presentacion, droga, forma, via, categoria_busqueda, query, precio)
 

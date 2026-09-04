@@ -1,4 +1,5 @@
 # 1. Limpieza y organizacion de los PGM----
+setwd(rstudioapi::getActiveProject())
 
 ## Librerias ----
 options(scipen=100, digits=4)
