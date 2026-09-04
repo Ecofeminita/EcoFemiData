@@ -9,17 +9,16 @@ suppressPackageStartupMessages(library(ggwordcloud))
 
 options(scipen = 100, digits = 4)
 
-## Funciones ----
-source("../funciones/google_sheets_auth.R", local = TRUE)
-source("../funciones/analisis_helpers.R", local = TRUE)
-source("../funciones/costo_fila_helpers.R", local = TRUE)
-
-## Conexión a Google Sheets ----
 if (!dir.exists(".secrets") && dir.exists("MenstruAccion/calcu-M/.secrets")) {
   setwd("MenstruAccion/calcu-M")
 }
 
+## Funciones ----
+source("funciones/google_sheets_auth.R", local = TRUE)
+source("funciones/analisis_helpers.R", local = TRUE)
+source("funciones/costo_fila_helpers.R", local = TRUE)
 
+## Conexión a Google Sheets ----
 if (file.exists(".secrets/.env")) readRenviron(".secrets/.env")
 
 SHEET_ID <- Sys.getenv("SHEET_ID")
@@ -307,12 +306,12 @@ print(grafico_costo)
 print(grafico_costo_edad)
 
 ## Exporto los gráficos a PNG ----
-dir.create("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas", showWarnings = FALSE)
+dir.create("analisis_respuestas/graficos_respuestas", showWarnings = FALSE)
 
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/respuestas_por_provincia.png", grafico_provincias, width = 8, height = 6, dpi = 150)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/ciclo_vital_por_rango_etario.png", grafico_ciclo_edad, width = 9, height = 6, dpi = 150)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/distribucion_costo_mensual.png", grafico_costo, width = 8, height = 6, dpi = 150)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/distribucion_costo_por_edad.png", grafico_costo_edad, width = 10, height = 7, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/respuestas_por_provincia.png", grafico_provincias, width = 8, height = 6, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/ciclo_vital_por_rango_etario.png", grafico_ciclo_edad, width = 9, height = 6, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/distribucion_costo_mensual.png", grafico_costo, width = 8, height = 6, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/distribucion_costo_por_edad.png", grafico_costo_edad, width = 10, height = 7, dpi = 150)
 
 # 7. Nube de palabras de gastos adicionales mencionados libremente (other_costs) ----
 # Buscamos patrones de consumo que no estén cubiertos por las preguntas cerradas del resto de la encuesta.
@@ -377,7 +376,7 @@ grafico_nube <- frecuencia_palabras %>%
   )
 
 print(grafico_nube)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/nube_other_costs.png", grafico_nube, width = 11, height = 9, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/nube_other_costs.png", grafico_nube, width = 11, height = 9, dpi = 150)
 
 # 8. Costo estimado según cobertura de salud, y señales de barrera de acceso ----
 # Un costo más bajo en "No tengo cobertura" puede reflejar un gasto real menor, o puede reflejar que
@@ -456,8 +455,8 @@ grafico_barrera_acceso <- tasa_sin_practicas %>%
 
 print(grafico_costo_cobertura)
 print(grafico_barrera_acceso)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/costo_por_cobertura.png", grafico_costo_cobertura, width = 8, height = 6, dpi = 150)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/barrera_acceso_por_cobertura.png", grafico_barrera_acceso, width = 8, height = 6, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/costo_por_cobertura.png", grafico_costo_cobertura, width = 8, height = 6, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/barrera_acceso_por_cobertura.png", grafico_barrera_acceso, width = 8, height = 6, dpi = 150)
 
 # 9. Sensibilidad geográfica de precios: nacional (usado por la app) vs. provincial ----
 # app.R usa un único precio nacional (preciosPGM.csv) para toda Argentina, pero el propio proyecto ya
@@ -466,7 +465,7 @@ ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/barrera_ac
 # población, no por dónde respondió la encuesta) está sub/sobreestimando el costo real fuera del AMBA.
 # Nota: la base de precios con detalle provincial solo tiene "toallitas" y "tampones"; "protectores
 # diarios" no tiene granularidad provincial disponible, así que ese rubro queda con el precio nacional.
-precios_provinciales_raw <- readRDS("./insumos/precios-gestion-menstrual-limpio.RDS")
+precios_provinciales_raw <- readRDS("preprocesamiento/insumos_prepro/precios-gestion-menstrual-limpio.RDS")
 
 precio_provincia <- precios_provinciales_raw %>%
   filter(Categoría %in% c("toallitas", "tampones")) %>%
@@ -555,4 +554,4 @@ grafico_precio_geografico <- comparacion_precios %>%
   )
 
 print(grafico_precio_geografico)
-ggsave("MenstruAccion/calcu-M/analisis_respuestas/graficos_respuestas/precio_geografico_vs_nacional.png", grafico_precio_geografico, width = 10, height = 9, dpi = 150)
+ggsave("analisis_respuestas/graficos_respuestas/precio_geografico_vs_nacional.png", grafico_precio_geografico, width = 10, height = 9, dpi = 150)
