@@ -11,11 +11,11 @@ suppressPackageStartupMessages(library(scales))
 
 
 ## Insumos ----
-# datos <- read.csv("MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
-datos_tamp <- read.csv("MenstruAccion/Calcu-M/insumos/precios-tampones.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
-datos_toall <- read.csv("MenstruAccion/Calcu-M/insumos/precios-toallitas.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
-datos_protect <- read.csv("MenstruAccion/Calcu-M/insumos/precios-protectores-diarios.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
-datos_protect_inc <- read.csv("MenstruAccion/Calcu-M/insumos/precios-protectores-incontinencia.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+# datos <- read.csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-gestion-menstrual.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_tamp <- read.csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-tampones.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_toall <- read.csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-toallitas.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_protect <- read.csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-protectores-diarios.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
+datos_protect_inc <- read.csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-protectores-incontinencia.csv", header = TRUE, sep = ",", dec = ".",  fill = TRUE, encoding = "UTF-8")
 # datos_protect_inc <- datos_protect_inc %>% filter(!grepl("Pan", Nombre))
 
 datos <- bind_rows(datos_tamp, datos_toall, datos_protect, datos_protect_inc)
@@ -23,7 +23,7 @@ datos <- bind_rows(datos_tamp, datos_toall, datos_protect, datos_protect_inc)
 
 rm(datos_tamp, datos_toall, datos_protect, datos_protect_inc)
 
-regiones <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/insumos/provincias_regiones.xlsx", sheet = 1)
+regiones <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/provincias_regiones.xlsx", sheet = 1)
 
 datos$Marca <- trimws(datos$Marca) # quito espacios sobrantes en los nombres de las marcas (da problemas para el summarise)
 
@@ -436,14 +436,14 @@ ggplot(datos, aes(x = precio_unidad, y = Provincia,
        caption = "Fuente: #MenstruAcción")
 
 # Finalmente, guardamos esta nueva versión del dataset en formato .RDS para continuar en el siguiente script con el cálculo de cuánto cuesta menstruar.
-saveRDS(datos, file = "MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual-limpio.RDS")
+saveRDS(datos, file = "MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-gestion-menstrual-limpio.RDS")
 
 #5. Calculo costo anual de menstruar ----
-# datos <- readRDS("MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual-limpio.RDS")
+# datos <- readRDS("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-gestion-menstrual-limpio.RDS")
 
-# menstruan <- readxl::read_excel("MenstruAccion/Calcu-M/insumos/poblaciones.xls") %>% select(Provincia, Menstruan) # Para sacar las columnas con comentarios
+# menstruan <- readxl::read_excel("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/poblaciones.xls") %>% select(Provincia, Menstruan) # Para sacar las columnas con comentarios
 # menstruan %>% mutate(total = sum(Menstruan))
-menstruan <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/insumos/poblaciones_2022_2040_mujeres_edad.xlsx", sheet = 1)
+menstruan <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/poblaciones_2022_2040_mujeres_edad.xlsx", sheet = 1)
 
 # Se carga la estimación, por cada provincia, de personas que menstrúan. Como está aclarado en la carpeta de insumos, 
 # esto sale de las proyecciones poblacionales del INDEC, teniendo en cuenta que la menarca se estima en los 13 años y la menopausia en 49 años. 
@@ -570,8 +570,8 @@ tampones %>%
 # el rubro alimentos y bebidas no alcohólicas, y el de Salud. 
 # Ambas series se levantan desde archivos de extensión .xlsx en las tablas `serie_inflacion` y `precios_pgm`.
 
-serie_inflacion <- readxl::read_excel("MenstruAccion/Calcu-M/insumos/serie_inflacion.xlsx")
-precios_pgm <- read_csv("MenstruAccion/Calcu-M/insumos/serie_precios_pgm_viejo.csv")
+serie_inflacion <- readxl::read_excel("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/serie_inflacion.xlsx")
+precios_pgm <- read_csv("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/serie_precios_pgm_viejo.csv")
 
 # A continuación, agrego los precios actuales de toallitas y tampones a la serie histórica y la guardo. 
 
@@ -583,7 +583,7 @@ precios_pgm <- precios_pgm %>%
   )
 
 
-write_csv(precios_pgm, 'MenstruAccion/Calcu-M/insumos/serie_precios_pgm_nuevo.csv')
+write_csv(precios_pgm, 'MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/serie_precios_pgm_nuevo.csv')
 
 head(serie_inflacion)
 head(precios_pgm)

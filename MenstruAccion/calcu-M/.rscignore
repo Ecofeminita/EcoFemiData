@@ -1,0 +1,8 @@
+# shinyapps.io sube todo el directorio del proyecto salvo lo excluido acá
+# (a diferencia de .gitignore, que solo protege el repo de GitHub).
+# Nunca debe subirse el contenido de .secrets/ ni el .Renviron con las
+# credenciales de deploy de rsconnect (SHINYAPPS_TOKEN/SHINYAPPS_SECRET):
+# SHEET_ID y GOOGLE_CREDENTIALS_JSON se configuran como variables de entorno
+# desde el dashboard de shinyapps.io (Settings → Environment Variables).
+.secrets/
+.Renviron

@@ -43,9 +43,8 @@ vignettes/*.pdf
 .Renviron
 ENGHO1718/
 
-# Variables para calcu-m
-.env
-*.json
-
-# Credenciales de Google Service Account
+# Credenciales sensibles (calcu-m: .env, service-account.json, etc.)
 .secrets/
+
+# Contexto Claude
+CLAUDE.md

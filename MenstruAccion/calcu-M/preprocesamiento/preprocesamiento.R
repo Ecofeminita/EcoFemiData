@@ -9,7 +9,7 @@ gc()
 suppressPackageStartupMessages(library(tidyverse))
 
 ## PPG ----
-df_raw <- readRDS("MenstruAccion/Calcu-M/insumos/precios-gestion-menstrual-limpio.RDS")
+df_raw <- readRDS("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/precios-gestion-menstrual-limpio.RDS")
 
 # Como vamos a volar las marcas y tenemos una sobrerrepresentacion muy fuerte de las observaciones en el AMBA, vamos a comparar los valores
 # que nos devuelve una mediana y una media truncada (5% - 10%). De esta forma lo que buscamos es evitar sesgo geográfico y la dispersión
@@ -27,7 +27,7 @@ precio_provincia <- df_raw %>%
 
 
 # Corregimos el sesgo del AMBA y las diferencias regionales
-menstruan <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/insumos/poblaciones_2022_2040_mujeres_edad.xlsx", sheet = 1)
+menstruan <- openxlsx::read.xlsx("MenstruAccion/Calcu-M/preprocesamiento/insumos_prepro/poblaciones_2022_2040_mujeres_edad.xlsx", sheet = 1)
 menstruan <- menstruan %>% 
   mutate(total = sum(Menstruan),
          ponderador = Menstruan/total) %>% 

@@ -8,51 +8,25 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(googlesheets4))
 
 # Google Sheets-------------------------
-SHEET_ID <- "1VaflzpcENN8XN8kpC-IU8jLdhD_mSAnrcPMt6VTjBvU"
-gs4_auth(path = ".secrets/service-account.json")
+if (!dir.exists(".secrets") && dir.exists("MenstruAccion/calcu-M/.secrets")) {
+  setwd("MenstruAccion/calcu-M")
+}
+
+source("funciones/google_sheets_auth.R", local = TRUE)
+
+if (file.exists(".secrets/.env")) readRenviron(".secrets/.env")
+
+SHEET_ID <- Sys.getenv("SHEET_ID")
+if (identical(SHEET_ID, "")) {
+  stop("SHEET_ID no está definida. Configurá .secrets/.env (local) o la variable de entorno en shinyapps.io.")
+}
+
+gs4_auth(path = resolve_google_credentials())
 
 # Helpers-------------------------
-safe_num <- function(x) {
-  if (is.null(x) || length(x) == 0 || is.na(x) || x == "") return(0)
-  as.numeric(x)
-}
-
-money_fmt <- function(x) {
-  # Formato simple (sin depender de paquetes)
-  format(round(x, 0), big.mark = ".", decimal.mark = ",")
-}
-
-guardar_respuesta <- function(input, g) {
-  collapse <- function(x) paste(x %||% "", collapse = ", ")
-  fila <- data.frame(
-    timestamp          = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-    life_stage         = input$life_stage %||% "",
-    gender             = input$gender %||% "",
-    age_range          = input$age_range %||% "",
-    province           = input$province %||% "",
-    coverage           = input$coverage %||% "",
-    regular_period     = input$regular_period %||% "",
-    menstrual_products = collapse(input$menstrual_products_used),
-    qty_toallas        = as.integer(input$qty_toallas %||% 0),
-    qty_protectores    = as.integer(input$qty_protectores %||% 0),
-    qty_tampones       = as.integer(input$qty_tampones %||% 0),
-    meds_used          = collapse(input$meds_used),
-    othersmeds_used    = collapse(input$othersmeds_used),
-    practices_used     = collapse(input$practices_used),
-    selfcare_used      = if (g == "menopausia") collapse(input$selfcare_used) else "",
-    supplements_used   = if (g == "menopausia") collapse(input$supplements_used) else "",
-    exercise_weekly    = if (g == "menopausia") (input$exercise_weekly %||% "") else "",
-    other_costs        = if (g == "menopausia") (input$other_costs %||% "") else "",
-    organizacion       = input$organizacion %||% "",
-    other_meds_text    = if (g == "menopausia") (input$other_meds_text %||% "") else "",
-    other_meds_cost    = if (g == "menopausia") as.numeric(input$other_meds_cost %||% 0) else 0,
-    stringsAsFactors   = FALSE
-  )
-  tryCatch(
-    sheet_append(SHEET_ID, fila),
-    error = function(e) warning("No se pudo guardar la respuesta: ", e$message)
-  )
-}
+source("funciones/format_helpers.R", local = TRUE)
+source("funciones/guardar_respuesta.R", local = TRUE)
+source("funciones/shiny_ui_helpers.R", local = TRUE)
 
 # Constantes de encuesta-------------------------
 PROVINCES <- c(
@@ -251,36 +225,7 @@ server <- function(input, output, session) {
   
   # Grupo: menstrual / menopausia / out
   group <- reactiveVal(NULL)
-  
-  is_empty <- function(x) {
-    is.null(x) || length(x) == 0 || all(is.na(x)) || identical(x, "")
-  }
-  
-  notify_required <- function(msg = "Para continuar, respondé todas las preguntas de esta pantalla.") {
-    showNotification(msg, type = "error", duration = 5)
-  }
-  
-  # Si "Ninguno/a" está seleccionado junto con otras opciones
-  modular_ninguno_logic <- function(input_id, input_val) {
-    opcion_ninguno <- "Ninguno/a"
-    
-    if (opcion_ninguno %in% input_val && length(input_val) > 1) {
-      ultimo_seleccionado <- tail(input_val, 1)
-      
-      if (ultimo_seleccionado == opcion_ninguno) {
-        nuevos_seleccionados <- opcion_ninguno
-      } else {
-        nuevos_seleccionados <- input_val[input_val != opcion_ninguno]
-      }
-      
-      updateCheckboxGroupInput(
-        session, 
-        inputId = input_id, 
-        selected = nuevos_seleccionados
-      )
-    }
-  }
-  
+
   # UI dinámica por step-------------------------
   output$main_ui <- renderUI({
     s <- step()
@@ -783,7 +728,8 @@ server <- function(input, output, session) {
       if (identical(group(), "menopausia")) {
         step(5)
       } else {
-        guardar_respuesta(input, group())
+        costos <- cost_breakdown()
+        guardar_respuesta(input, group(), costos)
         step(6)
       }
     }
@@ -800,10 +746,11 @@ server <- function(input, output, session) {
       return()
     }
     
-    guardar_respuesta(input, group())
+    costos <- cost_breakdown()
+    guardar_respuesta(input, group(), costos)
     step(6)
   })
-  
+
   # Cantidades de PGM------------------------- 
   observe({
     productos <- input$menstrual_products_used
@@ -844,27 +791,27 @@ server <- function(input, output, session) {
   
   # Condición para los Checkboxs de steps 3, 4 y 5-------------------------
   observeEvent(input$menstrual_products_used, {        
-    modular_ninguno_logic("menstrual_products_used", input$menstrual_products_used) 
+    modular_ninguno_logic("menstrual_products_used", input$menstrual_products_used, session)
   }, ignoreNULL = TRUE)
   
   observeEvent(input$meds_used, {        
-    modular_ninguno_logic("meds_used", input$meds_used) 
+    modular_ninguno_logic("meds_used", input$meds_used, session)
   }, ignoreNULL = TRUE)
   
   observeEvent(input$othersmeds_used, {  
-    modular_ninguno_logic("othersmeds_used", input$othersmeds_used) 
+    modular_ninguno_logic("othersmeds_used", input$othersmeds_used, session)
   }, ignoreNULL = TRUE)
   
   observeEvent(input$practices_used, {   
-    modular_ninguno_logic("practices_used", input$practices_used) 
+    modular_ninguno_logic("practices_used", input$practices_used, session)
   }, ignoreNULL = TRUE)
   
   observeEvent(input$selfcare_used, {    
-    modular_ninguno_logic("selfcare_used", input$selfcare_used) 
+    modular_ninguno_logic("selfcare_used", input$selfcare_used, session)
   }, ignoreNULL = TRUE)
   
   observeEvent(input$supplements_used, { 
-    modular_ninguno_logic("supplements_used", input$supplements_used) 
+    modular_ninguno_logic("supplements_used", input$supplements_used, session)
   }, ignoreNULL = TRUE)
   
   
@@ -1032,15 +979,6 @@ server <- function(input, output, session) {
     bd$Costo <- paste0("$ ", money_fmt(bd$Costo))
     bd
   })
-  
-  # Botón recalcular (no hace falta, pero lo dejamos por UX)
-  observeEvent(input$recalc, {
-    # no-op: reactive recalcula solo, pero el botón da sensación de control
-    invisible(NULL)
-  })
 }
-
-# infix helper for NULL coalescing
-`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 shinyApp(ui, server)
