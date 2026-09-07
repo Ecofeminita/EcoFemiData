@@ -829,8 +829,8 @@ server <- function(input, output, session) {
     p_toallas <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="toallitas"])
     p_protectores <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="protectores diarios"])
     p_tampones <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="tampones"])
-    copa_month <- safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="copa"])
-    
+    copa_month <- if ("Copa menstrual" %in% input$menstrual_products_used){safe_num(preciosPGM$precio_nacional[preciosPGM$Categoría=="copa"])} else {0}
+
     menstrual_cost <- data.frame(
       Rubro = c("Toallas higiénicas", "Protectores diarios", "Tampones", "Copa"),
       Costo = c(qty_toallas * p_toallas,
