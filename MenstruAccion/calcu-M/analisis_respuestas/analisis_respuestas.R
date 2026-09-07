@@ -17,6 +17,7 @@ if (!dir.exists(".secrets") && dir.exists("MenstruAccion/calcu-M/.secrets")) {
 source("funciones/google_sheets_auth.R", local = TRUE)
 source("funciones/analisis_helpers.R", local = TRUE)
 source("funciones/costo_fila_helpers.R", local = TRUE)
+source("funciones/format_helpers.R", local = TRUE)
 
 ## Conexión a Google Sheets ----
 if (file.exists(".secrets/.env")) readRenviron(".secrets/.env")
@@ -31,12 +32,6 @@ gs4_auth(path = resolve_google_credentials())
 respuestas <- read_sheet(SHEET_ID)
 
 ## Vocabularios de opciones (idénticos a las constantes definidas en app.R) ----
-# Los necesitamos para poder reconstruir qué opciones se marcaron en cada campo de checkboxes:
-# guardar_respuesta() en app.R junta las opciones elegidas con ", ", pero varias opciones tienen
-# comas *dentro* de su propio texto (por ej. "Laboratorio (glucosa, colesterol, vitamina D)"),
-# por lo que separar el string guardado por comas rompe esas opciones en fragmentos falsos.
-# La única forma confiable de recuperar la selección original es buscar, para cada opción conocida,
-# si su texto completo aparece dentro del campo guardado.
 LIFE_STAGE <- c(
   "Menstruando y sin signos de climaterio/menopausia",
   "Experimentando signos de climaterio/menopausia",
@@ -173,32 +168,10 @@ if (nrow(menopausicas) > 0) {
   print(tabla_freq(menopausicas, exercise_weekly))
 }
 
-# 5. Costo mensual estimado por respuesta (misma lógica que cost_breakdown() en app.R) ----
-p_toallas     <- preciosPGM$precio_nacional[preciosPGM$Categoría == "toallitas"]
-p_protectores <- preciosPGM$precio_nacional[preciosPGM$Categoría == "protectores diarios"]
-p_tampones    <- preciosPGM$precio_nacional[preciosPGM$Categoría == "tampones"]
-p_incontinencia <- preciosPGM$precio_nacional[preciosPGM$Categoría == "protectores para incontinencia"]
-
-# Cantidad mensual asumida para "Protectores de incontinencias" (no se le pide
-# cantidad a la persona, a diferencia de toallas/protectores diarios/tampones):
-# Estudios de salud sugieren que una persona con incontinencia moderada utiliza unos 120 apósitos al mes (un promedio de 4 al día)
-QTY_INCONTINENCIA_MES <- 120
-
-
+# 5. Costo mensual estimado por respuesta ----
 respuestas <- respuestas %>%
-  rowwise() %>%
-  mutate(
-    costo_menstrual = sum(
-      qty_toallas * p_toallas,
-      qty_protectores * p_protectores,
-      qty_tampones * p_tampones,
-      na.rm = TRUE
-    ),
-    costo_medicamentos = costo_medicamentos_fila(meds_used, othersmeds_used),
-    costo_incontinencia = costo_incontinencia_fila(selfcare_used),
-    costo_total_mensual = sum(costo_menstrual, costo_medicamentos, costo_incontinencia, na.rm = TRUE)
-  ) %>%
-  ungroup()
+  mutate(costo_total_mensual = cost_total_month) %>% 
+  filter(costo_total_mensual > 0)
 
 cat("\n== Costo mensual estimado (canasta) ==\n")
 respuestas %>%
@@ -236,7 +209,6 @@ respuestas %>%
   print()
 
 # 6. Gráficos ----
-
 # Grilla de referencia (gris tenue) y quiebres de eje x más finos, reutilizadas en los gráficos de costo
 tema_grilla_tenue <- theme(
   panel.grid.major = element_line(color = "grey88"),
@@ -379,10 +351,6 @@ print(grafico_nube)
 ggsave("analisis_respuestas/graficos_respuestas/nube_other_costs.png", grafico_nube, width = 11, height = 9, dpi = 150)
 
 # 8. Costo estimado según cobertura de salud, y señales de barrera de acceso ----
-# Un costo más bajo en "No tengo cobertura" puede reflejar un gasto real menor, o puede reflejar que
-# esas personas directamente no acceden a prácticas/medicación que si tuvieran cobertura sí realizarían.
-# Para distinguir ambos casos, además del costo comparamos qué proporción de cada grupo no reporta
-# ninguna práctica médica ni ninguna medicación.
 cat("\n== Costo mensual estimado por cobertura de salud ==\n")
 respuestas %>%
   group_by(coverage) %>%
@@ -459,12 +427,10 @@ ggsave("analisis_respuestas/graficos_respuestas/costo_por_cobertura.png", grafic
 ggsave("analisis_respuestas/graficos_respuestas/barrera_acceso_por_cobertura.png", grafico_barrera_acceso, width = 8, height = 6, dpi = 150)
 
 # 9. Sensibilidad geográfica de precios: nacional (usado por la app) vs. provincial ----
-# app.R usa un único precio nacional (preciosPGM.csv) para toda Argentina, pero el propio proyecto ya
-# calcula precios por provincia en preprocesamiento.R (precios-gestion-menstrual-limpio.RDS). Como el
-# 70% de las respuestas viene de CABA+Buenos Aires, chequeamos si ese precio nacional (ponderado por
-# población, no por dónde respondió la encuesta) está sub/sobreestimando el costo real fuera del AMBA.
-# Nota: la base de precios con detalle provincial solo tiene "toallitas" y "tampones"; "protectores
-# diarios" no tiene granularidad provincial disponible, así que ese rubro queda con el precio nacional.
+p_toallas     <- preciosPGM$precio_nacional[preciosPGM$Categoría == "toallitas"]
+p_protectores <- preciosPGM$precio_nacional[preciosPGM$Categoría == "protectores diarios"]
+p_tampones    <- preciosPGM$precio_nacional[preciosPGM$Categoría == "tampones"]
+
 precios_provinciales_raw <- readRDS("preprocesamiento/insumos_prepro/precios-gestion-menstrual-limpio.RDS")
 
 precio_provincia <- precios_provinciales_raw %>%
@@ -504,7 +470,13 @@ respuestas <- respuestas %>%
       qty_tampones * precio_tampones_usar,
       na.rm = TRUE
     ),
-    costo_total_mensual_provincial = sum(costo_menstrual_provincial, costo_medicamentos, na.rm = TRUE),
+    # Canasta completa de los dos lados (igual que costo_total_mensual), variando solo
+    # el precio de toallas/tampones (nacional vs. provincial) — así la diferencia contra
+    # costo_total_mensual aísla el efecto de precio, sin mezclarlo con qué rubros entran.
+    costo_total_mensual_provincial = sum(
+      costo_menstrual_provincial, cost_copa, cost_meds, cost_selfcare, cost_other_meds,
+      na.rm = TRUE
+    ),
     dif_costo_provincial_vs_nacional = costo_total_mensual_provincial - costo_total_mensual
   ) %>%
   ungroup()
@@ -555,3 +527,104 @@ grafico_precio_geografico <- comparacion_precios %>%
 
 print(grafico_precio_geografico)
 ggsave("analisis_respuestas/graficos_respuestas/precio_geografico_vs_nacional.png", grafico_precio_geografico, width = 10, height = 9, dpi = 150)
+
+
+## CUIDADO! NO CORRER A MENOS QUE SEA NECESARIO ----
+# 10. Relleno de las columnas de costo ----
+respuestas_costeo <- read_sheet(SHEET_ID) %>%
+  mutate(fila_sheet = row_number() + 1) # +1 porque la fila 1 del sheet es el encabezado
+
+sin_costo <- respuestas_costeo %>% filter(is.na(cost_total_month))
+
+cat("\n== Backfill de columnas de costo ==\n")
+cat("Filas totales en el sheet:", nrow(respuestas_costeo), "\n")
+cat("Filas sin cost_total_month (a completar):", nrow(sin_costo), "\n")
+
+## Cálculo por fila
+p_copa <- preciosPGM$precio_nacional[preciosPGM$Categoría == "copa"]
+p_incontinencia <- preciosPGM$precio_nacional[preciosPGM$Categoría == "protectores para incontinencia"]
+
+# Cantidad mensual asumida para "Protectores de incontinencias" (no se le pide cantidad a
+# la persona, a diferencia de toallas/protectores diarios/tampones): estudios de salud
+# sugieren que una persona con incontinencia moderada utiliza unos 120 apósitos al mes
+# (un promedio de 4 al día)
+QTY_INCONTINENCIA_MES <- 120
+
+MEDS_COSTEO <- c(MEDS, "Estradiol — terapia hormonal con estrógenos (pastillas/comprimidos)")
+
+costo_medicamentos_fila_costeo <- function(meds, othersmeds) {
+  opciones <- c(detectar_opciones(meds, MEDS_COSTEO), detectar_opciones(othersmeds, OTHERS_MEDS))
+  opciones <- str_to_lower(opciones)
+  drogas <- case_when(
+    str_detect(opciones, "^estradiol") & str_detect(opciones, "gel|crema") ~ "estradiol_gel",
+    TRUE ~ str_extract(opciones, "^\\w{5,}((?=\\s)|$)")
+  )
+  preciosMED %>% filter(droga_costeo %in% drogas) %>% summarise(costo = sum(costo_mensual_promedio)) %>% pull(costo)
+}
+
+# Si no hay ninguna fila pendiente (sheet al día)
+if (nrow(sin_costo) == 0) {
+  cat("Nada para completar: todas las filas ya tienen cost_total_month. Se omite el cálculo.\n")
+  costos_calculados <- sin_costo %>%
+    select(fila_sheet, timestamp, cost_toallas, cost_protectores, cost_tampones, cost_copa,
+           cost_meds, cost_selfcare, cost_other_meds, cost_total_month)
+} else {
+  costos_calculados <- sin_costo %>%
+    rowwise() %>%
+    mutate(
+      marco_copa = "Copa menstrual" %in% detectar_opciones(menstrual_products, MENSTRUAL_PRODUCTS),
+      cost_toallas     = round(safe_num(qty_toallas) * p_toallas, 0),
+      cost_protectores = round(safe_num(qty_protectores) * p_protectores, 0),
+      cost_tampones    = round(safe_num(qty_tampones) * p_tampones, 0),
+      cost_copa        = round(ifelse(marco_copa, p_copa, 0), 0),
+      cost_meds        = round(costo_medicamentos_fila_costeo(meds_used, othersmeds_used), 0),
+      cost_selfcare    = round(costo_incontinencia_fila(selfcare_used), 0),
+      cost_other_meds  = round(safe_num(other_meds_cost), 0),
+      cost_total_month = round(sum(
+        safe_num(qty_toallas) * p_toallas,
+        safe_num(qty_protectores) * p_protectores,
+        safe_num(qty_tampones) * p_tampones,
+        ifelse(marco_copa, p_copa, 0),
+        costo_medicamentos_fila_costeo(meds_used, othersmeds_used),
+        costo_incontinencia_fila(selfcare_used),
+        safe_num(other_meds_cost),
+        na.rm = TRUE
+      ), 0)
+    ) %>%
+    ungroup() %>%
+    select(fila_sheet, timestamp, cost_toallas, cost_protectores, cost_tampones, cost_copa,
+           cost_meds, cost_selfcare, cost_other_meds, cost_total_month)
+
+  cat("\n== Data frame con los costos recalculados (antes de escribir nada al sheet) ==\n")
+  print(costos_calculados, n = Inf)
+
+  cat("\n== Resumen de cost_total_month recalculado ==\n")
+  costos_calculados %>%
+    summarise(
+      n = n(), promedio = mean(cost_total_month), mediana = median(cost_total_month),
+      minimo = min(cost_total_month), maximo = max(cost_total_month)
+    ) %>%
+    print()
+}
+
+## Escritura de vuelta al sheet vía API
+actualizar_costos_en_sheet <- function(costos_calculados, sheet_id = SHEET_ID) {
+  costos_calculados <- costos_calculados %>% arrange(fila_sheet)
+  tramo <- cumsum(c(1, diff(costos_calculados$fila_sheet) != 1))
+  cols <- c("cost_toallas", "cost_protectores", "cost_tampones", "cost_copa",
+            "cost_meds", "cost_selfcare", "cost_other_meds", "cost_total_month")
+
+  for (t in unique(tramo)) {
+    bloque <- costos_calculados[tramo == t, ]
+    rango <- paste0("V", min(bloque$fila_sheet), ":AC", max(bloque$fila_sheet))
+    range_write(sheet_id, data = bloque[cols], range = rango, col_names = FALSE, reformat = FALSE)
+    cat("Actualizado rango", rango, "(", nrow(bloque), "filas )\n")
+  }
+}
+
+cat(
+  "\n== Backfill listo para escribir ==\n",
+  "Se armó actualizar_costos_en_sheet(costos_calculados) para actualizar las filas existentes",
+  "del sheet (no agrega filas nuevas). Todavía NO se ejecutó: correrla a mano una vez confirmados",
+  "los valores de arriba.\n"
+)
