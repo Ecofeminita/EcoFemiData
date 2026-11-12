@@ -1,0 +1,1328 @@
+---
+title: "Pobreza con perspectiva de género"
+author: "#Ecofemidata | Ecofeminita"
+subtitle: "Datos de la Encuesta Permanente de Hogares (INDEC)"
+output:
+  html_document:
+    theme: flatly
+    df_print: paged
+    toc: false
+    self_contained: true
+urlcolor: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,   # nunca se muestra el codigo
+  message = FALSE,
+  warning = FALSE,
+  comment = NA,
+  fig.align = "center",
+  fig.width = 9,
+  fig.height = 5,
+  dpi = 150
+)
+```
+
+```{=html}
+<style>
+/* --- Navegacion por pestanias --- */
+.nav > li > a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: #E5616E;
+    font-weight: 500;
+}
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:focus,
+.nav-pills > li.active > a:hover {
+    color: #ffffff;
+    background-color: #E5616E;
+}
+
+/* --- Titulos de cuadros y graficos --- */
+.tit-cuadro {
+    color: #E5616E;
+    font-weight: 700;
+    font-size: 1.05em;
+    margin-bottom: 0;
+}
+.sub-cuadro {
+    color: #9a9a9a;
+    font-weight: 600;
+    font-size: 0.9em;
+    margin-top: 2px;
+    margin-bottom: 12px;
+}
+
+/* --- Tarjetas de numero grande --- */
+.kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+    margin: 28px 0 34px 0;
+}
+.kpi {
+    flex: 1 1 200px;
+    max-width: 280px;
+    border: 2px solid #E5616E;
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    background: #ffffff;
+}
+.kpi-valor {
+    font-size: 3.1em;
+    font-weight: 800;
+    line-height: 1.05;
+    color: #E5616E;
+}
+.kpi-label {
+    font-size: 0.92em;
+    color: #5a5a5a;
+    margin-top: 8px;
+    line-height: 1.35;
+}
+.kpi-nota {
+    font-size: 0.78em;
+    color: #9a9a9a;
+    margin-top: 6px;
+}
+
+/* --- Cuerpo --- */
+body { font-size: 15px; }
+.aviso {
+    background: #FBF0F1;
+    border-left: 4px solid #E5616E;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 18px 0;
+}
+table { margin-bottom: 6px; }
+</style>
+```
+
+```{r librerias}
+library(tidyverse)
+library(stringr)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(gridExtra)
+library(magrittr)
+library(eph)
+
+options(scipen = 9999)
+
+# Funciones de formato propias del repo
+if (file.exists("../../R/funciones formato.R")) source("../../R/funciones formato.R")
+
+# Respaldos por si el script de formato no esta disponible
+if (!exists("formato_porc")) {
+  formato_porc <- function(x) paste0(format(round(x, 1), decimal.mark = ","), "%")
+}
+formato_num <- function(x) {
+  format(round(x, 0), big.mark = ".", decimal.mark = ",",
+         scientific = FALSE, trim = TRUE)
+}
+
+colores  <- c("#E5616E", "#c9c9c9")
+coloresb <- c("#8CDDD3", "#8594C6", "#F8F5EE")
+```
+
+```{r parametros-a-actualizar}
+# ---------------------------------------------------------------------------
+# UNICO BLOQUE QUE HAY QUE TOCAR CADA TRIMESTRE
+# ---------------------------------------------------------------------------
+anio_eph      <- 2025
+trimestre_eph <- 2
+
+# Serie de evolucion del poder adquisitivo de la AUH.
+# No hay una fuente automatizable desde el paquete 'eph': los montos de AUH
+# se publican por ANSES. Hasta que se sume esa fuente, se actualiza a mano.
+evol_auh <- tibble(
+  semestre = c("1S 2023", "2S 2023", "1S 2024", "2S 2024", "1S 2025"),
+  CBA_real = c(100, 111.734, 101.572, 95.7887, 93.7258),
+  CBT_real = c(100, 103.215, 101.115, 97.9356, 93.7247),
+  AUH_real = c(100, 72.2653, 144.664, 149.826, 148.628),
+  AUH_CBA  = c(41.0, 26.5, 58.4, 64.2, 65.0),
+  AUH_CBT  = c(18.4, 12.9, 26.3, 28.1, 29.2)
+)
+```
+
+```{r funciones-de-presentacion}
+# Estilo unico para todos los cuadros del informe
+tabla_ecofem <- function(x, align = NULL, digits = 1, encabezado = colores[1]) {
+  x %>%
+    kable(escape = FALSE, format = "html", digits = digits, align = align) %>%
+    kable_styling(c("striped", "hover", "condensed", "responsive"),
+                  fixed_thead = TRUE, font_size = 16) %>%
+    footnote(general = fuente, general_title = "\n") %>%
+    row_spec(0, bold = TRUE, color = "white", background = encabezado)
+}
+
+# Tarjetas de numero grande. Se usa con results='asis'
+tarjetas <- function(...) {
+  items <- list(...)
+  cuerpo <- vapply(items, function(it) {
+    paste0("<div class='kpi'>",
+           "<div class='kpi-valor'>", it$valor, "</div>",
+           "<div class='kpi-label'>", it$label, "</div>",
+           if (!is.null(it$nota)) paste0("<div class='kpi-nota'>", it$nota, "</div>") else "",
+           "</div>")
+  }, character(1))
+  cat(paste0("<div class='kpi-row'>", paste(cuerpo, collapse = ""), "</div>"))
+}
+
+kpi <- function(valor, label, nota = NULL) list(valor = valor, label = label, nota = nota)
+
+# Titulo + subtitulo de cuadro. Se usa con results='asis'
+titulo_cuadro <- function(titulo, subtitulo = aglo_date) {
+  cat(paste0("<p class='tit-cuadro'>", titulo, "</p>",
+             "<p class='sub-cuadro'>", subtitulo, "</p>"))
+}
+
+# Etiquetas legibles y ordenadas para la variable 'situacion'
+etiqueta_situacion <- function(x) {
+  factor(case_when(x == "indigente" ~ "Indigente",
+                   x == "pobre"     ~ "Pobre",
+                   x == "no pobre"  ~ "No pobre"),
+         levels = c("Indigente", "Pobre", "No pobre"))
+}
+
+tema_ecofem <- theme_minimal(base_size = 12) +
+  theme(axis.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.caption = element_text(color = "#9a9a9a", size = 8),
+        legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r carga-bases}
+base_individual <- get_microdata(year = anio_eph, trimester = trimestre_eph, type = "individual")
+base_hogar      <- get_microdata(year = anio_eph, trimester = trimestre_eph, type = "hogar")
+
+date <- paste0(base_individual$TRIMESTRE[1],
+               ifelse(base_individual$TRIMESTRE[1] %in% c(1, 3), "er",
+                      ifelse(base_individual$TRIMESTRE[1] == 2, "do", "to")),
+               " trimestre ", base_individual$ANO4[1])
+aglo_date <- paste0("Total de aglomerados urbanos. ", date)
+fuente    <- "#Ecofemidata y Ecofeminita en base a EPH-INDEC"
+```
+
+```{r preparacion-base}
+base_individual <- base_individual %>%
+  mutate(
+    Sexo = case_when(CH04 == 1 ~ "Varones",
+                     CH04 == 2 ~ "Mujeres"),
+    Region = case_when(REGION == 1  ~ "Gran Buenos Aires",
+                       REGION == 40 ~ "NOA",
+                       REGION == 41 ~ "NEA",
+                       REGION == 42 ~ "Cuyo",
+                       REGION == 43 ~ "Pampeana",
+                       REGION == 44 ~ "Patagonia"),
+    PP04D_COD = str_pad(as.character(PP04D_COD), width = 5, side = "left", pad = "0"),
+    CALIFICACION = substr(PP04D_COD, 5, 5),
+    CALIFICACION = case_when(CALIFICACION == "1" ~ "Profesionales",
+                             CALIFICACION == "2" ~ "Técnicos",
+                             CALIFICACION == "3" ~ "Operativos",
+                             CALIFICACION == "4" ~ "No Calificados",
+                             TRUE ~ "0"),
+    CALIFICACION = factor(CALIFICACION,
+                          c("No Calificados", "Operativos", "Técnicos", "Profesionales")),
+    JERARQUIA = substr(PP04D_COD, 3, 3),
+    JERARQUIA = case_when(
+      JERARQUIA %in% c("0", "2", "9")   ~ "Dirección o Jefes",
+      JERARQUIA == "1"                  ~ "Cuentapropia",
+      JERARQUIA == "3" & PP07H == 1     ~ "Asalariados Formales",
+      JERARQUIA == "3"                  ~ "Asalariados Informales",
+      TRUE ~ "0"),
+    JERARQUIA = factor(JERARQUIA, levels = c("Dirección o Jefes",
+                                             "Asalariados Formales",
+                                             "Asalariados Informales",
+                                             "Cuentapropia")),
+    NIVEL_EDUCATIVO = case_when(NIVEL_ED %in% c(1, 7) ~ "Sin Instrucción",
+                                NIVEL_ED %in% c(2, 3) ~ "Primaria",
+                                NIVEL_ED %in% c(4, 5) ~ "Secundaria",
+                                NIVEL_ED == 6         ~ "Superior",
+                                NIVEL_ED == 9         ~ "NS/NR"),
+    NIVEL_EDUCATIVO = factor(NIVEL_EDUCATIVO,
+                             levels = c("Sin Instrucción", "Primaria", "Secundaria", "Superior")),
+    GRUPO_EDAD = case_when(CH06 >= 14 & CH06 <= 29 ~ "de 14 a 29 años",
+                           CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años")
+  )
+```
+
+```{r canastas}
+canastas <- get_poverty_lines(regional = TRUE)
+
+date_trimestre <- paste(base_individual$ANO4[1], base_individual$TRIMESTRE[1], sep = ".")
+show.pobreza   <- nrow(canastas %>% filter(periodo == date_trimestre)) > 0
+```
+
+```{r bases-de-pobreza, eval=show.pobreza}
+# ---- Metodo oficial (hogar): toda la poblacion ----------------------------
+tabla_1 <- base_individual %>%
+  calculate_poverty(basket = canastas, print_summary = FALSE)
+
+# ---- Metodo individual (Ecofeminita): toda la poblacion --------------------
+# CBA y CBT individuales = canasta regional * adulto equivalente,
+# comparadas contra el ingreso total individual (P47T).
+tabla_2 <- base_individual %>%
+  filter(P47T != -9) %>%
+  mutate(periodo = paste(ANO4, TRIMESTRE, sep = ".")) %>%
+  left_join(eph::adulto_equivalente, by = c("CH04", "CH06")) %>%
+  left_join(canastas, by = c(REGION = "codigo", "periodo")) %>%
+  mutate(CBA_individual = CBA * adequi,
+         CBT_individual = CBT * adequi,
+         situacion = case_when(
+           P47T <  CBA_individual ~ "indigente",
+           P47T >= CBA_individual & P47T < CBT_individual ~ "pobre",
+           P47T >= CBT_individual ~ "no pobre"),
+         situacion = if_else(PONDII == 0, NA_character_, situacion)) %>%
+  select(-adequi, -periodo, -CBA, -CBT)
+
+# ---- Las mismas dos bases, restringidas a ocupadas/os con ingreso ----------
+filtro_ocupados <- function(x) {
+  x %>% filter(ESTADO == 1, PP3E_TOT > 0, PP3E_TOT != 999, P21 > 0)
+}
+tabla_1_ocup <- filtro_ocupados(tabla_1)
+tabla_2_ocup <- filtro_ocupados(tabla_2)
+```
+
+------------------------------------------------------------------------
+
+#  {.tabset .tabset-fade .tabset-pills}
+
+## Home
+
+------------------------------------------------------------------------
+
+###
+
+<br>
+
+En este informe analizamos la pobreza en Argentina con perspectiva de género. Recorremos la incidencia general del fenómeno, su distribución entre mujeres y varones, cómo afecta a quienes ya están ocupadas y ocupados, qué papel juegan las transferencias del Estado y qué ocurre en los hogares con jefatura femenina. <br><br>
+
+Presentamos la información para el total del país y desagregada por región, y en cada caso contrastamos la medición oficial con una medición alternativa que toma a la persona, y no al hogar, como unidad de análisis. <br><br>
+
+Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hacemos podés apoyarnos haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+
+------------------------------------------------------------------------
+
+### Crítica del indicador actual
+
+<br>
+
+La definición más frecuente utilizada para hablar de pobreza es la monetaria, que se centra en la capacidad (o no) que tengan los hogares para cubrir ciertas necesidades materiales a partir de sus ingresos. En Argentina, la forma de medición utilizada oficialmente se conoce como método indirecto o de "línea": procura definir si los hogares cuentan con ingresos suficientes para cubrir una canasta de alimentos, la Canasta Básica Alimentaria (CBA), y otros consumos básicos no alimentarios que junto a la anterior conforman la Canasta Básica Total (CBT). Estas canastas se comparan con los ingresos totales del hogar, lo que permite clasificarlo como *no pobre*, *pobre* o *indigente*, y esa caracterización se extiende luego a cada una de las personas que lo integran. <br><br>
+
+Ese último paso es el que nos interesa discutir. Al asignarle a cada integrante la situación del hogar en su conjunto, el indicador oficial **supone que los ingresos se reparten de manera equitativa puertas adentro**. El promedio del hogar suaviza las diferencias entre quienes cohabitan: una persona sin ingresos propios que convive con alguien de ingresos altos aparece como no pobre, aunque no tenga autonomía económica alguna. Como las mujeres perciben en promedio menos ingresos que los varones, trabajan más horas no remuneradas y participan menos del mercado laboral, el sesgo no es neutral: **invisibiliza sistemáticamente la pobreza femenina**. <br><br>
+
+A esto se suman otras limitaciones del enfoque monetario. No capta la dimensión del tiempo, es decir, la pobreza de tiempo de quienes cargan con el trabajo doméstico y de cuidados no remunerado. Tampoco registra el acceso diferencial a bienes públicos, a la vivienda o a la infraestructura del cuidado. Y al ser un umbral binario, no dice nada sobre la distancia a la que se está de la línea ni sobre la persistencia en esa situación. <br><br>
+
+### Metodología
+
+<br>
+
+Para los cálculos utilizamos las bases usuarias de la **Encuesta Permanente de Hogares (EPH) del INDEC**, que releva características demográficas, sociales y económicas de hogares y personas en 31 aglomerados urbanos, con especial atención a las formas de participación en el mercado laboral. <br><br>
+
+En este informe conviven **dos mediciones**: <br>
+
+**1. Medición por hogar (oficial).** Replica la metodología de INDEC, disponible [acá](https://www.indec.gob.ar/ftp/cuadros/sociedad/EPH_metodologia_22_pobreza.pdf). Compara el ingreso total familiar con la canasta que le corresponde al hogar según su composición de adultos equivalentes, y clasifica a todas las personas del hogar con el mismo resultado. <br><br>
+
+**2. Medición individual (Ecofeminita).** Construimos Canastas Básicas Individuales multiplicando la CBA y la CBT regionales por las unidades de adulto equivalente que le corresponden a cada persona según la tabla de equivalencias de INDEC. Luego comparamos esa canasta personal contra el **Ingreso Total Individual** de cada persona, sin promediar con el resto del hogar. La diferencia entre ambas mediciones es, precisamente, la medida del sesgo que señalamos más arriba. <br><br>
+
+Cabe aclarar que la medición individual **no reemplaza** a la oficial ni pretende estimar cuánta gente "es realmente pobre": lo que hace es mostrar qué pasaría si cada persona tuviera que cubrir sus necesidades únicamente con los ingresos que percibe. Es una medida de autonomía económica más que de consumo efectivo. <br><br>
+
+Las estadísticas son binarias porque la variable de sexo de la EPH sólo adopta los valores "varón" y "mujer", lo que deja fuera del análisis a las identidades no binarias y trans. <br><br>
+
+El documento se realizó con el lenguaje de programación R. Para les curioses, todo el código se encuentra disponible para su descarga ^2^.
+
+------------------------------------------------------------------------
+
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2026). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. <http://doi.org/10.5281/zenodo.4540185>"
+
+^2^ Presionando en *Code \> Download Rmd* se accede a la descarga de la sintaxis completa de este informe. <br><br>
+
+## Pobreza general
+
+------------------------------------------------------------------------
+
+### Incidencia general de la pobreza {.tabset .tabset-fade .tabset-pills}
+
+```{r calculos-generales, eval=show.pobreza}
+resumen_pobreza <- function(datos, etiqueta = NULL) {
+  r <- datos %>%
+    filter(!is.na(situacion)) %>%
+    summarise(
+      Poblacion  = sum(PONDIH, na.rm = TRUE),
+      Pobres     = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+      Indigentes = sum(PONDIH[situacion == "indigente"], na.rm = TRUE)
+    ) %>%
+    mutate(
+      `Tasa de pobreza`    = round(Pobres / Poblacion * 100, 1),
+      `Tasa de indigencia` = round(Indigentes / Poblacion * 100, 1),
+      across(c(Poblacion, Pobres, Indigentes), ~ round(.x, 0))
+    )
+  if (!is.null(etiqueta)) r <- r %>% mutate(Metodología = etiqueta) %>% relocate(Metodología)
+  r
+}
+
+cuadro_pobreza1 <- resumen_pobreza(tabla_1, "Por hogar (oficial INDEC)")
+cuadro_pobreza2 <- resumen_pobreza(tabla_2, "Por ingreso individual (Ecofeminita)")
+
+cuadro_comparacion_metodos <- bind_rows(cuadro_pobreza1, cuadro_pobreza2)
+
+inline_1 <- formato_porc(cuadro_pobreza1$`Tasa de pobreza`)
+inline_2 <- formato_num(cuadro_pobreza1$Pobres)
+inline_3 <- formato_porc(cuadro_pobreza1$`Tasa de indigencia`)
+inline_4 <- formato_num(cuadro_pobreza1$Indigentes)
+inline_5 <- formato_porc(cuadro_pobreza2$`Tasa de pobreza`)
+
+cuadro_region <- tabla_1 %>%
+  filter(!is.na(situacion), !is.na(Region)) %>%
+  group_by(Región = Region) %>%
+  summarise(
+    Poblacion  = sum(PONDIH, na.rm = TRUE),
+    Pobres     = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    Indigentes = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `Tasa de pobreza`               = round(Pobres / Poblacion * 100, 1),
+    `Tasa de indigencia`            = round(Indigentes / Poblacion * 100, 1),
+    `Distribución de la pobreza`    = round(Pobres / sum(Pobres) * 100, 1),
+    `Distribución de la indigencia` = round(Indigentes / sum(Indigentes) * 100, 1),
+    across(c(Poblacion, Pobres, Indigentes), ~ formato_num(.x))
+  ) %>%
+  arrange(desc(`Tasa de pobreza`))
+```
+
+<br>
+
+#### Total nacional
+
+<br>
+
+```{r kpi-nacional, results='asis', eval=show.pobreza}
+tarjetas(
+  kpi(inline_1, "Tasa de pobreza", "medición por hogar"),
+  kpi(inline_2, "personas en situación de pobreza"),
+  kpi(inline_3, "Tasa de indigencia", "medición por hogar"),
+  kpi(inline_4, "personas en situación de indigencia")
+)
+```
+
+`r if (!show.pobreza) {"<div class='aviso'>_Todavía no están disponibles las canastas del trimestre, por lo que esta sección no puede calcularse. Podés ver la última actualización en el informe del trimestre anterior._</div>"}`
+
+`r if (show.pobreza) {paste0("En Argentina la tasa de pobreza asciende a **", inline_1, "**, lo que significa que unas **", inline_2, "** personas viven en hogares que no alcanzan a cubrir la Canasta Básica Total. La indigencia, que mide a quienes no cubren siquiera la canasta alimentaria, alcanza al **", inline_3, "**, es decir **", inline_4, "** personas. <br><br> Ahora bien, si en lugar de mirar el hogar miramos lo que percibe cada persona, la tasa trepa al **", inline_5, "**. Esa distancia entre una y otra medición no es un error de cálculo: es la porción de la pobreza que el promedio del hogar mantiene fuera de la foto. <br><br>")}`
+
+```{r titulo-metodos, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia según metodología de medición")
+```
+
+```{r cuadro-metodos, eval=show.pobreza}
+cuadro_comparacion_metodos %>%
+  transmute(
+    Metodología,
+    `Población de referencia` = formato_num(Poblacion),
+    `Personas pobres`         = formato_num(Pobres),
+    `Personas indigentes`     = formato_num(Indigentes),
+    `Tasa de pobreza (%)`     = `Tasa de pobreza`,
+    `Tasa de indigencia (%)`  = `Tasa de indigencia`
+  ) %>%
+  tabla_ecofem(align = "lccccc") %>%
+  column_spec(1, width = "6cm", bold = TRUE)
+```
+
+<br>
+
+#### Por región
+
+<br>
+
+`r if (show.pobreza) {"Las dos primeras columnas de porcentaje responden a preguntas distintas y conviene no confundirlas. La __tasa__ indica qué proporción de la población de esa región es pobre, es decir, cuán extendido está el fenómeno ahí. La __distribución__ indica qué porcentaje del total de personas pobres del país vive en esa región, y por lo tanto depende también de cuánta población concentre. Una región chica puede tener la tasa más alta y aun así aportar una porción menor al total nacional. <br><br>"}`
+
+```{r titulo-region, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia por región",
+              paste0("Tasas de incidencia y distribución sobre el total nacional. ", aglo_date))
+```
+
+```{r cuadro-region, eval=show.pobreza}
+cuadro_region %>%
+  select(Región,
+         `Personas pobres` = Pobres,
+         `Personas indigentes` = Indigentes,
+         `Tasa de pobreza`, `Distribución de la pobreza`,
+         `Tasa de indigencia`, `Distribución de la indigencia`) %>%
+  tabla_ecofem(align = "lcccccc") %>%
+  column_spec(1, bold = TRUE, width = "4cm") %>%
+  add_header_above(c(" " = 3, "Pobreza" = 2, "Indigencia" = 2),
+                   bold = TRUE, color = "white", background = colores[1])
+```
+
+```{r grafico-region, eval=show.pobreza, fig.height=4.5}
+cuadro_region %>%
+  select(Región, Pobreza = `Tasa de pobreza`, Indigencia = `Tasa de indigencia`) %>%
+  pivot_longer(-Región, names_to = "Situación", values_to = "Tasa") %>%
+  ggplot(aes(x = Tasa, y = reorder(Región, Tasa), fill = Situación,
+             label = paste0(format(Tasa, decimal.mark = ","), "%"))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), hjust = -0.15, size = 3) +
+  scale_fill_manual(values = c(Pobreza = coloresb[2], Indigencia = coloresb[1]),
+                    breaks = c("Pobreza", "Indigencia")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.18))) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(axis.text.x = element_blank())
+```
+
+## Pobreza por sexo
+
+------------------------------------------------------------------------
+
+### Pobreza por sexo {.tabset .tabset-fade .tabset-pills}
+
+```{r calculos-sexo, eval=show.pobreza}
+cuadro_sexo <- function(datos) {
+  datos %>%
+    filter(!is.na(situacion), !is.na(Sexo)) %>%
+    group_by(Sexo) %>%
+    summarise(
+      Poblacion  = sum(PONDIH, na.rm = TRUE),
+      Pobres     = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+      Indigentes = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      `Tasa de pobreza`               = round(Pobres / Poblacion * 100, 1),
+      `Distribución de la pobreza`    = round(Pobres / sum(Pobres) * 100, 1),
+      `Tasa de indigencia`            = round(Indigentes / Poblacion * 100, 1),
+      `Distribución de la indigencia` = round(Indigentes / sum(Indigentes) * 100, 1),
+      across(c(Poblacion, Pobres, Indigentes), ~ formato_num(.x))
+    )
+}
+
+cuadro_sexo_hogar      <- cuadro_sexo(tabla_1)
+cuadro_sexo_individual <- cuadro_sexo(tabla_2)
+
+# Brechas por metodologia, sobre ocupadas y ocupados con ingreso
+brecha_metodo <- function(datos, etiqueta) {
+  datos %>%
+    filter(!is.na(situacion), !is.na(Sexo)) %>%
+    group_by(Sexo) %>%
+    summarise(
+      Pobreza    = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) /
+                   sum(PONDIH, na.rm = TRUE) * 100,
+      Indigencia = sum(PONDIH[situacion == "indigente"], na.rm = TRUE) /
+                   sum(PONDIH, na.rm = TRUE) * 100,
+      .groups = "drop"
+    ) %>%
+    pivot_wider(names_from = Sexo, values_from = c(Pobreza, Indigencia)) %>%
+    transmute(
+      Metodología            = etiqueta,
+      `Brecha de pobreza`    = round(Pobreza_Mujeres - Pobreza_Varones, 1),
+      `Brecha de indigencia` = round(Indigencia_Mujeres - Indigencia_Varones, 1)
+    )
+}
+
+cuadro_brechas <- bind_rows(
+  brecha_metodo(tabla_1_ocup, "Hogar"),
+  brecha_metodo(tabla_2_ocup, "Individual")
+)
+
+inline_26 <- cuadro_brechas %>% filter(Metodología == "Hogar") %>%
+  pull(`Brecha de pobreza`) %>% abs()
+inline_27 <- cuadro_brechas %>% filter(Metodología == "Individual") %>%
+  pull(`Brecha de pobreza`) %>% abs()
+
+# Brechas por region
+brecha_region <- function(datos, etiqueta) {
+  datos %>%
+    filter(!is.na(situacion), !is.na(Sexo), !is.na(Region)) %>%
+    group_by(Sexo, Region) %>%
+    summarise(
+      Pobreza = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) /
+                sum(PONDIH, na.rm = TRUE) * 100,
+      .groups = "drop"
+    ) %>%
+    pivot_wider(id_cols = Region, names_from = Sexo, values_from = Pobreza) %>%
+    transmute(Region, Metodología = etiqueta,
+              Brecha = round(Mujeres - Varones, 1))
+}
+
+cuadro_brechas_region <- bind_rows(
+  brecha_region(tabla_1_ocup, "Hogar"),
+  brecha_region(tabla_2_ocup, "Individual")
+) %>%
+  pivot_wider(id_cols = Metodología, names_from = Region, values_from = Brecha)
+```
+
+<br>
+
+#### Totales por sexo
+
+<br>
+
+`r if (!show.pobreza) {"<div class='aviso'>_Todavía no están disponibles las canastas del trimestre, por lo que esta sección no puede calcularse._</div>"}`
+
+`r if (show.pobreza) {"Hay dos maneras de mirar la pobreza por sexo y cada una responde una pregunta distinta. <br><br> La __tasa__ toma como denominador a toda la población de cada sexo: dice qué porcentaje de las mujeres es pobre y qué porcentaje de los varones lo es. Mide la intensidad con la que el fenómeno afecta a cada grupo. <br><br> La __distribución__ toma como denominador al total de personas pobres: dice qué porcentaje de las personas pobres son mujeres. Es la medida habitual de la feminización de la pobreza, y depende tanto de la incidencia como del peso demográfico de cada grupo. <br><br> Presentamos las dos, primero según la medición por hogar y después según el ingreso individual. <br><br>"}`
+
+```{r titulo-sexo-hogar, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia por sexo",
+              paste0("Medición por hogar (oficial). ", aglo_date))
+```
+
+```{r cuadro-sexo-hogar, eval=show.pobreza}
+cuadro_sexo_hogar %>%
+  select(Sexo,
+         `Personas pobres` = Pobres, `Personas indigentes` = Indigentes,
+         `Tasa de pobreza`, `Distribución de la pobreza`,
+         `Tasa de indigencia`, `Distribución de la indigencia`) %>%
+  tabla_ecofem(align = "lcccccc") %>%
+  column_spec(1, bold = TRUE, width = "3cm") %>%
+  add_header_above(c(" " = 3, "Pobreza" = 2, "Indigencia" = 2),
+                   bold = TRUE, color = "white", background = colores[1])
+```
+
+<br>
+
+```{r titulo-sexo-individual, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia por sexo",
+              paste0("Medición por ingreso total individual. ", aglo_date))
+```
+
+```{r cuadro-sexo-individual, eval=show.pobreza}
+cuadro_sexo_individual %>%
+  select(Sexo,
+         `Personas pobres` = Pobres, `Personas indigentes` = Indigentes,
+         `Tasa de pobreza`, `Distribución de la pobreza`,
+         `Tasa de indigencia`, `Distribución de la indigencia`) %>%
+  tabla_ecofem(align = "lcccccc", encabezado = coloresb[2]) %>%
+  column_spec(1, bold = TRUE, width = "3cm") %>%
+  add_header_above(c(" " = 3, "Pobreza" = 2, "Indigencia" = 2),
+                   bold = TRUE, color = "white", background = coloresb[2])
+```
+
+```{r grafico-sexo, eval=show.pobreza, fig.height=4}
+bind_rows(
+  cuadro_sexo_hogar %>% mutate(Metodología = "Por hogar"),
+  cuadro_sexo_individual %>% mutate(Metodología = "Por ingreso individual")
+) %>%
+  select(Sexo, Metodología, Tasa = `Tasa de pobreza`) %>%
+  ggplot(aes(x = Metodología, y = Tasa, fill = Sexo,
+             label = paste0(format(Tasa, decimal.mark = ","), "%"))) +
+  geom_col(position = "dodge", width = .6) +
+  geom_text(position = position_dodge(width = .6), vjust = -0.6, size = 3.4) +
+  scale_fill_manual(values = c(Mujeres = colores[1], Varones = coloresb[2])) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(axis.text.y = element_blank(), panel.grid.major.x = element_blank())
+```
+
+<br>
+
+#### Metodología hogar vs. individual
+
+<br>
+
+`r if (show.pobreza) {paste0("Este apartado se restringe a __ocupadas y ocupados con ingresos laborales positivos__, para comparar en igualdad de condiciones a quienes ya están dentro del mercado de trabajo. <br><br> Las brechas están calculadas como ___tasa de mujeres menos tasa de varones___, así que se leen en puntos porcentuales: un valor negativo indica mayor incidencia entre los varones y uno positivo, mayor incidencia entre las mujeres. <br><br> Tomando al hogar como unidad de medida, los varones ocupados registran ", inline_26, " p.p. más de incidencia de la pobreza que las mujeres ocupadas. En cambio, si contrastamos las canastas calculadas para cada persona contra sus ingresos totales individuales, la relación se invierte y pasa a haber ", inline_27, " p.p. más de incidencia entre las mujeres. La pobreza medida por ingresos afecta mayoritariamente a las mujeres en cuanto dejamos de suponer que dentro del hogar todo se reparte por igual. <br><br>")}`
+
+```{r titulo-brechas, results='asis', eval=show.pobreza}
+titulo_cuadro("Diferencias de tasas de pobreza e indigencia por sexo",
+              paste0("Ocupadas/os. Metodología hogar e individual. ", aglo_date))
+```
+
+```{r cuadro-brechas, eval=show.pobreza}
+cuadro_brechas %>%
+  mutate(
+    `Brecha de pobreza`    = color_tile("#E3E2E7", coloresb[2])(`Brecha de pobreza`),
+    `Brecha de indigencia` = color_tile("#E6F1E9", coloresb[1])(`Brecha de indigencia`)
+  ) %>%
+  tabla_ecofem(align = "lcc", encabezado = coloresb[2]) %>%
+  column_spec(1, width = "5cm", bold = TRUE) %>%
+  column_spec(2:3, color = "black", width = "4cm")
+```
+
+<br>
+
+#### Brechas por región
+
+<br>
+
+`r if (show.pobreza) {"La apertura regional muestra que el cambio de metodología no opera igual en todo el país. Donde la participación laboral femenina es más baja y los ingresos propios más escasos, el paso de la medición por hogar a la individual amplía más la brecha. <br><br>"}`
+
+```{r titulo-brechas-region, results='asis', eval=show.pobreza}
+titulo_cuadro("Diferencias de tasas de pobreza por sexo y región",
+              paste0("Ocupadas/os. Metodología hogar e individual. ", aglo_date))
+```
+
+```{r cuadro-brechas-region, eval=show.pobreza}
+cuadro_brechas_region %>%
+  rename(GBA = `Gran Buenos Aires`) %>%
+  mutate(across(-Metodología, ~ color_tile("#E3E2E7", coloresb[2])(.x))) %>%
+  tabla_ecofem(align = "lcccccc", encabezado = coloresb[2]) %>%
+  column_spec(1, width = "4cm", bold = TRUE) %>%
+  column_spec(2:7, color = "black")
+```
+
+## Trabajadoras/es pobres
+
+------------------------------------------------------------------------
+
+### Pobreza entre quienes trabajan {.tabset .tabset-fade .tabset-pills}
+
+```{r calculos-mercado-trabajo, eval=show.pobreza}
+tabla_3 <- tabla_1 %>%
+  mutate(
+    tasasbasicas = case_when(
+      ESTADO == 1 ~ "Ocupados/as",
+      ESTADO == 2 ~ "Desocupados/as",
+      ESTADO == 3 ~ "Inactivos/as",
+      TRUE ~ "Otro"),
+    # Ocupadas/os que ademas buscan otra ocupacion
+    OcupadosDemandantes = case_when(
+      ESTADO == 1 & PP03J == 1 ~ "Ocupados/as demandantes",
+      TRUE ~ "Otro"),
+    tipo_subocupado = case_when(
+      ESTADO == 1 & INTENSI == 1 & (PP03J == 1 | PP03I == 1) ~ "Subocupados/as demandantes",
+      ESTADO == 1 & INTENSI == 1 & (PP03J == 2 & PP03I == 2) ~ "Subocupados/as no demandantes",
+      TRUE ~ "Otro")
+  )
+
+# Poblacion de referencia del cuadro: mayores de 10 anios con ponderador valido
+poblacion_total_EPH <- tabla_3 %>%
+  filter(PONDIH > 0, CH06 > 10) %>%
+  summarise(total = sum(PONDIH, na.rm = TRUE)) %>%
+  pull(total)
+
+cuadro_MT <- tabla_3 %>%
+  filter(PONDIH > 0, CH06 > 10, !is.na(situacion)) %>%
+  mutate(
+    tipo_subocupado = if_else(
+      ESTADO == 1 & PP3E_TOT > 0 & PP3E_TOT != 999 & P21 > 0,
+      tipo_subocupado, NA_character_)
+  ) %>%
+  pivot_longer(cols = c(tasasbasicas, OcupadosDemandantes, tipo_subocupado),
+               names_to = "Indicador", values_to = "Categoria") %>%
+  filter(!is.na(Categoria), Categoria != "Otro") %>%
+  group_by(Indicador, Categoria) %>%
+  summarise(
+    Poblacion  = sum(PONDIH, na.rm = TRUE),
+    Pobres     = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    Indigentes = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `% de la población`  = round(Poblacion / poblacion_total_EPH * 100, 1),
+    `Tasa de pobreza`    = round(Pobres / Poblacion * 100, 1),
+    `Tasa de indigencia` = round(Indigentes / Poblacion * 100, 1),
+    Indicador = factor(Indicador,
+                       levels = c("tasasbasicas", "OcupadosDemandantes", "tipo_subocupado"),
+                       labels = c("Condición de actividad",
+                                  "Dentro de las y los ocupados",
+                                  "Subocupación horaria"))
+  ) %>%
+  arrange(Indicador, desc(Poblacion))
+
+valor_MT <- function(categoria, columna) {
+  cuadro_MT %>% filter(Categoria == categoria) %>% pull(.data[[columna]])
+}
+
+inline_ocup_pob  <- formato_porc(valor_MT("Ocupados/as", "Tasa de pobreza"))
+inline_ocup_ind  <- formato_porc(valor_MT("Ocupados/as", "Tasa de indigencia"))
+inline_dem_pob   <- formato_porc(valor_MT("Ocupados/as demandantes", "Tasa de pobreza"))
+inline_dem_ind   <- formato_porc(valor_MT("Ocupados/as demandantes", "Tasa de indigencia"))
+inline_desoc_pob <- formato_porc(valor_MT("Desocupados/as", "Tasa de pobreza"))
+```
+
+<br>
+
+#### Trabajadores/as pobres
+
+<br>
+
+`r if (!show.pobreza) {"<div class='aviso'>_Todavía no están disponibles las canastas del trimestre, por lo que esta sección no puede calcularse._</div>"}`
+
+```{r kpi-ocupados, results='asis', eval=show.pobreza}
+tarjetas(
+  kpi(inline_ocup_pob, "de las personas ocupadas es pobre"),
+  kpi(inline_dem_pob, "de las ocupadas/os demandantes es pobre"),
+  kpi(inline_desoc_pob, "de las personas desocupadas es pobre")
+)
+```
+
+`r if (show.pobreza) {paste0("Tener un empleo dejó de ser garantía de no ser pobre. El ", inline_ocup_pob, " de las personas ocupadas integra hogares que no cubren la Canasta Básica Total, y el ", inline_ocup_ind, " no llega siquiera a cubrir la canasta alimentaria. <br><br> La cifra aumenta sustancialmente entre las y los __ocupados demandantes__: personas que ya tienen un empleo pero buscan activamente otro, en general porque el que tienen no les alcanza, sea por el ingreso o por la cantidad de horas. Entre ellas la pobreza llega al ", inline_dem_pob, " y la indigencia al ", inline_dem_ind, ". Es un grupo que las tasas básicas de desocupación no captan: están adentro del mercado de trabajo, cuentan como ocupados, y sin embargo su situación material se parece más a la de quienes buscan empleo sin conseguirlo. <br><br>")}`
+
+```{r titulo-MT, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia según condición frente al mercado de trabajo",
+              paste0("Población de 10 años y más. Medición por hogar. ", aglo_date))
+```
+
+```{r cuadro-MT, eval=show.pobreza}
+indice_MT <- cuadro_MT %>% count(Indicador) %>% tibble::deframe()
+
+cuadro_MT %>%
+  transmute(
+    Categoría = Categoria,
+    Personas = formato_num(Poblacion),
+    `% de la población`,
+    `Personas pobres` = formato_num(Pobres),
+    `Tasa de pobreza`,
+    `Tasa de indigencia`
+  ) %>%
+  tabla_ecofem(align = "lccccc") %>%
+  column_spec(1, bold = TRUE, width = "6cm") %>%
+  pack_rows(index = indice_MT, background = "#FBF0F1",
+            color = colores[1], bold = TRUE)
+```
+
+<br>
+
+#### Sectores feminizados
+
+<br>
+
+```{r calculos-ramas, eval=show.pobreza}
+ramas_seleccionadas <- c("Servicio domestico", "Ensenanza", "Servicios sociales y de salud",
+                         "Industria manufacturera", "Actividades primarias",
+                         "Transporte, almacenamiento y comunicaciones", "Construccion")
+
+base_ramas <- organize_caes(tabla_1_ocup) %>%
+  mutate(Rama = as.character(caes_eph_label)) %>%
+  filter(!is.na(Rama), Rama %in% ramas_seleccionadas) %>%
+  mutate(Rama = case_when(
+    Rama == "Servicios sociales y de salud" ~ "Serv. sociales y de salud",
+    Rama == "Transporte, almacenamiento y comunicaciones" ~ "Transporte, almacen. y comu.",
+    Rama == "Servicio domestico" ~ "Servicio doméstico",
+    Rama == "Ensenanza" ~ "Enseñanza",
+    Rama == "Construccion" ~ "Construcción",
+    TRUE ~ Rama))
+
+tabla_ramas <- base_ramas %>%
+  group_by(Rama) %>%
+  summarise(
+    Pobreza    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) /
+                       sum(PONDIH, na.rm = TRUE) * 100, 1),
+    Indigencia = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) /
+                       sum(PONDIH, na.rm = TRUE) * 100, 1),
+    .groups = "drop") %>%
+  pivot_longer(cols = c(Pobreza, Indigencia),
+               names_to = "Situación", values_to = "Tasa")
+
+tabla_ramas_region <- base_ramas %>%
+  filter(!is.na(Region)) %>%
+  group_by(Rama, Region) %>%
+  summarise(
+    Tasa = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) /
+                 sum(PONDIH, na.rm = TRUE) * 100, 1),
+    .groups = "drop")
+```
+
+`r if (show.pobreza) {"A continuación vemos las tasas de pobreza e indigencia según la rama de la ocupación en la que se desempeñan las ocupadas y ocupados, de acuerdo a la medición por hogar. Las trabajadoras del servicio doméstico están sobrerrepresentadas en los hogares en situación de mayor vulnerabilidad, superando incluso las tasas generales calculadas por INDEC. La enseñanza y los servicios sociales y de salud, las otras dos ramas fuertemente feminizadas, muestran una situación intermedia: no son las peores del cuadro, pero concentran a la mayoría de las trabajadoras del país. <br><br>"}`
+
+```{r titulo-ramas, results='asis', eval=show.pobreza}
+titulo_cuadro("Tasas de pobreza e indigencia según rama de la ocupación",
+              paste0("Ocupadas/os. Medición por hogar. ", aglo_date))
+```
+
+```{r grafico-ramas, eval=show.pobreza, fig.height=4.5}
+ggplot(tabla_ramas, aes(x = Tasa, y = reorder(Rama, Tasa), fill = Situación,
+                        label = paste0(format(Tasa, decimal.mark = ","), "%"))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), hjust = -0.12, size = 3) +
+  scale_fill_manual(values = c(Pobreza = coloresb[2], Indigencia = coloresb[1]),
+                    breaks = c("Pobreza", "Indigencia")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(axis.text.x = element_blank())
+```
+
+<br>
+
+#### Por región y rama
+
+<br>
+
+`r if (show.pobreza) {"El cruce entre región y rama muestra que la sobrerrepresentación del servicio doméstico en los hogares pobres se sostiene en todo el territorio, con independencia del mercado laboral local. <br><br>"}`
+
+```{r titulo-heatmap, results='asis', eval=show.pobreza}
+titulo_cuadro("Proporción de personas que integran hogares en situación de pobreza",
+              paste0("Según región y rama de la ocupación. ", aglo_date))
+```
+
+```{r heatmap-region-rama, eval=show.pobreza, fig.height=5}
+ggplot(tabla_ramas_region, aes(x = Region, y = Rama, fill = Tasa)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = format(Tasa, decimal.mark = ",")), size = 3.4) +
+  scale_fill_gradient(low = coloresb[3], high = coloresb[2], name = "Tasa (%)") +
+  scale_x_discrete(labels = c("Gran Buenos Aires" = "GBA")) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.title = element_text(size = 9))
+```
+
+## Transferencias
+
+------------------------------------------------------------------------
+
+### Transferencias del Estado y pobreza {.tabset .tabset-fade .tabset-pills}
+
+```{r calculos-transferencias, eval=show.pobreza}
+# --- Escenarios contrafacticos ---------------------------------------------
+# Se descuenta del ingreso total familiar el monto de la transferencia
+# percibida por cada integrante y se recalcula la pobreza con esa canasta.
+pobreza_escenario <- function(vars = NULL, etiqueta) {
+  d <- base_individual
+  if (!is.null(vars)) {
+    d <- d %>%
+      mutate(transf_persona = rowSums(across(all_of(vars),
+                                             ~ ifelse(is.na(.x) | .x < 0, 0, .x)))) %>%
+      group_by(CODUSU, NRO_HOGAR) %>%
+      mutate(miembros_hogar = n(),
+             transf_hogar   = sum(transf_persona, na.rm = TRUE),
+             ITF  = ITF - transf_hogar,
+             IPCF = ITF / miembros_hogar) %>%
+      ungroup() %>%
+      select(-transf_persona, -transf_hogar, -miembros_hogar)
+  }
+  d %>%
+    filter(!is.na(ITF)) %>%
+    calculate_poverty(basket = canastas, print_summary = FALSE) %>%
+    filter(!is.na(situacion)) %>%
+    summarise(
+      Escenario = etiqueta,
+      `Tasa de pobreza`    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")],
+                                       na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 1),
+      `Tasa de indigencia` = round(sum(PONDIH[situacion == "indigente"],
+                                       na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 1)
+    )
+}
+
+cuadro_escenarios <- bind_rows(
+  pobreza_escenario(NULL,        "Situación actual (con todas las transferencias)"),
+  pobreza_escenario("V5_01_M",   "Sin AUH"),
+  pobreza_escenario("V2_02_M",   "Sin moratoria previsional"),
+  pobreza_escenario(c("V2_01_M", "V2_02_M", "V2_03_M"), "Sin jubilaciones ni pensiones"),
+  pobreza_escenario("T_VI",      "Sin ningún ingreso no laboral (T_VI)")
+) %>%
+  mutate(
+    `Diferencia en p.p.` = round(`Tasa de pobreza` - first(`Tasa de pobreza`), 1)
+  )
+
+# --- Quienes perciben cada transferencia, por sexo --------------------------
+perceptores_sexo <- function(datos) {
+  datos %>%
+    filter(!is.na(Sexo)) %>%
+    group_by(Sexo) %>%
+    summarise(Personas = sum(PONDIH, na.rm = TRUE), .groups = "drop") %>%
+    mutate(`% de las personas perceptoras` = round(Personas / sum(Personas) * 100, 1),
+           Personas = formato_num(Personas))
+}
+
+cuadro_auh_sexo       <- perceptores_sexo(tabla_1 %>% filter(V5_01_M > 0))
+cuadro_moratoria_sexo <- perceptores_sexo(tabla_1 %>% filter(V2_02_M > 0, CH06 > 60))
+
+inline_auh_muj <- cuadro_auh_sexo %>% filter(Sexo == "Mujeres") %>%
+  pull(`% de las personas perceptoras`) %>% formato_porc()
+inline_mor_muj <- cuadro_moratoria_sexo %>% filter(Sexo == "Mujeres") %>%
+  pull(`% de las personas perceptoras`) %>% formato_porc()
+
+# --- Situacion de pobreza de quienes perciben cada transferencia ------------
+situacion_perceptores <- function(datos, etiqueta) {
+  datos %>%
+    filter(!is.na(situacion)) %>%
+    group_by(Situación = etiqueta_situacion(situacion)) %>%
+    summarise(Personas = sum(PONDIH, na.rm = TRUE), .groups = "drop") %>%
+    mutate(Transferencia = etiqueta,
+           Porcentaje = round(Personas / sum(Personas) * 100, 1))
+}
+
+cuadro_perceptores <- bind_rows(
+  situacion_perceptores(tabla_1 %>% filter(V5_01_M > 0), "AUH"),
+  situacion_perceptores(tabla_1 %>% filter(V2_02_M > 0, CH06 > 60), "Moratoria previsional"),
+  situacion_perceptores(tabla_1 %>% filter(T_VI > 0), "Algún ingreso no laboral")
+) %>%
+  pivot_wider(id_cols = Situación, names_from = Transferencia, values_from = Porcentaje) %>%
+  arrange(Situación)
+
+# --- Cobertura: que porcentaje de cada grupo percibe transferencias ---------
+cuadro_cobertura <- tabla_1 %>%
+  filter(!is.na(situacion)) %>%
+  mutate(Situación = etiqueta_situacion(situacion),
+         plan = if_else(!is.na(T_VI) & T_VI > 0, "Recibe", "No recibe")) %>%
+  group_by(Situación, plan) %>%
+  summarise(personas = sum(PONDIH, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = plan, values_from = personas, values_fill = 0) %>%
+  mutate(
+    total          = Recibe + `No recibe`,
+    `Recibe (%)`    = round(Recibe / total * 100, 1),
+    `No recibe (%)` = round(`No recibe` / total * 100, 1),
+    Recibe          = formato_num(Recibe),
+    `No recibe`     = formato_num(`No recibe`)
+  ) %>%
+  select(Situación, Recibe, `No recibe`, `Recibe (%)`, `No recibe (%)`) %>%
+  arrange(Situación)
+
+inline_cob_pobres <- cuadro_cobertura %>% filter(Situación == "Pobre") %>%
+  pull(`Recibe (%)`) %>% formato_porc()
+inline_cob_indig <- cuadro_cobertura %>% filter(Situación == "Indigente") %>%
+  pull(`Recibe (%)`) %>% formato_porc()
+
+inline_sin_auh <- cuadro_escenarios %>% filter(Escenario == "Sin AUH") %>%
+  pull(`Diferencia en p.p.`)
+inline_sin_todo <- cuadro_escenarios %>%
+  filter(Escenario == "Sin ningún ingreso no laboral (T_VI)") %>%
+  pull(`Diferencia en p.p.`)
+```
+
+<br>
+
+#### Quiénes perciben
+
+<br>
+
+`r if (!show.pobreza) {"<div class='aviso'>_Todavía no están disponibles las canastas del trimestre, por lo que esta sección no puede calcularse._</div>"}`
+
+```{r kpi-transferencias, results='asis', eval=show.pobreza}
+tarjetas(
+  kpi(inline_auh_muj, "de quienes perciben AUH son mujeres"),
+  kpi(inline_mor_muj, "de quienes acceden por moratoria son mujeres"),
+  kpi(inline_cob_pobres, "de las personas pobres recibe algún ingreso no laboral")
+)
+```
+
+`r if (show.pobreza) {paste0("Las transferencias del Estado están fuertemente feminizadas, y no por casualidad. La AUH se paga preferentemente a la madre, de modo que el ", inline_auh_muj, " de sus perceptores son mujeres. La moratoria previsional, por su parte, es la vía por la que acceden a un haber quienes no completaron los aportes exigidos, algo mucho más frecuente entre mujeres por las trayectorias laborales intermitentes y por el trabajo no remunerado: el ", inline_mor_muj, " de quienes cobran por moratoria son mujeres. <br><br> Que las transferencias lleguen mayoritariamente a mujeres reconoce una desigualdad previa, pero también la consolida: son ingresos de monto bajo, no contributivos y sujetos a decisión política, en lugar de derechos derivados de una inserción laboral plena. <br><br>")}`
+
+```{r titulo-auh-sexo, results='asis', eval=show.pobreza}
+titulo_cuadro("Perceptoras y perceptores de AUH según sexo", aglo_date)
+```
+
+```{r cuadro-auh-sexo, eval=show.pobreza}
+cuadro_auh_sexo %>%
+  tabla_ecofem(align = "lcc") %>%
+  column_spec(1, bold = TRUE, width = "4cm")
+```
+
+<br>
+
+```{r titulo-mor-sexo, results='asis', eval=show.pobreza}
+titulo_cuadro("Perceptoras y perceptores de moratoria previsional según sexo",
+              paste0("Población de más de 60 años. ", aglo_date))
+```
+
+```{r cuadro-mor-sexo, eval=show.pobreza}
+cuadro_moratoria_sexo %>%
+  tabla_ecofem(align = "lcc", encabezado = coloresb[2]) %>%
+  column_spec(1, bold = TRUE, width = "4cm")
+```
+
+<br>
+
+```{r titulo-perceptores, results='asis', eval=show.pobreza}
+titulo_cuadro("Situación de pobreza de quienes perciben cada transferencia",
+              paste0("Distribución en % dentro de cada grupo de perceptores. ", aglo_date))
+```
+
+```{r cuadro-perceptores, eval=show.pobreza}
+cuadro_perceptores %>%
+  tabla_ecofem(align = "lccc") %>%
+  column_spec(1, bold = TRUE, width = "4cm")
+```
+
+<br>
+
+#### Pobreza con y sin transferencias
+
+<br>
+
+`r if (show.pobreza) {paste0("Para estimar el efecto de cada transferencia descontamos su monto del ingreso total del hogar y volvemos a calcular la pobreza con las mismas canastas. Es un ejercicio contrafáctico y tiene un supuesto fuerte: asume que, si esa transferencia no existiera, el resto de los ingresos del hogar se mantendría igual. En la práctica podría haber respuestas de comportamiento (más horas de trabajo, otro ingreso que lo reemplace), así que las cifras deben leerse como una cota superior del efecto. <br><br> Sin AUH, la tasa de pobreza sería ", abs(inline_sin_auh), " p.p. más alta. Sin ningún ingreso no laboral, la diferencia trepa a ", abs(inline_sin_todo), " p.p. <br><br>")}`
+
+```{r titulo-escenarios, results='asis', eval=show.pobreza}
+titulo_cuadro("Tasas de pobreza e indigencia según escenario de transferencias",
+              paste0("Ejercicio contrafáctico sobre el ingreso total familiar. ", aglo_date))
+```
+
+```{r cuadro-escenarios, eval=show.pobreza}
+cuadro_escenarios %>%
+  tabla_ecofem(align = "lccc") %>%
+  column_spec(1, bold = TRUE, width = "8cm") %>%
+  row_spec(1, background = "#FBF0F1")
+```
+
+```{r grafico-escenarios, eval=show.pobreza, fig.height=4}
+cuadro_escenarios %>%
+  mutate(Escenario = factor(Escenario, levels = rev(Escenario))) %>%
+  select(Escenario, Pobreza = `Tasa de pobreza`, Indigencia = `Tasa de indigencia`) %>%
+  pivot_longer(-Escenario, names_to = "Situación", values_to = "Tasa") %>%
+  ggplot(aes(x = Tasa, y = Escenario, fill = Situación,
+             label = paste0(format(Tasa, decimal.mark = ","), "%"))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), hjust = -0.12, size = 3) +
+  scale_fill_manual(values = c(Pobreza = coloresb[2], Indigencia = coloresb[1]),
+                    breaks = c("Pobreza", "Indigencia")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(axis.text.x = element_blank())
+```
+
+`r if (show.pobreza) {"<div class='aviso'>La variable __T_VI__ agrupa el total de ingresos no laborales, de modo que el último escenario incluye además de las transferencias del Estado otros conceptos como alquileres, intereses o cuotas alimentarias. Conviene leerlo como el efecto de todo el ingreso ajeno al mercado de trabajo y no exclusivamente como el de la política social.</div>"}`
+
+<br>
+
+#### Cobertura entre las personas pobres
+
+<br>
+
+`r if (show.pobreza) {paste0("La pregunta que cierra la sección es de cobertura: de las personas que hoy son pobres, ¿cuántas están alcanzadas por alguna transferencia? El ", inline_cob_pobres, " de las personas en situación de pobreza y el ", inline_cob_indig, " de las que están en situación de indigencia perciben algún ingreso no laboral. La brecha entre ese porcentaje y el 100% es la medida de cuánta población en situación de vulnerabilidad queda hoy fuera del sistema de protección. <br><br>")}`
+
+```{r titulo-cobertura, results='asis', eval=show.pobreza}
+titulo_cuadro("Percepción de ingresos no laborales según situación de pobreza",
+              aglo_date)
+```
+
+```{r cuadro-cobertura, eval=show.pobreza}
+cuadro_cobertura %>%
+  tabla_ecofem(align = "lcccc") %>%
+  column_spec(1, bold = TRUE, width = "4cm") %>%
+  add_header_above(c(" " = 1, "Total de personas" = 2, "Porcentajes" = 2),
+                   bold = TRUE, color = "white", background = colores[1])
+```
+
+<br>
+
+#### Poder adquisitivo de la AUH
+
+<br>
+
+Este gráfico compara la evolución real de la AUH con la de las canastas que debería ayudar a cubrir, y muestra qué porcentaje de cada canasta llega a financiar el beneficio. Las líneas continuas son índices en términos reales con base 100 en el primer semestre de 2023 (eje derecho); las punteadas indican qué proporción de la CBA y de la CBT representa la AUH en cada momento (eje izquierdo). <br><br>
+
+```{r grafico-auh, fig.height=4.8}
+evol_auh_plot <- evol_auh %>%
+  mutate(semestre = factor(semestre, levels = evol_auh$semestre))
+
+escala <- max(c(evol_auh_plot$AUH_CBA, evol_auh_plot$AUH_CBT)) /
+          max(c(evol_auh_plot$AUH_real, evol_auh_plot$CBA_real, evol_auh_plot$CBT_real))
+
+evol_auh_long <- evol_auh_plot %>%
+  pivot_longer(cols = -semestre, names_to = "serie", values_to = "valor") %>%
+  mutate(
+    tipo = if_else(serie %in% c("AUH_CBA", "AUH_CBT"), "cobertura", "índice"),
+    valor_plot = if_else(tipo == "índice", valor * escala, valor),
+    serie = factor(serie,
+                   levels = c("AUH_CBA", "AUH_CBT", "AUH_real", "CBA_real", "CBT_real"),
+                   labels = c("AUH / CBA", "AUH / CBT", "AUH real", "CBA real", "CBT real"))
+  )
+
+ggplot(evol_auh_long, aes(x = semestre, y = valor_plot, color = serie, group = serie)) +
+  geom_line(aes(linetype = tipo), linewidth = 1.1) +
+  geom_point(size = 2) +
+  scale_y_continuous(
+    name = "% de la canasta cubierto por la AUH",
+    sec.axis = sec_axis(~ . / escala, name = "Índice real (1S 2023 = 100)")
+  ) +
+  scale_color_manual(values = c("AUH / CBA" = "#E94F64", "AUH / CBT" = "#2EC4B6",
+                                "AUH real" = "#999999", "CBA real" = "#E5616E",
+                                "CBT real" = "#8594C6")) +
+  scale_linetype_manual(values = c(cobertura = "dashed", `índice` = "solid"),
+                        guide = "none") +
+  labs(caption = fuente, x = NULL, color = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        axis.title.y = element_text(size = 9),
+        axis.title.y.right = element_text(size = 9),
+        panel.grid.minor = element_blank(),
+        plot.caption = element_text(color = "#9a9a9a", size = 8))
+```
+
+<div class='aviso'>Esta serie todavía se actualiza a mano: los montos de la AUH los publica ANSES y no están disponibles en el paquete `eph`. Los valores se editan en el bloque de parámetros del inicio del documento. Para automatizarla hace falta definir una fuente estable (por ejemplo la serie de montos de ANSES o el boletín de la Secretaría de Seguridad Social) y empalmarla con la serie de canastas que ya se descarga de INDEC.</div>
+
+## Jefatura femenina
+
+------------------------------------------------------------------------
+
+### Hogares vulnerables con jefatura femenina {.tabset .tabset-fade .tabset-pills}
+
+```{r calculos-hogares, eval=show.pobreza}
+# Ponderador de hogar, tomado de la base de hogares
+pesos_hogar <- base_hogar %>%
+  select(CODUSU, NRO_HOGAR, PONDIH_hogar = PONDIH)
+
+hogares <- tabla_1 %>%
+  filter(!is.na(situacion)) %>%
+  group_by(CODUSU, NRO_HOGAR) %>%
+  summarise(
+    sexo_jefx       = Sexo[CH03 == 1][1],
+    situacion_hogar = situacion[CH03 == 1][1],
+    pond_jefx       = PONDIH[CH03 == 1][1],
+    hay_conyuge     = any(CH03 == 2, na.rm = TRUE),
+    hijos_menores   = sum(CH03 == 3 & CH06 < 18, na.rm = TRUE),
+    miembros        = n(),
+    .groups = "drop"
+  ) %>%
+  left_join(pesos_hogar, by = c("CODUSU", "NRO_HOGAR")) %>%
+  mutate(ponderador = coalesce(PONDIH_hogar, pond_jefx)) %>%
+  filter(!is.na(sexo_jefx), !is.na(situacion_hogar), !is.na(ponderador)) %>%
+  mutate(
+    tipo_hogar = case_when(
+      sexo_jefx == "Mujeres" & !hay_conyuge & hijos_menores > 0 ~ "Monomarental (jefa mujer, sin cónyuge, con hijas/os menores)",
+      sexo_jefx == "Mujeres" & hijos_menores > 0                ~ "Jefatura femenina con cónyuge e hijas/os menores",
+      sexo_jefx == "Mujeres"                                    ~ "Resto de hogares con jefatura femenina",
+      sexo_jefx == "Varones" & !hay_conyuge & hijos_menores > 0 ~ "Monoparental (jefe varón, sin cónyuge, con hijas/os menores)",
+      TRUE                                                      ~ "Resto de hogares con jefatura masculina"
+    ),
+    tipo_hogar = factor(tipo_hogar, levels = c(
+      "Monomarental (jefa mujer, sin cónyuge, con hijas/os menores)",
+      "Jefatura femenina con cónyuge e hijas/os menores",
+      "Resto de hogares con jefatura femenina",
+      "Monoparental (jefe varón, sin cónyuge, con hijas/os menores)",
+      "Resto de hogares con jefatura masculina"))
+  )
+
+cuadro_hogares <- hogares %>%
+  group_by(`Tipo de hogar` = tipo_hogar) %>%
+  summarise(
+    Hogares    = sum(ponderador, na.rm = TRUE),
+    Pobres     = sum(ponderador[situacion_hogar %in% c("pobre", "indigente")], na.rm = TRUE),
+    Indigentes = sum(ponderador[situacion_hogar == "indigente"], na.rm = TRUE),
+    `Tamaño promedio` = round(weighted.mean(miembros, ponderador, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `Tasa de pobreza`            = round(Pobres / Hogares * 100, 1),
+    `Tasa de indigencia`         = round(Indigentes / Hogares * 100, 1),
+    `Distribución de la pobreza` = round(Pobres / sum(Pobres) * 100, 1),
+    across(c(Hogares, Pobres, Indigentes), ~ formato_num(.x))
+  )
+
+valor_hogar <- function(tipo, columna) {
+  cuadro_hogares %>% filter(str_starts(`Tipo de hogar`, tipo)) %>% pull(.data[[columna]])
+}
+
+inline_mono_pob   <- formato_porc(valor_hogar("Monomarental", "Tasa de pobreza"))
+inline_mono_ind   <- formato_porc(valor_hogar("Monomarental", "Tasa de indigencia"))
+inline_monopa_pob <- formato_porc(valor_hogar("Monoparental", "Tasa de pobreza"))
+inline_resto_pob  <- formato_porc(valor_hogar("Resto de hogares con jefatura masculina",
+                                              "Tasa de pobreza"))
+
+# Jefatura femenina sobre el total de hogares
+inline_jef_fem <- hogares %>%
+  summarise(p = sum(ponderador[sexo_jefx == "Mujeres"], na.rm = TRUE) /
+                sum(ponderador, na.rm = TRUE) * 100) %>%
+  pull(p) %>% formato_porc()
+```
+
+<br>
+
+`r if (!show.pobreza) {"<div class='aviso'>_Todavía no están disponibles las canastas del trimestre, por lo que esta sección no puede calcularse._</div>"}`
+
+```{r kpi-hogares, results='asis', eval=show.pobreza}
+tarjetas(
+  kpi(inline_jef_fem, "de los hogares tiene jefatura femenina"),
+  kpi(inline_mono_pob, "de los hogares monomarentales es pobre"),
+  kpi(inline_resto_pob, "de los hogares con jefatura masculina y sin hijas/os es pobre")
+)
+```
+
+`r if (show.pobreza) {paste0("Llamamos __hogar monomarental__ al que tiene una mujer como jefa de hogar, no registra cónyuge conviviente y cuenta con al menos una hija o hijo menor de 18 años. Es la configuración donde se concentran a la vez la responsabilidad económica y la del cuidado, sin un segundo adulto con quien repartirlas. <br><br> La pobreza alcanza al ", inline_mono_pob, " de estos hogares y la indigencia al ", inline_mono_ind, ". La comparación pertinente es doble: contra los hogares monoparentales de jefe varón, en la misma situación de crianza sin cónyuge (", inline_monopa_pob, "), y contra el resto de los hogares con jefatura masculina (", inline_resto_pob, "). La distancia entre esas cifras es la que da cuenta de que la sobrecarga de cuidados no es sólo una cuestión de tiempo: se traduce en menos horas disponibles para el mercado, en empleos más precarios y, al final del recorrido, en ingresos que no alcanzan. <br><br>")}`
+
+```{r titulo-hogares, results='asis', eval=show.pobreza}
+titulo_cuadro("Pobreza e indigencia según tipo de hogar y sexo de la jefatura",
+              paste0("Hogares. Medición por hogar (oficial). ", aglo_date))
+```
+
+```{r cuadro-hogares, eval=show.pobreza}
+cuadro_hogares %>%
+  select(`Tipo de hogar`, Hogares, `Tamaño promedio`,
+         `Tasa de pobreza`, `Tasa de indigencia`, `Distribución de la pobreza`) %>%
+  tabla_ecofem(align = "lccccc") %>%
+  column_spec(1, bold = TRUE, width = "9cm") %>%
+  row_spec(1, background = "#FBF0F1")
+```
+
+```{r grafico-hogares, eval=show.pobreza, fig.height=4.5}
+cuadro_hogares %>%
+  select(`Tipo de hogar`, Pobreza = `Tasa de pobreza`, Indigencia = `Tasa de indigencia`) %>%
+  pivot_longer(-`Tipo de hogar`, names_to = "Situación", values_to = "Tasa") %>%
+  mutate(`Tipo de hogar` = str_wrap(as.character(`Tipo de hogar`), 34)) %>%
+  ggplot(aes(x = Tasa, y = reorder(`Tipo de hogar`, Tasa), fill = Situación,
+             label = paste0(format(Tasa, decimal.mark = ","), "%"))) +
+  geom_col(position = "dodge") +
+  geom_text(position = position_dodge(width = .9), hjust = -0.12, size = 3) +
+  scale_fill_manual(values = c(Pobreza = colores[1], Indigencia = coloresb[1]),
+                    breaks = c("Pobreza", "Indigencia")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(caption = fuente) +
+  tema_ecofem +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 8.5))
+```
+
+<div class='aviso'>__Nota metodológica.__ La unidad de análisis de este apartado es el hogar y no la persona, por lo que las tasas no son comparables con las del resto del informe. Se usa el ponderador de hogar de la base correspondiente y la condición de pobreza asignada a la persona jefa del hogar, que por construcción es la misma para todo el hogar en la metodología oficial. Los hogares sin jefe o jefa identificada quedan excluidos.</div>
+
+<br>
+
+Para profundizar en la situación de los hogares monomarentales y en el diseño de políticas de cuidado se puede articular con **UNICEF Argentina**, la **Dirección Nacional de Economía, Igualdad y Género (DNEIG)**, la **Unidad de Gabinete de Asesores (UGE)** y la **Fundación SES**. <br><br>
+
+## Glosario
+
+------------------------------------------------------------------------
+
+### Glosario {.tabset .tabset-fade .tabset-pills}
+
+<br><br> En esta sección definimos conceptos que facilitan la lectura del informe.\
+<br>
+
+**Adulto equivalente:** Unidad de medida que expresa las necesidades energéticas de cada persona según su edad y sexo, tomando como referencia a un varón adulto de entre 30 y 60 años con actividad moderada. Es lo que permite construir una canasta a la medida de cada hogar o de cada persona. <br>
+
+**Asignación Universal por Hijo (AUH):** Transferencia monetaria no contributiva destinada a hogares con niñas, niños y adolescentes a cargo cuyos adultos no perciben asignaciones familiares por la vía del empleo registrado. Se abona preferentemente a la madre. <br>
+
+**Canasta Básica Alimentaria (CBA):** Conjunto de alimentos que cubre los requerimientos nutricionales mínimos. El ingreso que no llega a cubrirla define la situación de indigencia. <br>
+
+**Canasta Básica Total (CBT):** Amplía la CBA incorporando bienes y servicios no alimentarios como vestimenta, transporte, educación y salud. El ingreso que no llega a cubrirla define la situación de pobreza. <br>
+
+**Desocupado/a:** Es el estado de una persona que está inserta en el mercado laboral, buscando un empleo aunque no lo consiga. <br>
+
+**Estadísticas binarias:** Hace referencia a que la variable "sexo" sólo adopta el valor de "masculino" o "femenino" en la base de datos utilizada, reforzando el paradigma heteronormativo y el binarismo de género. Sin disponer de una variable que aluda a la identidad de género, muchas identidades quedan invisibilizadas y con ellas, sus situaciones y necesidades específicas. <br>
+
+**Feminización de la pobreza:** Refiere al conjunto de procesos de empobrecimiento que afectan en mayor medida a las mujeres y que se manifiestan en una mayor proporción de mujeres entre las personas cuyos ingresos no llegan a cubrir la canasta. <br>
+
+**Hogar monomarental:** Hogar cuya jefatura recae en una mujer que no convive con un cónyuge y que tiene al menos una hija o hijo menor de 18 años a cargo. <br>
+
+**Incidencia y distribución:** La incidencia (o tasa) mide qué proporción de un grupo se encuentra en situación de pobreza y responde a cuán extendido está el fenómeno dentro de ese grupo. La distribución mide qué proporción del total de personas pobres pertenece a ese grupo y depende además de su peso demográfico. <br>
+
+**Moratoria previsional:** Régimen que permite acceder a una jubilación regularizando aportes adeudados. Es la vía de acceso mayoritaria para las mujeres, cuyas trayectorias laborales suelen estar interrumpidas por el trabajo doméstico y de cuidados no remunerado. <br>
+
+**Ocupado/a:** Es el estado de una persona que está inserta en el mercado laboral con un empleo, sea formal, informal, de jornada reducida, asalariado, por cuenta propia, de jefatura, entre otros. <br>
+
+**Ocupados/as demandantes:** Personas que ya tienen un empleo pero buscan activamente otro, en general porque el actual no les resulta suficiente en ingresos o en cantidad de horas. <br>
+
+**Paredes de cristal / segregación horizontal:** Es una forma de visibilizar la distribución asimétrica de las mujeres en ramas de la ocupación, que además de reproducir estereotipos de género representa un problema de ingresos, ya que las ramas feminizadas tienen sueldos promedios más bajos y mayores niveles de informalidad que los masculinizados. <br>
+
+**Ramas de la ocupación:** Es una clasificación de las actividades económicas que realiza el establecimiento donde trabajan las personas. La rama de actividad económica de una persona no depende de las tareas específicas de su trabajo, sino de las características de la unidad económica en la que trabaja. <br>
+
+**Regiones:** En este informe se identifican 6 regiones: Gran Buenos Aires, Noroeste Argentino (NOA), Noreste Argentino (NEA), Cuyo, Pampeana y Patagonia. Debido a la disponibilidad de la muestra, algunas desagregaciones pierden validez y por esa razón se omite su publicación. <br>
+
+**Subocupados/as:** Todas las personas que trabajan menos de 35 horas semanales, están disponibles para trabajar más horas y desean aumentar la cantidad de horas que trabajan. <br>
+
+**Subocupados/as demandantes:** Proporción de personas de la población económicamente activa que tienen un empleo de menos de 35 horas semanales, están disponibles para trabajar más horas y se encuentran buscando empleo. <br>
+
+**Techo de cristal / segregación vertical:** Alude a los obstáculos que enfrentan las mujeres para ascender a cargos jerárquicos y puestos de decisión. La metáfora del cristal muestra que los impedimentos no son visibles ya que no hay normas explícitas que busquen segregar a las trabajadoras, pero que las barreras existen incluso cuando están igual o mejor calificadas que sus compañeros varones. <br>
+
+**Trabajo doméstico y de cuidados:** También conocido como "trabajo reproductivo", es aquel que resulta imprescindible para sostener la vida de las personas. Se manifiesta en tareas como cocinar, lavar, ordenar y atender las necesidades de quienes integran un hogar. Todas las personas necesitamos cuidados a lo largo de la vida y su provisión recae mayoritariamente en las identidades feminizadas. <br>
+
+# {-}
+
+------------------------------------------------------------------------
+
+```{r fin, include=FALSE}
+# FIN DEL INFORME
+```

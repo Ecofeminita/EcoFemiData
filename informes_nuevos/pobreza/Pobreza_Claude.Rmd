@@ -1,0 +1,1476 @@
+---
+title: "Pobreza_nuevo"
+output: html_document
+date: "2026-08-14"
+---
+
+```{=html}
+<style>
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    color: #E5616E;
+}
+
+ .nav-pills>li.active>a, .nav-pills>li.active>a:focus, .nav-pills>li.active>a:hover {
+    color: #ffffff;
+    background-color: #E5616E;
+}
+</style>
+
+```
+
+------------------------------------------------------------------------
+
+#  {.tabset .tabset-fade .tabset-pills}
+
+## Home
+
+------------------------------------------------------------------------
+
+### 
+
+En este informe se pueden explorar las diferencias en la inserción en el mercado de trabajo, en los ingresos que perciben, en la cantidad de horas que trabajan semanalmente, y la distribución de las tareas domésticas entre varones y mujeres. Presentamos esta información para el país en general y desagregada por región. <br><br>
+
+Estos datos están disponibles para su divulgación ^1^. Si te gusta lo que hacemos podés apoyarnos haciéndote socie del [#ClubEcofeminita o realizando una donación](https://donaronline.org/economia-femini-s-ta/club-ecofeminita).
+
+------------------------------------------------------------------------
+
+^1^ Si necesitás citarnos en un trabajo, podés hacerlo como: "Ecofeminita. (2026). Ecofeminita/EcoFemiData: informes ecofemidata. Zenodo. <http://doi.org/10.5281/zenodo.4540185>"
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# Se limpia la memoria y se cargan librerías útiles
+# Reiniciar R
+library(tidyverse)
+library(httr)
+library(stringr)
+library(ggthemes)
+library(scales)
+library(dplyr)
+library(purrr)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(openxlsx)
+library(gridExtra)
+library(ggridges)
+library(magrittr)
+library(DT)
+library(eph) # Un paquete para trabajar con las bases de la Encuesta permanente de Hogares!
+# Como fuente tomamos un script con el código de funciones para modificar el formato de los datos.
+options(scipen = 9999)
+source("../../R/funciones formato.R")
+
+# Formato de valores absolutos (separador de miles)
+formato_num <- function(x) {
+  format(round(x, 0), big.mark = ".", decimal.mark = ",",
+         scientific = FALSE, trim = TRUE)
+}
+
+# Valores por defecto de los inline: si el trimestre todavia no tiene
+# canastas publicadas, los chunks de pobreza no se evaluan y el texto
+# muestra "s/d" en lugar de cortar el knit.
+for (.v in c("inline_1", "inline_2", "inline_3", "inline_4", "inline_a1",
+             "inline_41", "inline_42", "inline_43",
+             "inline_51", "inline_52", "inline_53", "inline_54")) {
+  assign(.v, "s/d")
+}
+rm(.v)
+```
+
+``` {r message=FALSE, warning=FALSE, include=FALSE}
+
+# Se levantan las bases usuarias de la EPH del trimestre correspondiente
+library(readxl)
+
+# (funciones del paquete 'eph')
+base_individual <- get_microdata(year = 2025, trimester = 2, type = "individual")
+base_hogar <- get_microdata(year = 2025, trimester = 2, type = "hogar")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Subtitulo y fuente para graficos
+# date <- "1er trimestre 2025"
+date <- paste0(base_individual$TRIMESTRE[1], ifelse(base_individual$TRIMESTRE[1] %in% c(1,3), "er", ifelse(base_individual$TRIMESTRE[1]==2, "do", "to")), " trimestre ", base_individual$ANO4[1])
+aglo_date <- paste0("Total de aglomerados urbanos. ", date)
+fuente <- "#Ecofemidata y Ecofeminita en base a EPH-INDEC"
+```
+base individual
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Modificaciones en la base
+base_individual <- base_individual %>% 
+  mutate(Sexo = as.character(CH04),
+         Sexo = case_when(Sexo=="1" ~ "Varones",
+                          Sexo=="2" ~ "Mujeres"),
+         Region = as.character(REGION),
+         Region = case_when(REGION=="1" ~ "Gran Buenos Aires",
+                            REGION=="40" ~ "NOA",
+                            REGION=="41" ~ "NEA",
+                            REGION=="42" ~ "Cuyo",
+                            REGION=="43" ~ "Pampeana",
+                            REGION=="44" ~ "Patagonia"),
+         PP04D_COD = as.character(PP04D_COD),
+         PP04D_COD = case_when(nchar(PP04D_COD) == 5 ~ PP04D_COD,
+                               nchar(PP04D_COD) == 4 ~ paste0("0", PP04D_COD),
+                               nchar(PP04D_COD) == 3 ~ paste0("00", PP04D_COD),
+                               nchar(PP04D_COD) == 2 ~ paste0("000", PP04D_COD),
+                               nchar(PP04D_COD) == 1 ~ paste0("0000", PP04D_COD)),
+         CALIFICACION = substr(PP04D_COD, 5, 5),
+         CALIFICACION = case_when(CALIFICACION=="1" ~ "Profesionales",
+                                  CALIFICACION=="2" ~ "Técnicos",
+                                  CALIFICACION=="3" ~ "Operativos",
+                                  CALIFICACION=="4" ~ "No Calificados",
+                                  TRUE ~ "0"),
+         CALIFICACION = factor(CALIFICACION, c("No Calificados", "Operativos", "Técnicos", "Profesionales")),
+         JERARQUIA = substr(PP04D_COD, 3, 3),
+       JERARQUIA = case_when(
+    JERARQUIA %in% c("0", "2", "9") ~ "Dirección o Jefes",
+    JERARQUIA == "1" ~ "Cuentapropia",
+    
+    # Separamos a los asalariados (código 3) según PP07H:
+    JERARQUIA == "3" & PP07H == 1 ~ "Asalariados Formales",
+    JERARQUIA == "3" ~ "Asalariados Informales", # Todo el resto de los "3" cae aquí
+    
+    TRUE ~ "0"
+  ),
+  # Actualizamos los niveles del factor para incluir los dos nuevos grupos
+  JERARQUIA = factor(JERARQUIA, levels = c("Dirección o Jefes", 
+                                           "Asalariados Formales", 
+                                           "Asalariados Informales", 
+                                           "Cuentapropia")),
+         NIVEL_EDUCATIVO = case_when(NIVEL_ED %in% c(1, 7) ~ "Sin Instrucción",
+                                     NIVEL_ED %in% c(2, 3) ~ "Primaria",
+                                     NIVEL_ED %in% c(4, 5) ~ "Secundaria",
+                                     NIVEL_ED == 6         ~ "Superior",
+                                     NIVEL_ED == 9         ~ "NS/NR"),
+         NIVEL_EDUCATIVO = factor(NIVEL_EDUCATIVO, levels = c("Sin Instrucción", "Primaria", "Secundaria", "Superior")),
+         GRUPO_EDAD = case_when(CH06 >= 14 & CH06 <= 29 ~ "de 14 a 29 años",
+                                CH06 >= 30 & CH06 <= 64 ~ "de 30 a 64 años"),
+         plan = ifelse(!is.na(PP07H) & PP07H > 0, 1, 0))
+
+# colores = c("#aa165a","#16aa66")
+colores = c("#E5616E", "#c9c9c9")
+coloresb = c("#8CDDD3", "#8594C6", "#F8F5EE")
+```
+
+CODIGO
+Cargamos las CBA y CBT. `show.pobreza` condiciona que se muestre la seccion solo si hay canastas disponibles para el trimestre.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+canastas <- get_poverty_lines(regional = TRUE)
+
+ 
+date_trimestre <- paste(base_individual$ANO4[1], base_individual$TRIMESTRE[1], sep = ".")
+show.pobreza <- nrow(canastas %>% filter(periodo==date_trimestre))>0     
+         
+
+```
+
+base de pobreza institucional. general, itfpc, hogar.
+```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+
+
+tabla_1 <- base_individual %>% 
+    calculate_poverty(., basket = canastas, print_summary = FALSE)
+    
+```
+
+
+base de pobreza  individual - Armado por Ecofem- Y tot Individual- Filtrado por genero, region , edad.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide', eval=show.pobreza}
+ tabla_2 <- base_individual %>% 
+     mutate(Sexo = as.character(CH04),
+            Sexo = case_when(
+      CH04 == 1 ~ "Varones",
+      CH04 == 2 ~ "Mujeres" ),
+  periodo = paste(ANO4, TRIMESTRE, sep = "."))  %>%
+    left_join(eph::adulto_equivalente, by = c("CH04", "CH06")) %>% 
+    left_join(canastas, by = c(REGION = "codigo", "periodo")) %>% 
+    mutate(CBA_individual = CBA * adequi, 
+           CBT_individual = CBT * adequi, 
+           situacion = case_when(P47T < CBA_individual ~ "indigente", 
+                                 P47T >= CBA_individual & P47T < CBT_individual ~ "pobre", 
+                                 P47T >= CBT_individual ~ "no pobre"), 
+           situacion = case_when(PONDII == 0 ~ NA_character_, TRUE ~ situacion)) %>% 
+    select(-adequi, -periodo, -CBA, -CBT) 
+    
+```
+
+2DA TAB:TABLAS DE POBREZA generales
+total, diferencia con la tabla que toma en cuenta el ingreso total en relacion al ingreso promedio. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide', eval=show.pobreza}
+
+cuadro_pobreza1 <- tabla_1 %>% 
+  summarise(
+    PobrezaXCategoria    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    IndigenciaXCategoria = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza        = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia     = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+ 
+inline_1 <- cuadro_pobreza1 %>% pull(Pobreza) %>% formato_porc()
+inline_2 <- cuadro_pobreza1 %>% pull(PobrezaXCategoria) %>% formato_num()
+inline_3 <- cuadro_pobreza1 %>% pull(Indigencia) %>% formato_porc()
+inline_4 <- cuadro_pobreza1 %>% pull(IndigenciaXCategoria) %>% formato_num()
+
+```
+En Argentina la tasa de pobreza asciende a  `r inline_1`, esto se traduce en que en nuestro pais unas  `r inline_2`
+personas son pobres. Cuando habalmos de indigencia la tasa es de  `r inline_3`, lo cual se traduce en  `r inline_4` personas en situacion de indigencia. 
+
+
+ <p style="color:#E5616E">__Tasa de pobreza__</p>
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+inline_1 %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+Por región (nuevo) totales y distribución
+``` {r echo=FALSE, message=FALSE, warning=FALSE, results='hide', eval=show.pobreza}
+cuadro_distribucion_pobreza_region <- tabla_1 %>% 
+  group_by(region) %>% 
+  summarise(
+    PobrezaXCategoria    = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    IndigenciaXCategoria = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  mutate(
+    # 2. Ahora calculamos la distribución (%) sobre el total nacional
+    Distribucion_Pobreza    = round(PobrezaXCategoria / sum(PobrezaXCategoria) * 100, 2),
+    Distribucion_Indigencia = round(IndigenciaXCategoria / sum(IndigenciaXCategoria) * 100, 2),
+    PobrezaXCategoria    = round(PobrezaXCategoria, 0),
+    IndigenciaXCategoria = round(IndigenciaXCategoria, 0)
+  ) 
+
+
+```
+
+
+<p style="color:#E5616E">__Distribucion de personas en situación de pobreza e indigencia por región__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_distribucion_pobreza_region %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+
+por genero
+```{r eval=show.pobreza}
+cuadro_sexo1 <- tabla_1 %>% 
+    mutate(Sexo = case_when(
+    CH04 == 1 ~ "Varones",
+    CH04 == 2 ~ "Mujeres",
+    TRUE ~ NA_character_
+  )) %>% 
+  filter(!is.na(Sexo)) %>%
+  group_by(Sexo) %>% 
+  summarise(
+    `Total por Sexo` = sum(PONDIH, na.rm = TRUE),
+    `Pobreza por Sexo`      = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    `Indigencia por Sexo`  = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    `Incidencia de la Pobreza`    = round(`Pobreza por Sexo`  / `Total por Sexo` * 100, 2), 
+    `Incidencia de la Indigencia` = round(`Indigencia por Sexo`  / `Total por Sexo` * 100, 2),
+    .groups = "drop" 
+  ) %>% 
+  mutate(
+    # Distribucion: que porcentaje del total de pobres / indigentes
+    # corresponde a cada sexo (feminizacion de la pobreza)
+    `Distribucion de la Pobreza`    = round(`Pobreza por Sexo` / sum(`Pobreza por Sexo`, na.rm = TRUE) * 100, 2),
+    `Distribucion de la Indigencia` = round(`Indigencia por Sexo` / sum(`Indigencia por Sexo`, na.rm = TRUE) * 100, 2),
+    `Total por Sexo`      = round(`Total por Sexo`, 0),
+    `Pobreza por Sexo`    = round(`Pobreza por Sexo`, 0),
+    `Indigencia por Sexo` = round(`Indigencia por Sexo`, 0)
+  ) %>% 
+  select(Sexo, `Total por Sexo`, `Pobreza por Sexo`, `Indigencia por Sexo`,
+         `Incidencia de la Pobreza`, `Distribucion de la Pobreza`,
+         `Incidencia de la Indigencia`, `Distribucion de la Indigencia`)
+
+  
+```
+Si el calculo de la pobreza tuviera en cuenta las diferencias entre los ingresos por sexo, dejaria en evidencia el sesgo del calculo tradicional. al realizar un promedio entre los ingresos del hogar dividido los habitantes se suaviza el impacto de las direncias en los ingresos de los cohabitantes. 
+  
+<p style="color:#E5616E">__Distribucion de personas en situación de pobreza e indigencia por sexo__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_sexo1 %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+ 
+  
+  
+```{r eval=show.pobreza}
+cuadro_sexo_2 <- tabla_2 %>% 
+  mutate(Sexo = case_when(
+    CH04 == 1 ~ "Varones",
+    CH04 == 2 ~ "Mujeres",
+    TRUE ~ NA_character_
+  )) %>% 
+  filter(!is.na(Sexo)) %>%
+  group_by(Sexo) %>% 
+  summarise(
+    `Total por Sexo` = sum(PONDIH, na.rm = TRUE),
+    `Pobreza por Sexo`      = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    `Indigencia por Sexo`  = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    `Incidencia de la Pobreza`    = round(`Pobreza por Sexo`  / `Total por Sexo` * 100, 2), 
+    `Incidencia de la Indigencia` = round(`Indigencia por Sexo`  / `Total por Sexo` * 100, 2),
+    .groups = "drop" 
+  ) %>% 
+  mutate(
+    # Distribucion: que porcentaje del total de pobres / indigentes
+    # corresponde a cada sexo (feminizacion de la pobreza)
+    `Distribucion de la Pobreza`    = round(`Pobreza por Sexo` / sum(`Pobreza por Sexo`, na.rm = TRUE) * 100, 2),
+    `Distribucion de la Indigencia` = round(`Indigencia por Sexo` / sum(`Indigencia por Sexo`, na.rm = TRUE) * 100, 2),
+    `Total por Sexo`      = round(`Total por Sexo`, 0),
+    `Pobreza por Sexo`    = round(`Pobreza por Sexo`, 0),
+    `Indigencia por Sexo` = round(`Indigencia por Sexo`, 0)
+  ) %>% 
+  select(Sexo, `Total por Sexo`, `Pobreza por Sexo`, `Indigencia por Sexo`,
+         `Incidencia de la Pobreza`, `Distribucion de la Pobreza`,
+         `Incidencia de la Indigencia`, `Distribucion de la Indigencia`)
+```
+  
+<p style="color:#E5616E">__Distribucion de personas en situación de pobreza e indigencia por sexo- Metodo insesgado__</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_sexo_2 %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+  
+  
+  
+  
+   Pobreza de los/as ocupados/as (trabajadores pobres) (nuevo)
+```{r eval=show.pobreza}
+tabla_3 <- tabla_1 %>% 
+  mutate(  condicion = case_when(
+      CAT_OCUP == 1 ~ "Patrones",  
+      CAT_OCUP == 3 & PP07H == 1 ~ "Asalariados Formales",
+      CAT_OCUP == 3 ~ "Asalariados Informales", 
+      CAT_OCUP == 2 ~ "Cuentapropia",
+      CAT_OCUP %in% c(0, 4, 9) ~ "resto",
+      TRUE ~ "0"
+    ),
+        condicion = factor(condicion, levels = c("Patrones", 
+                                             "Asalariados Formales", 
+                                             "Asalariados Informales", 
+                                             "Cuentapropia",
+                                             "resto", 
+                                             "0")),
+      tasasbasicas = case_when(
+      ESTADO == 1 ~ "Ocupados",
+      ESTADO == 2 ~ "Desocupados",
+      ESTADO == 3 ~ "Inactivos",
+      TRUE ~ "Otro"
+    ),
+    OcupadosDemandantes = case_when(
+      # Ocupados que ademas buscan otra ocupacion (PP03J == 1)
+      ESTADO == 1 & PP03J == 1 ~ "Ocupado demandante",
+      TRUE ~ "Otro"
+    ),
+    tipo_subocupado = case_when(
+      # Subocupado demandante
+      ESTADO == 1 & INTENSI == 1 & (PP03J == 1 | PP03I == 1) ~ "Subocupado demandante",
+            # Subocupado no demandante
+      ESTADO == 1 & INTENSI == 1 & (PP03J == 2 & PP03I == 2) ~ "Subocupado no demandante",
+            # Resto de la población
+      TRUE ~ "Otro"
+    )    )
+  
+  
+  pobrezaOcup <- tabla_3 %>% 
+           mutate(
+  estado_agrupado = if_else(ESTADO == 1, "Ocupados", "No ocupados")) %>% 
+  group_by(estado_agrupado) %>% 
+  summarise(
+    Pobres_abs     = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    Indigentes_abs = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    .groups = "drop" # Fundamental: desagrupamos para que el siguiente sum() sea el total nacional
+  ) %>% 
+    mutate(
+    Distribucion_Pobreza    = round(Pobres_abs / sum(Pobres_abs) * 100, 2),
+    Distribucion_Indigencia = round(Indigentes_abs / sum(Indigentes_abs) * 100, 2)
+  )
+
+```
+
+```{r eval=show.pobreza}
+# Poblacion de referencia del cuadro: mayores de 10 anios con ponderador valido
+poblacion_total_EPH <- tabla_3 %>% 
+  filter(PONDIH > 0, CH06 > 10) %>% 
+  summarise(total = sum(PONDIH, na.rm = TRUE)) %>% 
+  pull(total)
+
+cuadro_MT <- tabla_3 %>% 
+   filter(PONDIH > 0, CH06 > 10) %>% 
+  mutate(
+    tipo_subocupado = if_else(
+      ESTADO == 1 & PP3E_TOT > 0 & PP3E_TOT != 999 & P21 > 0,
+      as.character(tipo_subocupado), 
+      NA_character_
+    )
+  ) %>% 
+  pivot_longer(
+    cols = c(tasasbasicas, OcupadosDemandantes, tipo_subocupado),
+    names_to = "Indicador",
+    values_to = "Categoria"
+  ) %>% 
+    filter(!is.na(Categoria), Categoria != "Otro") %>% 
+  group_by(Indicador, Categoria) %>% 
+  summarise(
+    PoblacionXCategoria = sum(PONDIH, na.rm = TRUE),
+    Pobres_abs      = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    Indigentes_abs  = sum(PONDIH[situacion == "indigente"], na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  mutate(
+    "Porcentaje de la poblacion total" = round((PoblacionXCategoria / poblacion_total_EPH) * 100, 2),
+    PobrezaXCategoria     = round(Pobres_abs / PoblacionXCategoria * 100, 2),
+    IndigenciaXCategoria  = round(Indigentes_abs / PoblacionXCategoria * 100, 2),
+    PoblacionXCategoria   = round(PoblacionXCategoria, 0),
+    Pobres_abs            = round(Pobres_abs, 0),
+    Indigentes_abs        = round(Indigentes_abs, 0)
+  ) %>% 
+  select(-Indicador)  %>% relocate(Categoria, PoblacionXCategoria, "Porcentaje de la poblacion total",PobrezaXCategoria,  Pobres_abs, IndigenciaXCategoria, Indigentes_abs  )
+
+
+inline_a1 <- cuadro_MT %>% 
+  filter(Categoria == "Ocupados") %>% 
+  pull(PobrezaXCategoria) %>% 
+  formato_porc()
+
+```
+
+
+<p style="color:#E5616E">__Pobreza dentro de las tasas básicas del mercado de trabajo__</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_MT %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+ 
+ 
+CUADROS DE TRANSFERENCIAS
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_4 <- tabla_1 %>% 
+  filter(!is.na(situacion)) %>% 
+  mutate(
+    plan = case_when(
+      T_VI > 0 ~ "perciben",
+        TRUE ~ "no transferencias"
+    )) %>% 
+   group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate( 
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(V5_01_M > 0, V5_01_M, 0), na.rm = TRUE),
+      ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup()
+  
+cuadro_transferencias <- tabla_1 %>% 
+  filter(!is.na(situacion)) %>% 
+  mutate(
+  plan = case_when(
+      T_VI > 0 ~ "perciben",
+        TRUE ~ "no perciben"
+    ) ) %>%  
+  group_by( plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  )  %>% 
+  mutate(
+    total_general = sum(personas, na.rm = TRUE),
+    porcentaje    = round((personas / total_general) * 100, 2)
+  ) %>% 
+    select(-total_general)
+
+cuadro_transferencias_situacion <- tabla_1 %>% 
+   filter(T_VI > 0, !is.na(situacion)) %>% 
+  group_by(situacion) %>% 
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round((personas / sum(personas)) * 100, 2)
+  )
+
+inline_41 <- cuadro_transferencias_situacion %>%
+  filter(situacion == "indigente") %>% 
+  pull(porcentaje) %>% 
+  formato_porc()
+
+inline_42 <- cuadro_transferencias_situacion %>%
+  filter(situacion == "pobre") %>% 
+  pull(porcentaje) %>% 
+  formato_porc()
+
+inline_43 <- cuadro_transferencias_situacion %>%
+  filter(situacion == "no pobre") %>% 
+  pull(porcentaje) %>% 
+  formato_porc()
+
+```
+
+ <p style="color:#E5616E">__Poblacion que percibe transferencias__</p>
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+```
+ 
+ <p style="color:#E5616E">__Tasa de pobreza dentro de los perceptores de transferencias__</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias_situacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+
+Del total de personas que reciben transferencias, el `r inline_41` son personas en situacion de indigencia y el `r inline_42` en situacion de pobreza, dejando al `r inline_43` fuera de la pobreza. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_plan_incidencia <- tabla_1 %>% 
+  filter(!is.na(situacion)) %>% 
+  mutate(
+    plan = case_when(
+      T_VI == 0 ~ "restantes",
+      T_VI == -9 ~ "restantes",
+      TRUE ~ "perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0  
+  ) %>% 
+  select(situacion, perciben, restantes) %>% 
+  mutate(
+    total_fila = perciben + restantes,
+    total_general = sum(total_fila, na.rm = TRUE),
+    `perciben (%)` = round((perciben / sum(perciben, na.rm = TRUE)) * 100, 2),
+    `distribucion total (%)` = round((total_fila / total_general) * 100, 2)
+  ) %>% 
+  select(-total_fila, -total_general) # Limpiamos las columnas auxiliares
+```
+
+ <p style="color:#E5616E">__Tasa de pobreza sobre el total de los perceptores de transferencias y sobre el total de la poblacion (incidencia) __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_plan_incidencia %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_planes_mujeres <- tabla_1 %>% 
+  filter(!is.na(situacion), CH04 != 1) %>% 
+  mutate(
+    Sexo = case_when(
+      CH04 == 1 ~ "varon",
+      CH04 == 2 ~ "mujer"
+    ),
+    plan = case_when(
+      T_VI == 0 ~ "no perciben",
+      T_VI == -9 ~ "no perciben",
+      TRUE ~ "perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(Sexo, situacion, perciben, `no perciben`) %>% 
+  group_by(Sexo) %>% 
+  mutate(
+    total_por_sexo = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_por_sexo) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_por_sexo) * 100, 2)
+  ) %>% 
+  ungroup() %>% 
+  select(-total_por_sexo, -Sexo)
+
+```
+ 
+ <p style="color:#E5616E">__Tasa de pobreza Femenina sobre el total de los perceptores de transferencias y sobre el total de la poblacion (incidencia) __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_planes_mujeres %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_planes_hombres <- tabla_1 %>% 
+  filter(!is.na(situacion), CH04 != 2) %>% 
+  mutate(
+    Sexo = case_when(
+      CH04 == 1 ~ "varon",
+      CH04 == 2 ~ "mujer"
+    ),
+    plan = case_when(
+      T_VI == 0 ~ "no perciben",
+      T_VI == -9 ~ "no perciben",
+      TRUE ~ "perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(Sexo, situacion, perciben, `no perciben`) %>% 
+  group_by(Sexo) %>% 
+  mutate(
+    total_por_sexo = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_por_sexo) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_por_sexo) * 100, 2)
+  ) %>% 
+  ungroup() %>% 
+  select(-total_por_sexo, -Sexo)
+
+```
+ 
+ <p style="color:#E5616E">__Tasa de pobreza Masculina sobre el total de los perceptores de transferencias y sobre el total de la poblacion (incidencia) __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_planes_hombres %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+
+AUH
+```{r eval=show.pobreza}
+cuadro_transferencias_AUH <- tabla_1 %>% 
+  filter(!is.na(situacion)) %>% 
+  rename( monto_AUH = V5_01_M) %>% 
+  mutate(
+  plan = case_when(
+      monto_AUH > 0 ~ "perciben",
+        TRUE ~ "no perciben"
+    ) ) %>%  
+  group_by( plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>%   pivot_wider(
+    names_from = plan,
+    values_from = personas  ) %>% 
+  select( perciben, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_general) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_general) * 100, 2)
+  ) %>% 
+    select(-total_general)
+```
+
+ <p style="color:#E5616E">__ Perceptores de Asignacion Universal por Hijo AUH __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias_AUH %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+```{r eval=show.pobreza}
+cuadro_AUH_situacion <- tabla_1 %>%
+    rename( monto_AUH = V5_01_M) %>% 
+
+   filter(monto_AUH > 0, !is.na(situacion)) %>% 
+  group_by(situacion) %>% 
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round((personas / sum(personas)) * 100, 2)
+  )
+```
+ <p style="color:#E5616E">__ Pobreza dentro de los perceptores de Asignacion Universal por Hijo AUH __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_AUH_situacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+JUBILACION
+```{r eval=show.pobreza}
+cuadro_transferencias_jubilacion <- tabla_1 %>% 
+  filter(!is.na(situacion), CH06 > 60) %>% 
+  rename(
+    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M
+  ) %>% 
+  mutate(
+  plan = case_when(
+       monto_jubilacion > 0 ~ "perciben",
+        TRUE ~ "no perciben"
+    ) ) %>%  
+  group_by( plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>%   pivot_wider(
+    names_from = plan,
+    values_from = personas  ) %>% 
+  select( perciben, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_general) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_general) * 100, 2)
+  ) %>% 
+    select(-total_general)
+```
+<p style="color:#E5616E">__ Perceptores de Jubilacion __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias_jubilacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+```{r eval=show.pobreza}
+cuadro_jubilacion_situacion <- tabla_1 %>%
+     filter(!is.na(situacion), CH06 > 60, V2_01_M > 0) %>% 
+  rename(    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M
+  ) %>% 
+   filter(monto_jubilacion > 0, !is.na(situacion)) %>% 
+  group_by(situacion) %>% 
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round((personas / sum(personas)) * 100, 2)
+  )
+```
+
+<p style="color:#E5616E">__ Pobreza dentro de los Jubilados __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_jubilacion_situacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+Moratoria
+
+```{r eval=show.pobreza}
+cuadro_transferencias_moratoria <- tabla_1 %>% 
+ filter(!is.na(situacion), CH06 > 60) %>% 
+  rename(    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M
+  ) %>% 
+  mutate(
+  plan = case_when(
+         monto_moratoria > 0 ~ "perciben",
+        TRUE ~ "no perciben"
+    ) ) %>%  
+  group_by( plan) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>%   pivot_wider(
+    names_from = plan,
+    values_from = personas  ) %>% 
+  select( perciben, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_general) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_general) * 100, 2)
+  ) %>% 
+    select(-total_general)
+```
+
+
+<p style="color:#E5616E">__ Perceptores de Moratoria __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias_moratoria %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+
+```{r eval=show.pobreza}
+cuadro_transferencias_moratoria_sexo <- tabla_1 %>% 
+ filter(!is.na(situacion), CH06 > 60) %>% 
+  rename(    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M
+  ) %>% 
+  mutate(
+    Sexo = case_when(
+      CH04 == 1 ~ "varon",
+      CH04 == 2 ~ "mujer"
+    ),
+  plan = case_when(
+         monto_moratoria > 0 ~ "perciben",
+        TRUE ~ "no perciben"
+    ) ) %>%  
+  group_by( plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>%   pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 # Evita valores NA si en algún cruce no hay casos
+  )%>% 
+    mutate(
+    total_general = sum(`no perciben`, na.rm = TRUE) + sum(perciben, na.rm = TRUE),
+    `perciben (%)`    = round((perciben / total_general) * 100, 2),
+    `no perciben (%)` = round((`no perciben` / total_general) * 100, 2)
+  ) %>% 
+select(Sexo, perciben, `no perciben`, `perciben (%)`, `no perciben (%)`)
+
+```
+
+
+<p style="color:#E5616E">__ Perceptores de Moratoria __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_transferencias_moratoria_sexo %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+```{r eval=show.pobreza}
+cuadro_moratoria_situacion <- tabla_1 %>%
+    filter(!is.na(situacion), CH06 > 60, V2_02_M > 0) %>% 
+  rename(    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M
+  ) %>% 
+  group_by(situacion) %>% 
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round((personas / sum(personas)) * 100, 2)
+  )
+```
+
+<p style="color:#E5616E">__ Pobreza dentro de los perceptores de Moratoria __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_moratoria_situacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+Calculos de pobreza ALTERNATIVO
+```{r eval=show.pobreza}
+cuadro_pobreza_alternativa <- tabla_1 %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(T_VI > 0, T_VI, 0), na.rm = TRUE),
+      ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  summarise(
+    PobrezaXCategoria    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    IndigenciaXCategoria = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza              = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia           = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+  
+inline_51 <- cuadro_pobreza_alternativa %>% pull(Pobreza) %>% formato_porc()
+```
+ 
+ <p style="color:#E5616E">__ Pobreza sin trasferencias __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_pobreza_alternativa %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+ 
+ `r inline_51` es la tasa de pobreza cuando no se realizan transferencias de ningun tipo
+ 
+
+```{r eval=show.pobreza}
+cuadro_pobreza_alternativa_AUH <- tabla_1 %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(V5_01_M > 0, V5_01_M, 0), na.rm = TRUE),
+      ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  summarise(
+    PobrezaXCategoria    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    IndigenciaXCategoria = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza              = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia           = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+  
+inline_52 <- cuadro_pobreza_alternativa_AUH %>% pull(Pobreza) %>% formato_porc()
+```
+
+  <p style="color:#E5616E">__Pobreza sin AUH__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_pobreza_alternativa_AUH %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#c9c9c9")
+```
+
+`r inline_52` seria el total de la pobreza si no hubiera AUH
+
+
+```{r eval=show.pobreza}
+cuadro_pobreza_alternativa_jubilacion <- tabla_1 %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(V2_01_M > 0, V2_01_M, 0), na.rm = TRUE),
+      ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  summarise(
+    PobrezaXCategoria    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    IndigenciaXCategoria = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza              = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia           = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+  
+inline_53 <- cuadro_pobreza_alternativa_jubilacion %>% pull(Pobreza) %>% formato_porc()
+```
+
+
+ <p style="color:#E5616E">__ Pobreza sin jubilacion __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_pobreza_alternativa_jubilacion %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+`r inline_53` seria el total de la pobreza si no hubiera Jubilaciones
+
+```{r eval=show.pobreza}
+cuadro_pobreza_alternativa_Moratoria <- tabla_1 %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(V2_02_M > 0, V2_02_M, 0), na.rm = TRUE),
+      ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  summarise(
+    PobrezaXCategoria    = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE), 0),
+    IndigenciaXCategoria = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE), 0),
+    Pobreza              = round(sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2), 
+    Indigencia           = round(sum(PONDIH[situacion == "indigente"], na.rm = TRUE) / sum(PONDIH, na.rm = TRUE) * 100, 2)
+  )
+  
+inline_54 <- cuadro_pobreza_alternativa_Moratoria %>% pull(Pobreza) %>% formato_porc()
+```
+
+ <p style="color:#E5616E">__ Pobreza sin moratoria __</p>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+cuadro_pobreza_alternativa_Moratoria %>% 
+  kable(align = "c",  col.names = NULL) %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 50) %>% 
+  row_spec(row = 1, bold = T, color = "white", background = "#c9c9c9")
+
+```
+
+`r inline_54` seria el total de la pobreza sin moratoria
+
+
+extra1:
+```{r eval=show.pobreza}
+cuadro_pobreza_ingresos_no_laborales <- tabla_1 %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  summarise(
+    Total_Pobres = sum(PONDIH[situacion %in% c("pobre", "indigente")], na.rm = TRUE),
+    
+    Total_Perceptores_T_VI = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(T_VI, 0) > 0], na.rm = TRUE),
+    Pct_Perceptores_T_VI = round((Total_Perceptores_T_VI / Total_Pobres) * 100, 2),
+    
+    # Agrupaciones previas
+    Pobres_Con_AUH = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V5_01_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Jub = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V2_01_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Mor = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V2_02_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Otras_Pensiones = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V2_03_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Otros_Subsidios = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V5_02_M, 0) > 0], na.rm = TRUE),
+    
+    # Resto de variables de ingresos no laborales (image_7ba5a1.png)
+    Pobres_Con_Indemnizacion = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V3_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_SegDesempleo = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V4_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_AyudaONG = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V5_03_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Alquiler = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V8_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_GananciaNeg = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V9_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_Intereses = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V10_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_BecaGob = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V11_01_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_BecaONG = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V11_02_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_CuotaAlim = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V12_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_OtrosIng = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V18_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_TrabajoMenores = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V19_AM, 0) > 0], na.rm = TRUE),
+    Pobres_Con_AguiJub = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V21_01_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_AguiMor = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V21_02_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_AguiOtras = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V21_03_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_RetroJub = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V22_01_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_RetroMor = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V22_02_M, 0) > 0], na.rm = TRUE),
+    Pobres_Con_RetroOtras = sum(PONDIH[situacion %in% c("pobre", "indigente") & coalesce(V22_03_M, 0) > 0], na.rm = TRUE)
+  ) %>% 
+  mutate(
+    Pct_AUH = round((Pobres_Con_AUH / Total_Pobres) * 100, 2),
+    Pct_Jub = round((Pobres_Con_Jub / Total_Pobres) * 100, 2),
+    Pct_Mor = round((Pobres_Con_Mor / Total_Pobres) * 100, 2),
+    Pct_Otras_Pensiones = round((Pobres_Con_Otras_Pensiones / Total_Pobres) * 100, 2),
+    Pct_Otros_Subsidios = round((Pobres_Con_Otros_Subsidios / Total_Pobres) * 100, 2),
+    Pct_Indemnizacion = round((Pobres_Con_Indemnizacion / Total_Pobres) * 100, 2),
+    Pct_SegDesempleo = round((Pobres_Con_SegDesempleo / Total_Pobres) * 100, 2),
+    Pct_AyudaONG = round((Pobres_Con_AyudaONG / Total_Pobres) * 100, 2),
+    Pct_Alquiler = round((Pobres_Con_Alquiler / Total_Pobres) * 100, 2),
+    Pct_GananciaNeg = round((Pobres_Con_GananciaNeg / Total_Pobres) * 100, 2),
+    Pct_Intereses = round((Pobres_Con_Intereses / Total_Pobres) * 100, 2),
+    Pct_BecaGob = round((Pobres_Con_BecaGob / Total_Pobres) * 100, 2),
+    Pct_BecaONG = round((Pobres_Con_BecaONG / Total_Pobres) * 100, 2),
+    Pct_CuotaAlim = round((Pobres_Con_CuotaAlim / Total_Pobres) * 100, 2),
+    Pct_OtrosIng = round((Pobres_Con_OtrosIng / Total_Pobres) * 100, 2),
+    Pct_TrabajoMenores = round((Pobres_Con_TrabajoMenores / Total_Pobres) * 100, 2),
+    Pct_AguiJub = round((Pobres_Con_AguiJub / Total_Pobres) * 100, 2),
+    Pct_AguiMor = round((Pobres_Con_AguiMor / Total_Pobres) * 100, 2),
+    Pct_AguiOtras = round((Pobres_Con_AguiOtras / Total_Pobres) * 100, 2),
+    Pct_RetroJub = round((Pobres_Con_RetroJub / Total_Pobres) * 100, 2),
+    Pct_RetroMor = round((Pobres_Con_RetroMor / Total_Pobres) * 100, 2),
+    Pct_RetroOtras = round((Pobres_Con_RetroOtras / Total_Pobres) * 100, 2)
+  ) %>% 
+  select(Total_Pobres, Total_Perceptores_T_VI, starts_with("Pct_"))
+
+```
+
+extra2:
+```{r eval=show.pobreza}
+tabla_plan_AUH_Sexo<- tabla_1 %>% 
+  rename(
+    monto_jubilacion = V2_01_M,
+    monto_moratoria = V2_02_M,
+    monto_discapacidad = V2_03_M,
+    monto_AUH = V5_01_M
+  ) %>% 
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(monto_AUH > 0, monto_AUH, 0), na.rm = TRUE),
+    ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  filter(!is.na(situacion)) %>% 
+  mutate(
+    plan = case_when(
+      monto_AUH == 0 ~ "no perciben",
+      monto_AUH == -9 ~ "no perciben",
+      TRUE ~ "perciben AUH"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben AUH`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben AUH`, na.rm = TRUE),
+    `perciben AUH (%)` = round((`perciben AUH` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+
+# Contraparte "con AUH": misma estructura, sin descontar el ingreso
+tabla_plan_AUH_Sexo_con <- tabla_1 %>% 
+  rename(monto_AUH = V5_01_M) %>% 
+  filter(!is.na(situacion)) %>% 
+  mutate(
+    plan = case_when(
+      monto_AUH == 0 ~ "no perciben",
+      monto_AUH == -9 ~ "no perciben",
+      TRUE ~ "perciben AUH"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben AUH`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben AUH`, na.rm = TRUE),
+    `perciben AUH (%)` = round((`perciben AUH` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+
+tabla_comparativa_AUH <- tabla_plan_AUH_Sexo_con %>% 
+  left_join(
+    tabla_plan_AUH_Sexo,
+    by = c("situacion", "Sexo"),
+    suffix = c(" (Con AUH)", " (Sin AUH)")
+  )
+```
+
+ <p style="color:#E5616E">__Perceptores de AUH por sexo y situacion, con y sin el ingreso de la AUH__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_comparativa_AUH %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+
+JUBILACION- 
+```{r eval=show.pobreza}
+tabla_plan_Jubilacion <- tabla_1 %>% 
+    filter(!is.na(situacion), CH06 > 60) %>% 
+  rename(
+     monto_jubilacion = V2_01_M
+  ) %>% 
+  mutate(
+    plan = case_when(
+      monto_jubilacion > 0 ~ "perciben Jubilacion",
+      TRUE ~ "no perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben Jubilacion`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben Jubilacion`, na.rm = TRUE),
+    `perciben Jubilacion (%)` = round((`perciben Jubilacion` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+
+tabla_plan_Jubilacion_2 <- tabla_1 %>% 
+  filter(!is.na(situacion), CH06 > 60) %>% 
+  rename(
+     monto_jubilacion = V2_01_M
+  ) %>% 
+  mutate(
+    plan = case_when(
+      monto_jubilacion > 0 ~ "perciben Jubilacion",
+      TRUE ~ "no perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben Jubilacion`, `no perciben`) %>% 
+    group_by(Sexo) %>% # Agrupamos por sexo antes de calcular los totales
+  mutate(
+    total_por_sexo = sum(`perciben Jubilacion`, na.rm = TRUE),
+    `perciben Jubilacion (%)` = round((`perciben Jubilacion` / total_por_sexo) * 100, 2)
+  ) %>% 
+  ungroup() %>% # Siempre es buena práctica desagrupar al final
+  select(-total_por_sexo)
+  
+  
+  
+  tabla_pobreza_alternativa_Jubilacion <- tabla_1 %>% 
+  rename(
+     monto_jubilacion = V2_01_M
+  ) %>% 
+  
+  # 1. Modificamos ingresos a nivel HOGAR (con la familia completa)
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(monto_jubilacion > 0, monto_jubilacion, 0), na.rm = TRUE),
+    ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  filter(!is.na(situacion)) %>% 
+  filter(CH06 > 60) %>% 
+  mutate(
+    plan = case_when(
+      monto_jubilacion > 0 ~ "perciben Jubilacion",
+      TRUE ~ "no perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben Jubilacion`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben Jubilacion`, na.rm = TRUE),
+    `perciben Jubilacion (%)` = round((`perciben Jubilacion` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+  
+tabla_comparativa_Jubilacion <- tabla_plan_Jubilacion %>% 
+  left_join(
+    tabla_pobreza_alternativa_Jubilacion, 
+    by = c("situacion", "Sexo"),
+    suffix = c(" (Con Jubilacion)", " (Sin Jubilacion)")
+  )
+```
+
+ <p style="color:#E5616E">__Jubilacion por sexo y situacion, con y sin el ingreso previsional__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_comparativa_Jubilacion %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+
+MORATORIA- 
+```{r eval=show.pobreza}
+tabla_plan_MORATORIA_Mujeres <- tabla_1 %>% 
+  filter(!is.na(situacion), CH06 > 60, CH04 == 2) %>% 
+  rename(
+    monto_moratoria = V2_02_M
+  ) %>% 
+  mutate(
+    plan = case_when(
+      monto_moratoria > 0 ~ "perciben MORATORIA",
+      TRUE ~ "no perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben MORATORIA`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben MORATORIA`, na.rm = TRUE),
+    `perciben MORATORIA (%)` = round((`perciben MORATORIA` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+  
+  tabla_pobreza_alternativa_MORATORIA <- tabla_1 %>% 
+  rename(
+    monto_moratoria = V2_02_M
+  ) %>% 
+  
+  # 1. Modificamos ingresos a nivel HOGAR (con la familia completa)
+  group_by(CODUSU, NRO_HOGAR) %>% 
+  mutate(
+    miembros_hogar = n(),
+    transferencia_hogar = sum(ifelse(monto_moratoria > 0, monto_moratoria, 0), na.rm = TRUE),
+    ITF = ITF - transferencia_hogar,
+    IPCF = ITF / miembros_hogar  
+  ) %>% 
+  ungroup() %>% 
+  select(-transferencia_hogar, -miembros_hogar) %>% 
+  filter(!is.na(ITF)) %>% 
+  
+  # 2. Recalculamos la pobreza con el nuevo ITF familiar
+  calculate_poverty(basket = canastas, print_summary = FALSE) %>% 
+  filter(!is.na(situacion)) %>% 
+  
+  # 3. AHORA SÍ filtramos a las mujeres mayores de 60 años
+  filter(CH06 > 60, Sexo == "Mujeres") %>% 
+  
+  # 4. Clasificamos y armamos la tabla
+  mutate(
+    plan = case_when(
+      monto_moratoria > 0 ~ "perciben MORATORIA",
+      TRUE ~ "no perciben"
+    )
+  ) %>%  
+  group_by(situacion, plan, Sexo) %>%
+  summarise(
+    personas = sum(PONDIH, na.rm = TRUE),
+    .groups = "drop" 
+  ) %>% 
+  pivot_wider(
+    names_from = plan,
+    values_from = personas,
+    values_fill = 0 
+  ) %>% 
+  select(situacion, Sexo, `perciben MORATORIA`, `no perciben`) %>% 
+  mutate(
+    total_general = sum(`perciben MORATORIA`, na.rm = TRUE),
+    `perciben MORATORIA (%)` = round((`perciben MORATORIA` / total_general) * 100, 2)
+  ) %>% 
+  select(-total_general)
+  
+tabla_comparativa_MORATORIA <- tabla_plan_MORATORIA_Mujeres %>% 
+  left_join(
+    tabla_pobreza_alternativa_MORATORIA, 
+    by = c("situacion", "Sexo"),
+    suffix = c(" (Con Moratoria)", " (Sin Moratoria)")
+  )
+```
+
+ <p style="color:#E5616E">__Moratoria en mujeres de mas de 60 anios, con y sin el ingreso de la moratoria__</p>
+```{r echo=FALSE, message=FALSE, warning=FALSE, eval=show.pobreza}
+tabla_comparativa_MORATORIA %>% 
+  kable(align = "c") %>% 
+  kable_styling(c("striped", "hover", "condensed", "responsive"),
+                fixed_thead = T, font_size = 20) %>%
+  footnote(general = fuente,
+           general_title = "\n")%>%  
+  row_spec(0, bold = T, color = "white", background = "#E5616E")
+```
+
+quede aca
+
